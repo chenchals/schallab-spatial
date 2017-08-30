@@ -91,6 +91,7 @@ function [ outNew, outOld ] = testRaster(spikeTimes, selectedTrials, eventData, 
                 temp_spikes = arrayfun(@(x) cell2mat(spikeTimes(x,cellIndex)'),selectedTrials,'UniformOutput',false);
                 [ bins, rasters_full ] = getRasters(temp_spikes, alignTimes);
                 outNew.multiUnit(cIndex).spikeIds = spikeIds(cellIndex);
+                outNew.multiUnit(cIndex).singleUnitIndices = cellIndex;
                 if size(rasters_full,2) > 1 % there are spikes
                     % Convolve & Convert to firing rate counts/ms -> spikes/sec
                     sdf_full = convn(rasters_full',kernel,'same')'.*1000;
@@ -109,6 +110,7 @@ function [ outNew, outOld ] = testRaster(spikeTimes, selectedTrials, eventData, 
                 end                
             else
                 outNew.multiUnit(cIndex).spikeIds = {};
+                outNew.multiUnit(cIndex).singleUnitIndices = [];
                 outNew.multiUnit(cIndex,1).sdfWindow = sdfWindow;
                 outNew.multiUnit(cIndex).rasters = nan(nTrials,range(sdfWindow)+1);
                 outNew.multiUnit(cIndex,1).sdf = nan(1,range(sdfWindow)+1);
@@ -119,6 +121,28 @@ function [ outNew, outOld ] = testRaster(spikeTimes, selectedTrials, eventData, 
         end
         
     end
+    
+    plotSdfs(outNew.multiUnit,outNew.singleUnit,32);
+    
+    %% Plot multi-unit along with single unit SDF_mean
+    figure();
+    set(gcf,'Units','normalized');
+    set(gcf,'PaperPosition',[0.1 0.1 0.7 0.7]);
+    for cIndex = 1:maxChannels
+        subplot(4,8,cIndex)
+        win = outNew.multiUnit(cIndex).sdfWindow;
+        mu = outNew.multiUnit(cIndex).sdf_mean;
+        suIndex = outNew.multiUnit(cIndex).singleUnitIndices;
+        if numel(suIndex)>0
+            su = cell2mat({outNew.singleUnit(suIndex).sdf_mean}');
+            plot(win,mu,'-r')
+            hold on
+            plot(win,su(1:end,:))
+        else
+            % leave empty box
+        end        
+    end
+    
 end
 
 
