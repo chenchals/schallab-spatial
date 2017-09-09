@@ -1,14 +1,16 @@
-function my_corr_heatmap()
+function [ sdf, z, fx ] = my_corr_heatmap()
 %function my_corr_heatmap(dataRoot, subject, session)
 dataRoot = '/Volumes/schalllab/Users/Chenchal/Jacob/data/';
 subject = 'joule';
 session = 'jp121n01';
 %session = 'jp110n01';
+dataFile = fullfile(dataRoot,subject,[session '.mat']);
+
 plotSdf = 0;
 multiUint = 0;
-%epochWindow = [-300 : 200];
-epochWindow = [-100 : 400];
-dataFile = fullfile(dataRoot,subject,[session '.mat']);
+
+sdfWindow = [-100 400];
+maxChannels = 32;
 
 trialVars = {...
     'fixWindowEntered',...
@@ -42,15 +44,16 @@ eventData.iTrial = (1 : size(eventData.trialOutcome,1))';
 eventData = pruneTrials(eventData.targAngle(~isnan(eventData.targAngle)),7,eventData);
 
 % Sort trials based on trial type criteria
-outcome = {'saccToTarget'};
-alignEvent = 'targOn';
+outcome = {'saccToTarget','fixationAbort'};
+alignEventName = 'targOn';
 %alignEvent = 'responseOnset';
 %sidename = 'left';
 side = {'right'};
 
-trialList = mem_trial_selection(eventData, outcome, side);
+selectedTrials = memTrialSelector(eventData, outcome, side);
 
-trialList
+[sdf, z, fx]  = spkfun_sdf(spikeData.spiketimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeData.spikeIdsTable.spikeIds, maxChannels);
+ 
 end
 
 function plotMulti(unitArrayNew, sdfAll, epochWindow)
