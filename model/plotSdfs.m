@@ -13,7 +13,7 @@ function plotSdfs( multiUnit, singleUnit, channelOrder )
     xMax = ceil(max([multiUnit.sdfWindow])/roundToNextNms)*roundToNextNms;
     maxChannels = numel(channelOrder);
     % Setup figure properties
-    figProps(1,:) = {1, maxChannels, 90, 'right', 'cap'};
+    figProps(1,:) = {maxChannels, 1, 90, 'right', 'cap'};
     figProps(2,:) = {4, 8, 0, 'center', 'bottom'};
     figProps = cell2table(figProps);
     figProps.Properties.VariableNames={'rows','cols','rotation','horizontalAlign','verticalAlign'};

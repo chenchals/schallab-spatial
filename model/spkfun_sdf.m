@@ -119,7 +119,7 @@ end
 function [ oStruct ] = computeSdfs(rasters,bins,kernel,sdfWindow,spikeId,varargin)
             minWin = min(sdfWindow);
             maxWin = max(sdfWindow);            
-            sdfWindow = (minWin:maxWin)';
+            sdfWindow = (minWin:maxWin);
             % Convolve & Convert to firing rate counts/ms -> spikes/sec
             sdf_full = convn(rasters',kernel,'same')'.*1000;
             % purne sdf and rasters to sdf window            
@@ -138,7 +138,7 @@ end
 function [ oStruct ] = computeSdfNans(nTrials,sdfWindow,spikeId,varargin)
             minWin = min(sdfWindow);
             maxWin = max(sdfWindow);            
-            sdfWindow = (minWin:maxWin)';
+            sdfWindow = (minWin:maxWin);
             oStruct.spikeId = spikeId;
             if numel(varargin) == 2
                 oStruct.singleUnitIndices = varargin{1};

@@ -5,6 +5,7 @@ subject = 'joule';
 session = 'jp121n01';
 %session = 'jp110n01';
 dataFile = fullfile(dataRoot,subject,[session '.mat']);
+neuronexusMap = ([9:16,25:32,17:24,1:8]);
 
 plotSdf = 0;
 multiUint = 0;
@@ -54,6 +55,8 @@ selectedTrials = memTrialSelector(eventData, outcome, side);
 
 [sdf, fx]  = spkfun_sdf(spikeData.spiketimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeData.spikeIdsTable.spikeIds, maxChannels);
  
+plotSdfs(sdf.multiUnit,sdf.singleUnit,neuronexusMap);
+
 end
 
 function plotMulti(unitArrayNew, sdfAll, epochWindow)
