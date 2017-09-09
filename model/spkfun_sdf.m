@@ -1,4 +1,4 @@
-function [ outNew, Z, fxHandles ] = spkfun_sdf(spikeTimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeIds, maxChannels)
+function [ outNew, fxHandles ] = spkfun_sdf(spikeTimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeIds, maxChannels)
 %SDF Summary of this function goes here
 %   Detailed explanation goes here
 %
@@ -74,9 +74,6 @@ function [ outNew, Z, fxHandles ] = spkfun_sdf(spikeTimes, selectedTrials, event
 %% Compute re-useables for this call
     sdfWindow = sort(sdfWindow);
     % BinWidth is always assumed to be 1 ms
-    minWin = min(sdfWindow);
-    maxWin = max(sdfWindow);
-    sdfWindow = (minWin:maxWin)';
     alignTimes = eventData.(alignEventName)(selectedTrials);
     kernel = pspKernel;
     nTrials = numel(selectedTrials);
@@ -87,25 +84,11 @@ function [ outNew, Z, fxHandles ] = spkfun_sdf(spikeTimes, selectedTrials, event
     for chanIndex = 1:nCells
         temp_spikes = spikeTimes(selectedTrials,chanIndex);
         spikeId = spikeIds(chanIndex);
-        Z.singleUnit(chanIndex,1).spikeId = spikeId;
         [ bins, rasters_full ] = spkfun_getRasters(temp_spikes, alignTimes);
         if size(rasters_full,2) > 1 % there are spikes
-            outNew.singleUnit(chanIndex,1) = computeSdfs(rasters_full,bins,kernel,minWin,maxWin,spikeId);
-            % Convolve & Convert to firing rate counts/ms -> spikes/sec
-            sdf_full = convn(rasters_full',kernel,'same')'.*1000;
-            % purne sdf and rasters to sdf window            
-            Z.singleUnit(chanIndex,1).sdfWindow = sdfWindow;
-            Z.singleUnit(chanIndex,1).rasters = rasters_full(:,find(bins == minWin):find(bins == maxWin));        
-            Z.singleUnit(chanIndex,1).sdf = sdf_full(:,find(bins == minWin):find(bins == maxWin));
-            Z.singleUnit(chanIndex,1).sdf_mean = mean(Z.singleUnit(chanIndex,1).sdf);
-            Z.singleUnit(chanIndex,1).sdf_std = std(Z.singleUnit(chanIndex,1).sdf);
+            outNew.singleUnit(chanIndex,1) = computeSdfs(rasters_full,bins,kernel,sdfWindow,spikeId);
         else  
-            outNew.singleUnit(chanIndex,1) = computeSdfNans(nTrials,minWin,maxWin,spikeId);
-            Z.singleUnit(chanIndex,1).sdfWindow = sdfWindow;
-            Z.singleUnit(chanIndex,1).rasters = nan(nTrials,range(sdfWindow)+1);  
-            Z.singleUnit(chanIndex,1).sdf = nan(nTrials,range(sdfWindow)+1);
-            Z.singleUnit(chanIndex,1).sdf_mean = nan(1,range(sdfWindow)+1);
-            Z.singleUnit(chanIndex,1).sdf_std = nan(1,range(sdfWindow)+1);
+            outNew.singleUnit(chanIndex,1) = computeSdfNans(nTrials,sdfWindow,spikeId);
         end
     end
     
@@ -114,42 +97,17 @@ function [ outNew, Z, fxHandles ] = spkfun_sdf(spikeTimes, selectedTrials, event
     for chanIndex = 1:maxChannels
         fprintf('Doing channel #%02d\n',chanIndex);
         cellIndex = find(~cellfun(@isempty,regexp(spikeIds,num2str(chanIndex,'%02d'))));
-        Z.multiUnit(chanIndex,1).channelNo = chanIndex;
         if numel(cellIndex)>0
             temp_spikes = arrayfun(@(x) cell2mat(spikeTimes(x,cellIndex)'),selectedTrials,'UniformOutput',false);
             [ bins, rasters_full ] = spkfun_getRasters(temp_spikes, alignTimes);
             spikeId = spikeIds(cellIndex);
-            Z.multiUnit(chanIndex).spikeId = spikeId;
-            Z.multiUnit(chanIndex).singleUnitIndices = cellIndex;
             if size(rasters_full,2) > 1 % there are spikes
-               outNew.multiUnit(chanIndex,1) = computeSdfs(rasters_full,bins,kernel,minWin,maxWin,spikeId,cellIndex,chanIndex);
-                % Convolve & Convert to firing rate counts/ms -> spikes/sec
-                sdf_full = convn(rasters_full',kernel,'same')'.*1000;
-                % purne sdf and rasters to sdf window
-                Z.multiUnit(chanIndex,1).sdfWindow = sdfWindow;
-                Z.multiUnit(chanIndex,1).rasters = rasters_full(:,find(bins == minWin):find(bins == maxWin));
-                Z.multiUnit(chanIndex,1).sdf = sdf_full(:,find(bins == minWin):find(bins == maxWin));
-                Z.multiUnit(chanIndex,1).sdf_mean = mean(Z.multiUnit(chanIndex,1).sdf);
-                Z.multiUnit(chanIndex,1).sdf_std = std(Z.multiUnit(chanIndex,1).sdf);
+               outNew.multiUnit(chanIndex,1) = computeSdfs(rasters_full,bins,kernel,sdfWindow,spikeId,cellIndex,chanIndex);
             else
-                outNew.multiUnit(chanIndex,1) = computeSdfNans(nTrials,minWin,maxWin,spikeId,cellIndex,chanIndex);
-                Z.multiUnit(chanIndex,1).sdfWindow = sdfWindow;
-                Z.multiUnit(chanIndex,1).rasters = nan(nTrials,range(sdfWindow)+1);
-                Z.multiUnit(chanIndex,1).sdf = nan(nTrials,range(sdfWindow)+1);
-                Z.multiUnit(chanIndex,1).sdf_mean = nan(1,range(sdfWindow)+1);
-                Z.multiUnit(chanIndex,1).sdf_std = nan(1,range(sdfWindow)+1);
+                outNew.multiUnit(chanIndex,1) = computeSdfNans(nTrials,sdfWindow,spikeId,cellIndex,chanIndex);
             end
         else
-            Z.multiUnit(chanIndex).spikeId = {};
-            Z.multiUnit(chanIndex).singleUnitIndices = [];
-            outNew.multiUnit(chanIndex,1) = computeSdfNans(nTrials,minWin,maxWin,{},[],[]);
-            Z.multiUnit(chanIndex).spikeIds = {};
-            Z.multiUnit(chanIndex).singleUnitIndices = [];
-            Z.multiUnit(chanIndex,1).sdfWindow = sdfWindow;
-            Z.multiUnit(chanIndex).rasters = nan(nTrials,range(sdfWindow)+1);
-            Z.multiUnit(chanIndex,1).sdf = nan(1,range(sdfWindow)+1);
-            Z.multiUnit(chanIndex,1).sdf_mean = nan(1,range(sdfWindow)+1);
-            Z.multiUnit(chanIndex,1).sdf_std = nan(1,range(sdfWindow)+1);
+            outNew.multiUnit(chanIndex,1) = computeSdfNans(nTrials,sdfWindow,{},[],[]);
         end
         
     end
@@ -158,7 +116,9 @@ function [ outNew, Z, fxHandles ] = spkfun_sdf(spikeTimes, selectedTrials, event
 end
 
 
-function [ oStruct ] = computeSdfs(rasters,bins,kernel,minWin,maxWin,spikeId,varargin)
+function [ oStruct ] = computeSdfs(rasters,bins,kernel,sdfWindow,spikeId,varargin)
+            minWin = min(sdfWindow);
+            maxWin = max(sdfWindow);            
             sdfWindow = (minWin:maxWin)';
             % Convolve & Convert to firing rate counts/ms -> spikes/sec
             sdf_full = convn(rasters',kernel,'same')'.*1000;
@@ -175,7 +135,9 @@ function [ oStruct ] = computeSdfs(rasters,bins,kernel,minWin,maxWin,spikeId,var
             oStruct.sdf_std = std(oStruct.sdf);
 end
 
-function [ oStruct ] = computeSdfNans(nTrials,minWin,maxWin,spikeId,varargin)
+function [ oStruct ] = computeSdfNans(nTrials,sdfWindow,spikeId,varargin)
+            minWin = min(sdfWindow);
+            maxWin = max(sdfWindow);            
             sdfWindow = (minWin:maxWin)';
             oStruct.spikeId = spikeId;
             if numel(varargin) == 2

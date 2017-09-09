@@ -1,4 +1,4 @@
-function [ sdf, z, fx ] = my_corr_heatmap()
+function [ sdf, fx ] = my_corr_heatmap()
 %function my_corr_heatmap(dataRoot, subject, session)
 dataRoot = '/Volumes/schalllab/Users/Chenchal/Jacob/data/';
 subject = 'joule';
@@ -52,7 +52,7 @@ side = {'right'};
 
 selectedTrials = memTrialSelector(eventData, outcome, side);
 
-[sdf, z, fx]  = spkfun_sdf(spikeData.spiketimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeData.spikeIdsTable.spikeIds, maxChannels);
+[sdf, fx]  = spkfun_sdf(spikeData.spiketimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeData.spikeIdsTable.spikeIds, maxChannels);
  
 end
 
