@@ -13,10 +13,10 @@ function plotSdfs( multiUnit, singleUnit, channelOrder )
     xMax = ceil(max([multiUnit.sdfWindow])/roundToNextNms)*roundToNextNms;
     maxChannels = numel(channelOrder);
     % Setup figure properties
-    figProps(1,:) = {maxChannels, 1, 90, 'right', 'cap'};
-    figProps(2,:) = {4, 8, 0, 'center', 'bottom'};
+    figProps(1,:) = {maxChannels, 1, 'YLabel', 0, 'right', 'cap'};
+    figProps(2,:) = {4, 8, 'XLabel', 0, 'center', 'bottom'};
     figProps = cell2table(figProps);
-    figProps.Properties.VariableNames={'rows','cols','rotation','horizontalAlign','verticalAlign'};
+    figProps.Properties.VariableNames={'rows','cols','labelAxis','rotation','horizontalAlign','verticalAlign'};
 
     for figNo = 1:2
         figure('Units','normalized','Position',[0.1 0.1 0.7 0.7]);
@@ -34,8 +34,11 @@ function plotSdfs( multiUnit, singleUnit, channelOrder )
                 line([0 0], [yMin  yMax], 'Color','k');
                 xlim(gca,[xMin  xMax]);
                 ylim(gca,[yMin  yMax]);
-                xlabel(sprintf('Chan#%02d',chNo),'FontWeight','bold','FontSize',12);
-                set(get(gca,'XLabel'),'Rotation',figProps.rotation(figNo),...
+                % Label axes
+                 %xlabel(sprintf('Chan#%02d',chNo),'FontWeight','bold','FontSize',12);
+                hAxis = get(gca,figProps.labelAxis{figNo});
+                set(hAxis,'String',sprintf('Chan#%02d',chNo),'FontWeight','bold','FontSize',12);
+                set(hAxis,'Rotation',figProps.rotation(figNo),...
                     'HorizontalAlignment',figProps.horizontalAlign{figNo},...
                     'VerticalAlignment',figProps.verticalAlign{figNo});
             else
@@ -43,6 +46,17 @@ function plotSdfs( multiUnit, singleUnit, channelOrder )
             end
             drawnow
         end
+        if figNo == 1
+            bgColor = get(gcf,'defaultfigurecolor');
+            allPlots = findobj(gcf,'type','axes');
+            set(allPlots,'Box','off','XTickLabel',{},'YTickLabel',{},...
+                'Color',bgColor);
+            cellfun(@(x) set(x,'TickValues',[],'Color', bgColor),...
+                get(allPlots,{'XAxis','YAxis'}));
+             cellfun(@(x) set(x,'Color',[0.15 0.15 0.15]),get(allPlots,{'XLabel','YLabel'}));
+       end
+        
+        
         %set(findobj('type','axes'),'YLim',[yMin  yMax]);
         %set(findobj('type','axes'),'XLim',[xMin  xMax]);
     end
