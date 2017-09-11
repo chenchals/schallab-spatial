@@ -1,4 +1,4 @@
-function corr_heatmap(dataRoot, matRoot, subject, session)
+function [sdfAll] = corr_heatmap(dataRoot, matRoot, subject, session)
 %dataRoot = '/Volumes/schalllab/Users/Chenchal/Jacob/data/';matRoot='/Users/subravcr/teba/local/schalllab/Jacob/Clustering-Project/matlab';
 multiUint = 1;
 epochWindow = [-300 : 200];
@@ -75,6 +75,7 @@ myMap = colormap('copper');
 colormap(flipud(myMap));
 
 % figure dimensions and labels
+figure();
 set(gcf, 'units', 'norm', 'position', [0 0 .5 .9])
 
 xlabel('Channels (Descending)', 'fontsize', 18);

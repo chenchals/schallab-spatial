@@ -122,7 +122,7 @@ function [ outNew, outOld ] = testRaster(spikeTimes, selectedTrials, eventData, 
         
     end
     
-    plotSdfs(outNew.multiUnit,outNew.singleUnit,32);
+    %plotSdfs(outNew.multiUnit,outNew.singleUnit,32,'blah');
     
     %% Plot multi-unit along with single unit SDF_mean
     figure();

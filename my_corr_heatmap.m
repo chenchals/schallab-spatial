@@ -1,17 +1,23 @@
-function [ sdf, fx ] = my_corr_heatmap()
+function [ data ] = my_corr_heatmap(dataFile,alignEventName, outcome, hemisphere, sdfWindow)
 %function my_corr_heatmap(dataRoot, subject, session)
-dataRoot = '/Volumes/schalllab/Users/Chenchal/Jacob/data/';
-subject = 'joule';
-session = 'jp121n01';
+%dataRoot = '/Volumes/schalllab/Users/Chenchal/Jacob/data/';
+%subject = 'joule';
+%session = 'jp121n01';
 %session = 'jp110n01';
-dataFile = fullfile(dataRoot,subject,[session '.mat']);
-neuronexusMap = ([9:16,25:32,17:24,1:8]);
+%dataFile = fullfile(dataRoot,subject,[session '.mat']);
+%sdfWindow = [-100 400];
+% Sort trials based on trial type criteria
+%alignEventName = 'targOn';
+%alignEventName = 'responseOnset';
+%outcome = {'saccToTarget'};
+%sidename = 'left';
+%side = {'right'};
 
-plotSdf = 0;
-multiUint = 0;
+side = hemisphere;
 
-sdfWindow = [-100 400];
+% Max channels and channel map
 maxChannels = 32;
+neuronexusMap = ([9:16,25:32,17:24,1:8]);
 
 trialVars = {...
     'fixWindowEntered',...
@@ -26,50 +32,48 @@ trialVars = {...
     'saccAngle',...
     };
 
-M = EphysModel.newEphysModel('memory',dataFile);
-eventData = M.getEventData(trialVars);
+[~,fileNoExt,~] = fileparts(dataFile);
+figureTitle = join({fileNoExt,...
+    'outcome',char(join(outcome,',')),...
+    'alignEvent',alignEventName,...
+    'hemisphere',char(join(side,','))},'-');
 
+%% Read datafile and process
+M = EphysModel.newEphysModel('memory',dataFile);
+% Read Event data
+fprintf('Reading Event Data from file %s\n',dataFile);
+eventData = M.getEventData(trialVars);
+% Read Spike data
+fprintf('Reading Spike Data from file %s\n',dataFile);
 spikeData = M.getSpikeData(...
     'spikeIdVar', 'SessionData.spikeUnitArray',...
     'spiketimeVar', 'spikeData',...
-    'channelMap', [9:16,25:32,17:24,1:8]);
-%SessionData1.spikeUnitArray = SessionData1.channelIdsTable.channelIds';
+    'channelMap', neuronexusMap);
 
-% RTs
+% Compute RTs (why?)
 eventData.rt = eventData.responseOnset - eventData.responseCueOn;
+% Create Trial list for all trials, just a row index
 eventData.iTrial = (1 : size(eventData.trialOutcome,1))';
 % Want to get rid of trials that were mistakenly recored with targets at
 % the wrong angles (happens sometimes at the beginning of a task session
 % recording when the angles were set wrong). For now, sue the criteria that
 % a target must have at least 7 trials to considered legitimate
-eventData = pruneTrials(eventData.targAngle(~isnan(eventData.targAngle)),7,eventData);
-
-% Sort trials based on trial type criteria
-outcome = {'saccToTarget','fixationAbort'};
-alignEventName = 'targOn';
-%alignEvent = 'responseOnset';
-%sidename = 'left';
-side = {'right'};
-
+minTrialsPerCondition = 7;
+eventData = pruneTrials(eventData.targAngle,minTrialsPerCondition,eventData);
+% Select trials
 selectedTrials = memTrialSelector(eventData, outcome, side);
+% Compute SDF
+[sdf, fx]  = spkfun_sdf(spikeData.spiketimes, selectedTrials, eventData, ...
+                        alignEventName, sdfWindow, ...
+                        spikeData.spikeIdsTable.spikeIds, maxChannels);
+% Plot SDFs 
+plotSdfs(sdf.multiUnit,sdf.singleUnit,neuronexusMap,figureTitle);
 
-[sdf, fx]  = spkfun_sdf(spikeData.spiketimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeData.spikeIdsTable.spikeIds, maxChannels);
- 
-plotSdfs(sdf.multiUnit,sdf.singleUnit,neuronexusMap);
+data.eventData = eventData;
+data.spikeData = spikeData;
+data.trialList = selectedTrials;
+data.sdf = sdf;
+data.fx = fx;
 
-end
 
-function plotMulti(unitArrayNew, sdfAll, epochWindow)
-    figure
-    set(gcf,'Units','normalized')
-    set(gcf,'Position', [0.01,0.01,0.6,0.6])
-
-    for i = 1 : length(unitArrayNew)
-        subplot(4,8,i);
-        plot(epochWindow,sdfAll(:,i));
-        ylims = get(gca,'YLim');
-        xlims = get(gca,'XLim');
-        text(min(xlims)+10,max(ylims)*.75,sprintf('seq# %d , Unit %s',i,unitArrayNew{i}),'FontSize',8,'FontWeight','bold');
-        drawnow
-    end
 end

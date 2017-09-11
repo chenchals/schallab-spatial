@@ -1,7 +1,6 @@
 function verifyCategories(categories, validCategories)
 %VERIFYCATEGORIES Summary of this function goes here
 %   Detailed explanation goes here
-
     if iscellstr(categories) && size(categories,2) > 1
         categories = categories';
     end
@@ -14,5 +13,3 @@ function verifyCategories(categories, validCategories)
             join(unknownOutcomes,','), join(unique(validCategories),','));
     end
 end
-
-

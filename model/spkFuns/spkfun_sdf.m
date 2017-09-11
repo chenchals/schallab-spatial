@@ -17,9 +17,9 @@ function [ outNew, fxHandles ] = spkfun_sdf(spikeTimes, selectedTrials, eventDat
 %    selectedTrials: A vector if trialNos.
 %
 %    eventData: A structure where fields are eventNames.
-%               A field is a vector of timestamps [nTrials x 1 double].
+%               Each field is a vector of timestamps [nTrials x 1 double].
 %               or
-%               A field is a cell array of strings {nTrials x 1 cell}.
+%               Each field is a cell array of strings {nTrials x 1 cell}.
 %
 %    alignEventName: A char. Event to align spike timestamps. 
 %                    Event name must be a fieldname of eventData structure.
@@ -144,11 +144,11 @@ function [ oStruct ] = computeSdfNans(nTrials,sdfWindow,spikeId,varargin)
                 oStruct.singleUnitIndices = varargin{1};
                 oStruct.channelIndex = varargin{2};
             end
-            oStruct.singleUnit(chanIndex,1).sdfWindow = sdfWindow;
-            oStruct.singleUnit(chanIndex,1).rasters = nan(nTrials,range(sdfWindow)+1);  
-            oStruct.singleUnit(chanIndex,1).sdf = nan(nTrials,range(sdfWindow)+1);
-            oStruct.singleUnit(chanIndex,1).sdf_mean = nan(1,range(sdfWindow)+1);
-            oStruct.singleUnit(chanIndex,1).sdf_std = nan(1,range(sdfWindow)+1);
+            oStruct.sdfWindow = sdfWindow;
+            oStruct.rasters = nan(nTrials,range(sdfWindow)+1);  
+            oStruct.sdf = nan(nTrials,range(sdfWindow)+1);
+            oStruct.sdf_mean = nan(1,range(sdfWindow)+1);
+            oStruct.sdf_std = nan(1,range(sdfWindow)+1);
 end
 
 
