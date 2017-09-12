@@ -1,13 +1,16 @@
 function [multiSdf] = exploreJoule()
     clear all
     delete(findobj('type','figure'))
-    plotIt = 0;
+    plotIt = 1;
     % Get file list
     d = dir('/Volumes/schalllab/Users/Chenchal/Jacob/data/joule/*.mat');
     jouleFiles = strcat({d.folder}', filesep, {d.name}');
+    %jouleFiles ={'/Volumes/schalllab/Users/Chenchal/Jacob/data/joule/jp064n01.mat'};
 
     for f = 1:numel(jouleFiles)
-
+        if exist('jouleModel','var')
+            clear jouleModel
+        end
         fullFileName = jouleFiles{f};
         fprintf('Processing file %s\n',fullFileName);
         
