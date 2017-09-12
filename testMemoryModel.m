@@ -7,7 +7,7 @@ clear all
  % clear existing variable
  if exist('jp110M','var'), clear 'jp110M', end
  % Create instance of MemoryTypeModel
- jp110M = EphysModel.newEphysModel('memory',jouleFiles{11})
+ jp110M = EphysModel.newEphysModel('memory',jouleFiles{11});
 
  % Get MultiUnitSdf
  multiSdf = jp110M.getMultiUnitSdf(jp110M.getTrialList('saccToTarget','right'), 'responseOnset',[-300 200]);
