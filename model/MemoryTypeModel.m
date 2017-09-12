@@ -134,23 +134,35 @@ classdef MemoryTypeModel < EphysModel
         end
         
         %% GETSINGLEUNITSDF
-        function [ sdf ] = getSingleUnitSdf(obj, selectedTrials, alignEventName, sdfWindow, maxChannels)
-            spikeTimes = obj.getSpikeData().spikeTimes;
-            eventData = obj.getEventData();
-            spikeIds = obj.getSpikeData().spikeIdsTable.spikeIds;
-            
-            sdf = spkfun_sdf(spikeTimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeIds, maxChannels);
+        function [ sdf ] = getSingleUnitSdf(obj, selectedTrials, alignEventName, sdfWindow)            
+            sdf = getSdf(obj, selectedTrials, alignEventName, sdfWindow, false);
         end
         
         %% GETMULTIUNITSDF
-        function [ sdf ] = getMultiUnitSdf(obj,varargin)
-            error('Not yet implemented');
+        function [ sdf ] = getMultiUnitSdf(obj, selectedTrials, alignEventName, sdfWindow)
+            sdf = getSdf(obj, selectedTrials, alignEventName, sdfWindow, true);
         end
         
-
+        %% GETCHANNELMAP
+        function [ channelMap ] = getChannelMap(obj)
+            electrodeMap = EphysModel.getElectrodeMap();
+            channelMap = electrodeMap{2};
+        end
+        
     end
     %% Helper Functions
     methods (Access=private)
+        
+        function [ sdf ] = getSdf(obj, selectedTrials, alignEventName, sdfWindow, singleOrMultiFlag)
+            spikeTimes = obj.getSpikeData().spikeTimes;
+            eventData = obj.getEventData();
+            spikeIds = obj.getSpikeData().spikeIdsTable.spikeIds;
+            electrodeMap = EphysModel.getElectrodeMap();
+            maxChannels = max(electrodeMap{2});
+            sdf = spkfun_sdf(spikeTimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeIds, maxChannels, singleOrMultiFlag);
+        end
+        
+        
         function [ vars ] = coerceCell2Mat(obj,vars)
             fields = fieldnames(vars);
             for jj=1:numel(fields)

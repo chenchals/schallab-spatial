@@ -13,12 +13,13 @@ classdef (Abstract=true) EphysModel < handle
     end
     
     methods (Abstract)
-        getEventData(obj, eventNames)
+        getEventData(obj, varargin)
         getSpikeData(obj, varargin)
         getTrialList(obj, varargin)
         %SDF
         getSingleUnitSdf(obj,varargin)
-        getMultiUnitSdf(obj,verargin)
+        getMultiUnitSdf(obj,varargin)
+        getChannelMap(obj)
     end
     
     methods (Access = public)

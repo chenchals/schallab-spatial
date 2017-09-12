@@ -1,4 +1,4 @@
-function [ outNew, fxHandles ] = spkfun_sdf(spikeTimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeIds, maxChannels)
+function [ out, outNew, fxHandles ] = spkfun_sdf(spikeTimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeIds, maxChannels, multiUnitTrueFalse)
 %SDF Summary of this function goes here
 %   Detailed explanation goes here
 %
@@ -57,6 +57,9 @@ function [ outNew, fxHandles ] = spkfun_sdf(spikeTimes, selectedTrials, eventDat
     assert(isscalar(maxChannels),... %if 0
         sprintf('Argument maxChannels must be a scalar, but was %s',class(maxChannels)));
     
+    assert(islogical(multiUnitTrueFalse),... %if 0
+        sprintf('Argument multiUnitFlag must be a logical, but was %s',class(maxChannels)));
+    
     % Ensure trials are valid
     verifyCategories(alignEventName,fieldnames(eventData));
     
@@ -78,79 +81,79 @@ function [ outNew, fxHandles ] = spkfun_sdf(spikeTimes, selectedTrials, eventDat
     kernel = pspKernel;
     nTrials = numel(selectedTrials);
     outNew = struct();
-    
-    %% Compute for Single Unit: rasters, sdf, sdf_mean, sdf_std
-    nCells = size(spikeTimes,2);
-    for chanIndex = 1:nCells
-        temp_spikes = spikeTimes(selectedTrials,chanIndex);
-        spikeId = spikeIds(chanIndex);
-        [ bins, rasters_full ] = spkfun_getRasters(temp_spikes, alignTimes);
-        if size(rasters_full,2) > 1 % there are spikes
-            outNew.singleUnit(chanIndex,1) = computeSdfs(rasters_full,bins,kernel,sdfWindow,spikeId);
-        else  
-            outNew.singleUnit(chanIndex,1) = computeSdfNans(nTrials,sdfWindow,spikeId);
-        end
-    end
-    
-    %% Compute for Multi Unit: rasters, sdf, sdf_mean, sdf_std
-    % Merge units for each channel
-    for chanIndex = 1:maxChannels
-        fprintf('Doing channel #%02d\n',chanIndex);
-        cellIndex = find(~cellfun(@isempty,regexp(spikeIds,num2str(chanIndex,'%02d'))));
-        if numel(cellIndex)>0
-            temp_spikes = arrayfun(@(x) cell2mat(spikeTimes(x,cellIndex)'),selectedTrials,'UniformOutput',false);
+    if ~multiUnitTrueFalse
+        %% Compute for Single Unit: rasters, sdf, sdf_mean, sdf_std
+        nCells = size(spikeTimes,2);
+        for chanIndex = 1:nCells
+            temp_spikes = spikeTimes(selectedTrials,chanIndex);
+            spikeId = spikeIds(chanIndex);
             [ bins, rasters_full ] = spkfun_getRasters(temp_spikes, alignTimes);
-            spikeId = spikeIds(cellIndex);
             if size(rasters_full,2) > 1 % there are spikes
-               outNew.multiUnit(chanIndex,1) = computeSdfs(rasters_full,bins,kernel,sdfWindow,spikeId,cellIndex,chanIndex);
+                outNew.singleUnit(chanIndex,1) = computeSdfs(rasters_full,bins,kernel,sdfWindow,spikeId);
             else
-                outNew.multiUnit(chanIndex,1) = computeSdfNans(nTrials,sdfWindow,spikeId,cellIndex,chanIndex);
+                outNew.singleUnit(chanIndex,1) = computeSdfNans(nTrials,sdfWindow,spikeId);
             end
-        else
-            outNew.multiUnit(chanIndex,1) = computeSdfNans(nTrials,sdfWindow,{},[],[]);
         end
-        
+        out = outNew.singleUnit;
+    else % if multiunitTrueFalse = true
+        %% Compute for Multi Unit: rasters, sdf, sdf_mean, sdf_std
+        % Merge units for each channel
+        for chanIndex = 1:maxChannels
+            fprintf('Doing channel #%02d\n',chanIndex);
+            cellIndex = find(~cellfun(@isempty,regexp(spikeIds,num2str(chanIndex,'%02d'))));
+            if numel(cellIndex)>0
+                temp_spikes = arrayfun(@(x) cell2mat(spikeTimes(x,cellIndex)'),selectedTrials,'UniformOutput',false);
+                [ bins, rasters_full ] = spkfun_getRasters(temp_spikes, alignTimes);
+                spikeId = spikeIds(cellIndex);
+                if size(rasters_full,2) > 1 % there are spikes
+                    outNew.multiUnit(chanIndex,1) = computeSdfs(rasters_full,bins,kernel,sdfWindow,spikeId,cellIndex,chanIndex);
+                else
+                    outNew.multiUnit(chanIndex,1) = computeSdfNans(nTrials,sdfWindow,spikeId,cellIndex,chanIndex);
+                end
+            else
+                outNew.multiUnit(chanIndex,1) = computeSdfNans(nTrials,sdfWindow,{},[],[]);
+            end            
+        end
+        out = outNew.multiUnit;
     end
-
     fxHandles = asMatHandles();
 end
 
 
 function [ oStruct ] = computeSdfs(rasters,bins,kernel,sdfWindow,spikeId,varargin)
-            minWin = min(sdfWindow);
-            maxWin = max(sdfWindow);            
-            sdfWindow = (minWin:maxWin);
-            % Convolve & Convert to firing rate counts/ms -> spikes/sec
-            sdf_full = convn(rasters',kernel,'same')'.*1000;
-            % purne sdf and rasters to sdf window            
-            oStruct.spikeId = spikeId;
-            if numel(varargin) == 2
-                oStruct.singleUnitIndices = varargin{1};
-                oStruct.channelIndex = varargin{2};
-            end
-            oStruct.sdfWindow = sdfWindow;
-            oStruct.rasters = rasters(:,find(bins == minWin):find(bins == maxWin));        
-            oStruct.sdf = sdf_full(:,find(bins == minWin):find(bins == maxWin));
-            oStruct.sdf_mean = mean(oStruct.sdf);
-            oStruct.sdf_std = std(oStruct.sdf);
+    minWin = min(sdfWindow);
+    maxWin = max(sdfWindow);
+    sdfWindow = (minWin:maxWin);
+    % Convolve & Convert to firing rate counts/ms -> spikes/sec
+    sdf_full = convn(rasters',kernel,'same')'.*1000;
+    % purne sdf and rasters to sdf window
+    oStruct.spikeId = spikeId;
+    if numel(varargin) == 2
+        oStruct.singleUnitIndices = varargin{1};
+        oStruct.channelIndex = varargin{2};
+    end
+    oStruct.sdfWindow = sdfWindow;
+    oStruct.rasters = rasters(:,find(bins == minWin):find(bins == maxWin));
+    oStruct.sdf = sdf_full(:,find(bins == minWin):find(bins == maxWin));
+    oStruct.sdf_mean = mean(oStruct.sdf);
+    oStruct.sdf_std = std(oStruct.sdf);
 end
 
 function [ oStruct ] = computeSdfNans(nTrials,sdfWindow,spikeId,varargin)
-            minWin = min(sdfWindow);
-            maxWin = max(sdfWindow);            
-            sdfWindow = (minWin:maxWin);
-            oStruct.spikeId = spikeId;
-            if numel(varargin) == 2
-                oStruct.singleUnitIndices = varargin{1};
-                oStruct.channelIndex = varargin{2};
-            end
-            oStruct.sdfWindow = sdfWindow;
-            oStruct.rasters = nan(nTrials,range(sdfWindow)+1);  
-            oStruct.sdf = nan(nTrials,range(sdfWindow)+1);
-            oStruct.sdf_mean = nan(1,range(sdfWindow)+1);
-            oStruct.sdf_std = nan(1,range(sdfWindow)+1);
+    minWin = min(sdfWindow);
+    maxWin = max(sdfWindow);
+    sdfWindow = (minWin:maxWin);
+    oStruct.spikeId = spikeId;
+    if numel(varargin) == 2
+        oStruct.singleUnitIndices = varargin{1};
+        oStruct.channelIndex = varargin{2};
+    end
+    oStruct.sdfWindow = sdfWindow;
+    oStruct.rasters = nan(nTrials,range(sdfWindow)+1);
+    oStruct.sdf = nan(nTrials,range(sdfWindow)+1);
+    oStruct.sdf_mean = nan(1,range(sdfWindow)+1);
+    oStruct.sdf_std = nan(1,range(sdfWindow)+1);
 end
-
 
 function [ fxHandles ] = asMatHandles()
    fxHandles.sdf_mean=@(x) cell2mat(transpose({x.sdf_mean}));
