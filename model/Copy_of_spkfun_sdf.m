@@ -1,4 +1,4 @@
-function [ outNew, fxHandles ] = spkfun_sdf(spikeTimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeIds, maxChannels)
+function [ outNew, fxHandles ] = Copy_of_spkfun_sdf(spikeTimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeIds, maxChannels)
 %SDF Summary of this function goes here
 %   Detailed explanation goes here
 %

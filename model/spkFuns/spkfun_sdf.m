@@ -77,10 +77,10 @@ function [ outNew, fxHandles ] = spkfun_sdf(spikeTimes, selectedTrials, eventDat
     alignTimes = eventData.(alignEventName)(selectedTrials);
     kernel = pspKernel;
     nTrials = numel(selectedTrials);
-
+    outNew = struct();
+    
     %% Compute for Single Unit: rasters, sdf, sdf_mean, sdf_std
     nCells = size(spikeTimes,2);
-    outNew = struct();
     for chanIndex = 1:nCells
         temp_spikes = spikeTimes(selectedTrials,chanIndex);
         spikeId = spikeIds(chanIndex);

@@ -1,6 +1,9 @@
 function verifyCategories(categories, validCategories)
-%VERIFYCATEGORIES Summary of this function goes here
-%   Detailed explanation goes here
+%VERIFYCATEGORIES Checks if category names are a subset of
+%validCategories. Throws an error if categories contain names not present in
+%validCatgories.
+%
+
     if iscellstr(categories) && size(categories,2) > 1
         categories = categories';
     end

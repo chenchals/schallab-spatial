@@ -1,4 +1,4 @@
-function [sdfAll] = corr_heatmap(dataRoot, matRoot, subject, session)
+function [sdfAllTemp] = corr_heatmap(dataRoot, matRoot, subject, session)
 %dataRoot = '/Volumes/schalllab/Users/Chenchal/Jacob/data/';matRoot='/Users/subravcr/teba/local/schalllab/Jacob/Clustering-Project/matlab';
 multiUint = 1;
 epochWindow = [-300 : 200];
@@ -42,7 +42,7 @@ Kernel.method = 'postsynaptic potential';
 Kernel.growth = 1;
 Kernel.decay = 20;
 
-sdfAll = [];
+sdfAllTemp = [];
 %alignEvent = 'targOn';
 alignEvent = 'responseOnset';
 
@@ -60,9 +60,9 @@ alignSide = trialData.(alignEvent)(trialsSide);
             [alignedRasters, alignmentIndex] = spike_to_raster(trialData.spikeData(trialsSide, iUnitIndex), alignSide);
             sdfSide = spike_density_function(alignedRasters, Kernel);
             sdfMeanSide = nanmean(sdfSide(:,epochWindow + alignmentIndex), 1);
-            sdfAll = [sdfAll ; sdfMeanSide];
+            sdfAllTemp = [sdfAllTemp ; sdfMeanSide];
     end
-sdfAll = fliplr(sdfAll');
+sdfAll = fliplr(sdfAllTemp');
 unitArrayNew = flipud(unitArrayNew'); 
 
 

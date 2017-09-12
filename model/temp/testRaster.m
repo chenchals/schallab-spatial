@@ -1,5 +1,5 @@
 
-function [ outNew, outOld ] = testRaster(spikeTimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeIds, maxChannels)
+function [ outNew, outOld, sdfAll ] = testRaster(spikeTimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeIds, maxChannels)
 % load('eventData.mat')
 % load('spikeData.mat')
 % load('trialList.mat')
@@ -77,6 +77,41 @@ function [ outNew, outOld ] = testRaster(spikeTimes, selectedTrials, eventData, 
         outOld.singleUnit(cIndex,1).sdf_mean = mean(outOld.singleUnit(cIndex,1).sdf);
         outOld.singleUnit(cIndex,1).sdf_std = std(outOld.singleUnit(cIndex,1).sdf);
     end
+    
+    %% Old Method multiUnit?
+    spikeUnitArray=arrayfun(@(x) ['spikeUnit' num2str(x,'%02d')],1:32,'UniformOutput',false);
+    
+    [spikeUnitArray, spikeTimesNew] = convert_to_multiunit(spikeUnitArray, spikeTimes);
+
+    [unitIndex, unitArrayNew] = neuronexus_plexon_mapping(spikeUnitArray, 32);
+        Kernel.growth = 1;
+        Kernel.decay = 20;
+        Kernel.method = 'postsynaptic potential';
+    sdfAll=[];
+    for i = 1 : length(unitArrayNew)
+            iUnitIndex = unitIndex(i);
+            [alignedRasters, alignmentIndex] = spike_to_raster(spikeTimesNew(selectedTrials, iUnitIndex), alignTimes);
+            sdfSide = spike_density_function(alignedRasters, Kernel);
+            sdfMeanSide = nanmean(sdfSide(:,sdfWindow + alignmentIndex), 1);
+            sdfAll = [sdfAll ; sdfMeanSide];
+    end
+    
+    
+    
+    % reduce spikeTim,es to nTrials by 32 cell array
+    % spikeDataNew(:,i) = arrayfun(@(IDX) [spikeData{IDX,iUnitInd}], 1:size(spikeData,1), 'Uniform', 0);
+    temp_spikes =  cell(size(spikeTimes, 1), maxChannels);
+    for cIndex=1:maxChannels
+        fprintf('Doing channel #%02d\n',cIndex);
+        cellIndex = find(~cellfun(@isempty,regexp(spikeIds,num2str(cIndex,'%02d'))));
+        outNew.multiUnit(cIndex,1).channelNo = cIndex;
+        if numel(cellIndex)>0
+            temp_spikes(:,cIndex) = arrayfun(@(x) cell2mat(spikeTimes(x,cellIndex)'),selectedTrials,'UniformOutput',false);
+        end
+    end
+    
+    
+    
     
     %% Compute for Multi Unit mu_rasters, mu_sdf, mu_sdf_mean, mu_sdf_std
     if doMultiUnit
