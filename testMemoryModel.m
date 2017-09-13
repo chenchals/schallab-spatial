@@ -1,7 +1,7 @@
 clear all
  delete(findobj('type','figure'))
 % Get file list
- d = dir('/Volumes/schalllab/Users/Chenchal/Jacob/data/joule/*.mat');
+ d = dir('/Volumes/SchallLab/Users/Chenchal/Jacob/data/joule/*.mat');
  jouleFiles = strcat({d.folder}', filesep, {d.name}');
  
  % clear existing variable
