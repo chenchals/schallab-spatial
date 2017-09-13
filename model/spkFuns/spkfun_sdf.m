@@ -128,6 +128,10 @@ function [ oStruct ] = computeSdfs(rasters,bins,kernel,sdfWindow,spikeId,varargi
     minWin = min(sdfWindow);
     maxWin = max(sdfWindow);
     sdfWindow = (minWin:maxWin);
+    nTrials = size(rasters,1);
+    confInt = 0.95;
+    % t-score for 95% 0.95+0.025 (1 tail), and deg. of freedom
+    tscore = tinv(confInt+(1-confInt)/2,nTrials-1);
     % Convolve & Convert to firing rate counts/ms -> spikes/sec
     sdf_full = convn(rasters',kernel,'same')'.*1000;
     % purne sdf and rasters to sdf window
@@ -141,6 +145,11 @@ function [ oStruct ] = computeSdfs(rasters,bins,kernel,sdfWindow,spikeId,varargi
     oStruct.sdf = sdf_full(:,find(bins == minWin):find(bins == maxWin));
     oStruct.sdf_mean = mean(oStruct.sdf);
     oStruct.sdf_std = std(oStruct.sdf);
+    oStruct.sdf_sem = oStruct.sdf_std/sqrt(nTrials);
+    oStruct.sdf_upper_ci = oStruct.sdf_mean+oStruct.sdf_sem*tscore;
+    oStruct.sdf_lower_ci = oStruct.sdf_mean-oStruct.sdf_sem*tscore;
+    oStruct.sdf_zscore = zscore(oStruct.sdf);
+    
 end
 
 function [ oStruct ] = computeSdfNans(nTrials,sdfWindow,spikeId,varargin)
@@ -153,10 +162,15 @@ function [ oStruct ] = computeSdfNans(nTrials,sdfWindow,spikeId,varargin)
         oStruct.channelIndex = varargin{2};
     end
     oStruct.sdfWindow = sdfWindow;
+    nanSdfWindow = nan(1,range(sdfWindow)+1);
     oStruct.rasters = nan(nTrials,range(sdfWindow)+1);
-    oStruct.sdf = nan(nTrials,range(sdfWindow)+1);
-    oStruct.sdf_mean = nan(1,range(sdfWindow)+1);
-    oStruct.sdf_std = nan(1,range(sdfWindow)+1);
+    oStruct.sdf = nan(nTrials,range(sdfWindow)+1);    
+    oStruct.sdf_mean = nanSdfWindow;
+    oStruct.sdf_std = nanSdfWindow;
+    oStruct.sdf_sem = nanSdfWindow;
+    oStruct.sdf_upper_ci = nanSdfWindow;
+    oStruct.sdf_lower_ci = nanSdfWindow;
+    oStruct.sdf_zscore =  nanSdfWindow;
 end
 
 function [ fxHandles ] = asMatHandles()
