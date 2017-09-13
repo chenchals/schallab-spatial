@@ -9,7 +9,7 @@ classdef (Abstract=true) EphysModel < handle
         %
         eventData
         spikeData
-        trialList=containers.Map;        
+        trialList        
     end
     
     methods (Abstract)

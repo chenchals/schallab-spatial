@@ -12,6 +12,7 @@ classdef MemoryTypeModel < EphysModel
             [~,f,e] = fileparts(source);
             obj.sourceFile = [f e];
             obj.checkFileExists;
+            obj.trialList = containers.Map;
         end
         
         %% Abstract Functions implemented
