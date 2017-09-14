@@ -1,4 +1,4 @@
-function [multiSdf] = exploreJoule()
+function [multiSdf, rcorr] = exploreJoule()
     clear all
     %delete(findobj('type','figure'))
     plotIt = 1;
@@ -46,8 +46,8 @@ function [multiSdf] = exploreJoule()
             imagesc(sdfAll)
             colorbar
             subplot(1,2,2)
-            temp = (1-pdist2(sdfAll,sdfAll,'correlation')).^2;
-            imagesc(temp)
+            rcorr = (1-pdist2(sdfAll,sdfAll,'correlation')).^2;
+            imagesc(rcorr)
             colorbar
         end
         
