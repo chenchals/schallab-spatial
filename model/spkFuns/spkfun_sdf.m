@@ -1,4 +1,4 @@
-function [ out, outNew, fxHandles ] = spkfun_sdf(spikeTimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeIds, maxChannels, multiUnitTrueFalse)
+function [ outSdfStruct ] = spkfun_sdf(spikeTimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeIds, maxChannels, multiUnitTrueFalse)
 %SDF Summary of this function goes here
 %   Detailed explanation goes here
 %
@@ -32,6 +32,8 @@ function [ out, outNew, fxHandles ] = spkfun_sdf(spikeTimes, selectedTrials, eve
 %              1st column in the spikeTimes cell array.
 %
 %    maxChannels: A scalar. Specifies maximum channel number of the probe.
+%
+%    multiUnitTrueFalse: A logigal [true|false]. Specifies singleUnit or multi-unit.
 %                 
 %
 
@@ -94,7 +96,7 @@ function [ out, outNew, fxHandles ] = spkfun_sdf(spikeTimes, selectedTrials, eve
                 outNew.singleUnit(chanIndex,1) = computeSdfNans(nTrials,sdfWindow,currSpikeIds);
             end
         end
-        out = outNew.singleUnit;
+        outSdfStruct = outNew.singleUnit;
     else % if multiunitTrueFalse = true
         %% Compute for Multi Unit: rasters, sdf, sdf_mean, sdf_std
         % Merge units for each channel
@@ -118,9 +120,9 @@ function [ out, outNew, fxHandles ] = spkfun_sdf(spikeTimes, selectedTrials, eve
             end            
         end
         fprintf('\n');
-        out = outNew.multiUnit;
+        outSdfStruct = outNew.multiUnit;
     end
-    fxHandles = asMatHandles();
+   
 end
 
 
@@ -173,9 +175,6 @@ function [ oStruct ] = computeSdfNans(nTrials,sdfWindow,spikeId,varargin)
     oStruct.sdf_zscore =  nanSdfWindow;
 end
 
-function [ fxHandles ] = asMatHandles()
-   fxHandles.sdf_mean=@(x) cell2mat(transpose({x.sdf_mean}));
-end
 
 
 
