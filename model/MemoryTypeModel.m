@@ -142,11 +142,8 @@ classdef MemoryTypeModel < EphysModel
         
         %% GETMULTIUNITSDF
         function [ sdf, sdfOrdered ] = getMultiUnitSdf(obj, selectedTrials, alignEventName, sdfWindow)
-            sdf = getSdf(obj, selectedTrials, alignEventName, sdfWindow, true);
-            channelMap = getChannelMap(obj);            
-            [ sdfOrdered.sdf_mean, sdfOrdered.sdf, sdfOrdered.trialMap ] = orderSdfByChannelMap(sdf, channelMap);
-            sdfOrdered.channelMap = channelMap(:);
-            sdfOrdered.spikeIds = {sdf(channelMap).spikeIds}';
+            sdf = getSdf(obj, selectedTrials, alignEventName, sdfWindow, true);      
+            sdfOrdered = orderSdfByChannelMap(sdf, getChannelMap(obj));
         end
         
         %% GETCHANNELMAP

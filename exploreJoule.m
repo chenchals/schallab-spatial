@@ -1,6 +1,6 @@
 function [multiSdf, fxHandle ] = exploreJoule()
-    clear all
-    delete(findobj('type','figure'))
+ %   clear all
+ %   delete(findobj('type','figure'))
     plotIt = 1;
     % Get file list
     d = dir('/Volumes/schalllab/Users/Chenchal/Jacob/data/joule/*.mat');
@@ -84,7 +84,7 @@ function [ h ] = setLegend(spikeIds)
         spikeIds = {'none'};
     end
     outChar = regexp(spikeIds,'\d\d[a-z]','match');
-    h = legend(char(join([outChar{:}],', ')));
+    h = legend(char(join(outChar,', ')));
     set(h,'Box','Off','FontWeight','bold')
 end
 
