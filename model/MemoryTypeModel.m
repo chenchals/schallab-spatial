@@ -137,11 +137,13 @@ classdef MemoryTypeModel < EphysModel
         %% GETSINGLEUNITSDF
         function [ sdf ] = getSingleUnitSdf(obj, selectedTrials, alignEventName, sdfWindow)            
             sdf = getSdf(obj, selectedTrials, alignEventName, sdfWindow, false);
+            % Ordering singleUnits by channelMap is not implemented
         end
         
         %% GETMULTIUNITSDF
-        function [ sdf ] = getMultiUnitSdf(obj, selectedTrials, alignEventName, sdfWindow)
-            sdf = getSdf(obj, selectedTrials, alignEventName, sdfWindow, true);
+        function [ sdf, sdfOrdered ] = getMultiUnitSdf(obj, selectedTrials, alignEventName, sdfWindow)
+            sdf = getSdf(obj, selectedTrials, alignEventName, sdfWindow, true);      
+            sdfOrdered = orderSdfByChannelMap(sdf, getChannelMap(obj));
         end
         
         %% GETCHANNELMAP
@@ -158,11 +160,9 @@ classdef MemoryTypeModel < EphysModel
             spikeTimes = obj.getSpikeData().spikeTimes;
             eventData = obj.getEventData();
             spikeIds = obj.getSpikeData().spikeIdsTable.spikeIds;
-            electrodeMap = EphysModel.getElectrodeMap();
-            maxChannels = max(electrodeMap{2});
-            sdf = spkfun_sdf(spikeTimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeIds, maxChannels, singleOrMultiFlag);
-        end
-        
+            maxChannels = max(getChannelMap(obj));
+            sdf = spkfun_sdf(spikeTimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeIds, maxChannels, singleOrMultiFlag);            
+        end       
         
         function [ vars ] = coerceCell2Mat(obj,vars)
             fields = fieldnames(vars);

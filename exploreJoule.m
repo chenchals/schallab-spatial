@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 function [multiSdf, rcorr] = exploreJoule()
     clear all
     %delete(findobj('type','figure'))
+=======
+function [multiSdf, fxHandle ] = exploreJoule()
+ %   clear all
+ %   delete(findobj('type','figure'))
+>>>>>>> e2722831c89d981306a5eb5cb2cb54f814715758
     plotIt = 1;
     % Get file list
     d = dir('/Volumes/schalllab/Users/Chenchal/Jacob/data/joule/*.mat');
@@ -40,26 +46,57 @@ function [multiSdf, rcorr] = exploreJoule()
             set(findobj(gcf,'type','axes'),'XLim', sdfWindow); 
             
             % show heat map + distances...
+            % Order sdf_mean by channelMap
+            % Order sdf trials by channelMap 
+            [ orderedSdfMean, orderedSdfTrials ] = reorderByLocation(multiSdf.(filename), channelMap);
             figure('Units','normalized', 'Position', [0.15 0.15 0.8 0.8]);
             sdfAll = cell2mat({multiSdf.(filename).sdf_mean}');
-            subplot(1,2,1)
-            imagesc(sdfAll)
+            subplot(1,3,1)
+            imagesc(orderedSdfMean)
             colorbar
+<<<<<<< HEAD
             subplot(1,2,2)
             rcorr = (1-pdist2(sdfAll,sdfAll,'correlation')).^2;
             imagesc(rcorr)
+=======
+            subplot(1,3,2)
+            temp = (1-pdist2(orderedSdfMean,orderedSdfMean,'correlation')).^2;
+            imagesc(temp)
+>>>>>>> e2722831c89d981306a5eb5cb2cb54f814715758
             colorbar
+            subplot(1,3,3)
+            temp = (1-pdist2(orderedSdfTrials,orderedSdfTrials,'correlation')).^2;
+            imagesc(temp)
+            colorbar
+            setFigureTitle(filename, 'outcome', outcome, 'targetLocation', targetCondition, 'alignOn', alignOn);
         end
-        
     end
+    fxHandle = @reorderByLocation;
 end
+
+
+function [ orderedSdfMean, orderedSdfTrials, trialOrder ] = reorderByLocation(sdfStruct, channelOrder)
+  orderedSdfMean = cell2mat({sdfStruct.sdf_mean}');
+  orderedSdfMean = orderedSdfMean(channelOrder,:);
+  nTrials = size(sdfStruct(1).sdf,1);
+  % rows = nTrials*nChannels; cols = length(sdfWindow)
+  orderedSdfTrials = cell2mat({sdfStruct.sdf}');
+  % create ordering vector where
+  % If there are 25 trials then
+  % For channelOrder == 1 -> replace with 1:25
+  % For channelOrder == 2 -> replace with 26:50
+  % For channelOrder == 32 -> replace with 776:800
+  trialOrder = cell2mat(arrayfun(@(x) [(x-1)*nTrials+1:x*nTrials],channelOrder,'UniformOutput',false))';
+  orderedSdfTrials = orderedSdfTrials(trialOrder,:);
+end
+
 
 function [ h ] = setLegend(spikeIds)
     if numel(spikeIds) ==0
         spikeIds = {'none'};
     end
     outChar = regexp(spikeIds,'\d\d[a-z]','match');
-    h = legend(char(join([outChar{:}],', ')));
+    h = legend(char(join(outChar,', ')));
     set(h,'Box','Off','FontWeight','bold')
 end
 
