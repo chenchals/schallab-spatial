@@ -108,56 +108,21 @@ function [ multiSdf, sdfDist ] = processJouleSession(jouleFile)
                     currAxes.XTick = channelTicks*nTrials;
                     currAxes.XTickLabelRotation = 90;
                     currAxes.XTickLabel = channelTickLabels;
-
             end
             drawnow
+            addFigureTitle(filename);
         end
     end
-    
-    
-    
-%     for ros = 1:2
-%         if ros == 1 % align on targOn
-%             pl1 = multiSdf.saccToTarget_left_targOn_minus100to400.sdf_mean;
-%             pl2 = sdfDist.sdf_mean.correlation_squared.saccToTarget_left_targOn_minus100to400;
-%             pl3 = sdfDist.sdf.correlation_squared.saccToTarget_left_targOn_minus100to400;
-%             pl4 = imgaussfilt(pl3,sigmaImgFilter);
-%             % reflect
-%             pl8 = multiSdf.saccToTarget_right_targOn_minus100to400.sdf_mean;
-%             pl7 = sdfDist.sdf_mean.correlation_squared.saccToTarget_right_targOn_minus100to400;
-%             pl6 = sdfDist.sdf.correlation_squared.saccToTarget_right_targOn_minus100to400;
-%             pl5 = imgaussfilt(pl6,sigmaImgFilter);
-%         else % align on responseOnset
-%             pl1 = multiSdf.saccToTarget_right_responseOnset_minus300to200.sdf_mean;
-%             pl2 = sdfDist.sdf_mean.correlation_squared.saccToTarget_left_responseOnset_minus300to200;
-%             pl3 = sdfDist.sdf.correlation_squared.saccToTarget_left_responseOnset_minus300to200;
-%             pl4 = imgaussfilt(pl3,sigmaImgFilter);
-%             % reflect
-%             pl8 = multiSdf.saccToTarget_right_responseOnset_minus300to200.sdf_mean;
-%             pl7 = sdfDist.sdf_mean.correlation_squared.saccToTarget_right_responseOnset_minus300to200;
-%             pl6 = sdfDist.sdf.correlation_squared.saccToTarget_right_responseOnset_minus300to200;
-%             pl5 = imgaussfilt(pl6,sigmaImgFilter);            
-%         end
-%         
-%         for subp = 1:8
-%             plotPos = subp+(ros-1)*8;
-%             subplot(2,8,plotPos)
-%             imagesc(eval(['pl' num2str(subp)]));
-%         end
-%     end
-    
 end
 
 function [ condStr ] = convertToChar(condCellArray)
   indexChars = cellfun(@(x) ischar(x),condCellArray);
   charStr = char(join(condCellArray(indexChars),'_'));
-%   numStr = cellfun(@(x) num2str(x),condCellArray(~indexChars),'UniformOutput',false);
-%   numStr = char(join(numStr,'_'));
-%   numStr = regexprep(numStr,'-','minus');  
-%   numStr = regexprep(numStr,'\s+','to');
-%   condStr = [charStr '_' numStr];
-   condStr = charStr;
+  condStr = charStr;
 end
 
-
-
+function addFigureTitle(figureTitle)
+  h = axes('Units','Normal','Position',[.02 .02 .94 .94],'Visible','off');
+  set(get(h,'Title'),'Visible','on');
+  title(figureTitle,'fontSize',20,'fontWeight','bold')
+end
