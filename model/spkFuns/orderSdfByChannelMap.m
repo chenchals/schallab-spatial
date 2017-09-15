@@ -14,6 +14,8 @@ function [ sdfOrdered ] = orderSdfByChannelMap( sdfStruct, channelOrder )
     sdfOrdered.sdf_mean = cell2mat({sdfStruct.sdf_mean}');
     sdfOrdered.sdf_mean = sdfOrdered.sdf_mean(channelOrder,:);
     sdfOrdered.spikeIds = {sdfStruct(channelOrder).spikeIds}';
+    sdfOrdered.sdfWindow = sdfStruct(1).sdfWindow;
+    sdfOrdered.nTrials = sdfStruct(1).nTrials;
     
     %% For multi-unit trial sdfs
     nTrials = size(sdfStruct(1).sdf,1);

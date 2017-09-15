@@ -144,6 +144,7 @@ function [ oStruct ] = computeSdfs(rasters,bins,kernel,sdfWindow,spikeIds,vararg
         oStruct.singleUnitIndices = varargin{1};
         oStruct.channelIndex = varargin{2};
     end
+    oStruct.nTrials = nTrials;
     oStruct.sdfWindow = sdfWindow;
     oStruct.rasters = rasters(:,find(bins == minWin):find(bins == maxWin));
     oStruct.sdf = sdf_full(:,find(bins == minWin):find(bins == maxWin));
@@ -165,6 +166,7 @@ function [ oStruct ] = computeSdfNans(nTrials,sdfWindow,spikeIds,varargin)
         oStruct.singleUnitIndices = varargin{1};
         oStruct.channelIndex = varargin{2};
     end
+    oStruct.nTrials = nTrials;
     oStruct.sdfWindow = sdfWindow;
     nanSdfWindow = nan(1,range(sdfWindow)+1);
     oStruct.rasters = nan(nTrials,range(sdfWindow)+1);
