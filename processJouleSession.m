@@ -144,6 +144,7 @@ function [ figH ] = doPlot8(multiSdf, sdfDist, plotHeatmapFor, currMeasure, plot
             end
             drawnow
             addFigureTitle(filename);
+            addDateStr()
         end
     end
 end
@@ -159,4 +160,10 @@ function addFigureTitle(figureTitle)
     h = axes('Units','Normal','Position',[.02 .02 .94 .94],'Visible','off');
     set(get(h,'Title'),'Visible','on');
     title(figureTitle,'fontSize',20,'fontWeight','bold')
+end
+
+function addDateStr()
+    h = axes('Units','Normal','Position',[.9 .02 .06 .04],'Visible','off');
+    text(0.1,0.1,datestr(now))
+    
 end
