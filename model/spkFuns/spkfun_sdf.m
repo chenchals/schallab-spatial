@@ -149,12 +149,7 @@ function [ oStruct ] = computeSdfs(rasters,bins,kernel,sdfWindow,spikeIds,vararg
     oStruct.rasters = rasters(:,find(bins == minWin):find(bins == maxWin));
     oStruct.sdf = sdf_full(:,find(bins == minWin):find(bins == maxWin));
     oStruct.sdf_mean = mean(oStruct.sdf);
-    oStruct.sdf_std = std(oStruct.sdf);
-    oStruct.sdf_sem = oStruct.sdf_std/sqrt(nTrials);
-    oStruct.sdf_upper_ci = oStruct.sdf_mean+oStruct.sdf_sem*tscore;
-    oStruct.sdf_lower_ci = oStruct.sdf_mean-oStruct.sdf_sem*tscore;
-    oStruct.sdf_zscore = zscore(oStruct.sdf);
-    
+    oStruct.sdf_std = std(oStruct.sdf);    
 end
 
 function [ oStruct ] = computeSdfNans(nTrials,sdfWindow,spikeIds,varargin)
@@ -173,10 +168,6 @@ function [ oStruct ] = computeSdfNans(nTrials,sdfWindow,spikeIds,varargin)
     oStruct.sdf = nan(nTrials,range(sdfWindow)+1);    
     oStruct.sdf_mean = nanSdfWindow;
     oStruct.sdf_std = nanSdfWindow;
-    oStruct.sdf_sem = nanSdfWindow;
-    oStruct.sdf_upper_ci = nanSdfWindow;
-    oStruct.sdf_lower_ci = nanSdfWindow;
-    oStruct.sdf_zscore =  nanSdfWindow;
 end
 
 function [ spikeIdsChar ] = spikeIdsAsChar(spikeIds)

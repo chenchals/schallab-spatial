@@ -162,6 +162,21 @@ classdef MemoryTypeModel < EphysModel
             spikeIds = obj.getSpikeData().spikeIdsTable.spikeIds;
             maxChannels = max(getChannelMap(obj));
             sdf = spkfun_sdf(spikeTimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeIds, maxChannels, singleOrMultiFlag);            
+        
+            % Find population mean and Std of firing rate
+            allSdf = cell2mat({sdf.sdf}');
+            allSdf = allSdf(:);
+            popMean = mean(allSdf);
+            popStd = std(allSdf);
+            % compute z-scores for each cell/channel
+            for ii = 1:size(sdf,1)
+                sdf(ii).populationMean = popMean;
+                sdf(ii).populationStd = popStd;
+                sdf(ii).sdf_population_zscored = (sdf(ii).sdf-popMean)/popStd;
+                sdf(ii).sdf_population_zscored_mean = mean(sdf(ii).sdf_population_zscored);
+            end
+        
+        
         end       
         
         function [ vars ] = coerceCell2Mat(obj,vars)

@@ -13,6 +13,9 @@ function [ sdfOrdered ] = orderSdfByChannelMap( sdfStruct, channelOrder )
     sdfOrdered.channelMap = channelOrder(:);
     sdfOrdered.sdf_mean = cell2mat({sdfStruct.sdf_mean}');
     sdfOrdered.sdf_mean = sdfOrdered.sdf_mean(channelOrder,:);
+    sdfOrdered.sdf_population_zscored_mean = cell2mat({sdfStruct.sdf_population_zscored_mean}');
+    sdfOrdered.sdf_population_zscored_mean = sdfOrdered.sdf_population_zscored_mean(channelOrder,:);
+    
     sdfOrdered.spikeIds = {sdfStruct(channelOrder).spikeIds}';
     sdfOrdered.sdfWindow = sdfStruct(1).sdfWindow;
     sdfOrdered.nTrials = sdfStruct(1).nTrials;
@@ -28,8 +31,8 @@ function [ sdfOrdered ] = orderSdfByChannelMap( sdfStruct, channelOrder )
     % rows = nTrials*nChannels; cols = length(sdfWindow)
     sdfOrdered.sdf = cell2mat({sdfStruct.sdf}');
     sdfOrdered.sdf = sdfOrdered.sdf(sdfOrdered.trialMap,:);
-    
-
+    sdfOrdered.sdf_population_zscored = cell2mat({sdfStruct.sdf_population_zscored}');
+    sdfOrdered.sdf_population_zscored = sdfOrdered.sdf_population_zscored(sdfOrdered.trialMap,:);
     
 end
 
