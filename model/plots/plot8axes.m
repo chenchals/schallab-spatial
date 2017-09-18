@@ -1,6 +1,7 @@
 function [ axesHandles ] = plot8axes()
-%PLOT28AXES Summary of this function goes here
-%   Detailed explanation goes here
+%PLOT28AXES Create handle for 2 rows by 4 columns plots
+%  Uses plot8axesTemplate.m file.
+
     %% Parse exported guide template file
     % Template filename = [functionName]Template.m
     % Template file is in the same location as this file
@@ -14,6 +15,5 @@ function [ axesHandles ] = plot8axes()
         axesHandles(ii) = axes('Position',axesPositions(ii,:),'Units','normalized');
         text(0.5,0.5,['axes' num2str(ii)])
     end
-
 end
 

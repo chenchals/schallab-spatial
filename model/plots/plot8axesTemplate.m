@@ -1,5 +1,10 @@
 function varargout = plot8axesTemplate(varargin)
-% PLOT8AXESTEMPLATE MATLAB code for plot8axesTemplate.fig
+% PLOT8AXESTEMPLATE MATLAB code for plot8axesTemplate.fig. This is not
+% called directly, but is parsed by plot8axes.m file.  
+%   This file is parsed and values for 'Position' is extracted where 'Tag'
+%   is like 'axes*' by the plot8axes.m  file where 'Tag' is like 'axes*'.
+%   This template file was created using 'guide' and placing normalized axes
+%   and exporting the GUI as .m file.
 %      PLOT8AXESTEMPLATE, by itself, creates a new PLOT8AXESTEMPLATE or raises the existing
 %      singleton*.
 %
