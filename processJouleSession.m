@@ -9,7 +9,8 @@ function [ multiSdf, sdfDist ] = processJouleSession(jouleFile)
     conditions{3} = {'right', 'targOn', [-100 400]};
     conditions{4} = {'right', 'responseOnset', [-300 200]};
 
-    distancesToCompute = {'correlation', 'euclidean', 'cosine'};
+    % distancesToCompute = {'correlation', 'euclidean', 'cosine'};
+    distancesToCompute = {'correlation'};
 
     fullFileName = jouleFile;
     fprintf('Processing file %s\n',fullFileName);
