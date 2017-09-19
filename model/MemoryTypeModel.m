@@ -172,10 +172,9 @@ classdef MemoryTypeModel < EphysModel
             for ii = 1:size(sdf,1)
                 sdf(ii).populationMean = popMean;
                 sdf(ii).populationStd = popStd;
-                sdf(ii).sdf_population_zscored = (sdf(ii).sdf-popMean)/popStd;
-                sdf(ii).sdf_population_zscored_mean = mean(sdf(ii).sdf_population_zscored);
+                sdf(ii).sdfPopulationZscored = (sdf(ii).sdf-popMean)/popStd;
+                sdf(ii).sdfPopulationZscoredMean = mean(sdf(ii).sdfPopulationZscored);
             end
-        
         
         end       
         

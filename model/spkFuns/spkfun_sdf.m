@@ -124,10 +124,10 @@ function [ outSdfStruct ] = spkfun_sdf(spikeTimes, selectedTrials, eventData, al
         fprintf('\n');
         outSdfStruct = outNew.multiUnit;
     end
-   
+    
 end
 
-
+%%
 function [ oStruct ] = computeSdfs(rasters,bins,kernel,sdfWindow,spikeIds,varargin)
     minWin = min(sdfWindow);
     maxWin = max(sdfWindow);
@@ -148,10 +148,11 @@ function [ oStruct ] = computeSdfs(rasters,bins,kernel,sdfWindow,spikeIds,vararg
     oStruct.sdfWindow = sdfWindow;
     oStruct.rasters = rasters(:,find(bins == minWin):find(bins == maxWin));
     oStruct.sdf = sdf_full(:,find(bins == minWin):find(bins == maxWin));
-    oStruct.sdf_mean = mean(oStruct.sdf);
-    oStruct.sdf_std = std(oStruct.sdf);    
+    oStruct.sdfMean = mean(oStruct.sdf);
+    oStruct.sdfStd = std(oStruct.sdf);    
 end
 
+%%
 function [ oStruct ] = computeSdfNans(nTrials,sdfWindow,spikeIds,varargin)
     minWin = min(sdfWindow);
     maxWin = max(sdfWindow);
@@ -166,10 +167,11 @@ function [ oStruct ] = computeSdfNans(nTrials,sdfWindow,spikeIds,varargin)
     nanSdfWindow = nan(1,range(sdfWindow)+1);
     oStruct.rasters = nan(nTrials,range(sdfWindow)+1);
     oStruct.sdf = nan(nTrials,range(sdfWindow)+1);    
-    oStruct.sdf_mean = nanSdfWindow;
-    oStruct.sdf_std = nanSdfWindow;
+    oStruct.sdfMean = nanSdfWindow;
+    oStruct.sdfStd = nanSdfWindow;
 end
 
+%%
 function [ spikeIdsChar ] = spikeIdsAsChar(spikeIds)
 spikeIdsChar = spikeIds;
     if iscellstr(spikeIds)

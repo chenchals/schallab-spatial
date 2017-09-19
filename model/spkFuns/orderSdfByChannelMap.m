@@ -11,10 +11,10 @@ function [ sdfOrdered ] = orderSdfByChannelMap( sdfStruct, channelOrder )
     
     %% For multi-unit mean sdfs
     sdfOrdered.channelMap = channelOrder(:);
-    sdfOrdered.sdf_mean = cell2mat({sdfStruct.sdf_mean}');
-    sdfOrdered.sdf_mean = sdfOrdered.sdf_mean(channelOrder,:);
-    sdfOrdered.sdf_population_zscored_mean = cell2mat({sdfStruct.sdf_population_zscored_mean}');
-    sdfOrdered.sdf_population_zscored_mean = sdfOrdered.sdf_population_zscored_mean(channelOrder,:);
+    sdfOrdered.sdfMean = cell2mat({sdfStruct.sdfMean}');
+    sdfOrdered.sdfMean = sdfOrdered.sdfMean(channelOrder,:);
+    sdfOrdered.sdfPopulationZscoredMean = cell2mat({sdfStruct.sdfPopulationZscoredMean}');
+    sdfOrdered.sdfPopulationZscoredMean = sdfOrdered.sdfPopulationZscoredMean(channelOrder,:);
     
     sdfOrdered.spikeIds = {sdfStruct(channelOrder).spikeIds}';
     sdfOrdered.sdfWindow = sdfStruct(1).sdfWindow;
@@ -31,8 +31,8 @@ function [ sdfOrdered ] = orderSdfByChannelMap( sdfStruct, channelOrder )
     % rows = nTrials*nChannels; cols = length(sdfWindow)
     sdfOrdered.sdf = cell2mat({sdfStruct.sdf}');
     sdfOrdered.sdf = sdfOrdered.sdf(sdfOrdered.trialMap,:);
-    sdfOrdered.sdf_population_zscored = cell2mat({sdfStruct.sdf_population_zscored}');
-    sdfOrdered.sdf_population_zscored = sdfOrdered.sdf_population_zscored(sdfOrdered.trialMap,:);
+    sdfOrdered.sdfPopulationZscored = cell2mat({sdfStruct.sdfPopulationZscored}');
+    sdfOrdered.sdfPopulationZscored = sdfOrdered.sdfPopulationZscored(sdfOrdered.trialMap,:);
     
 end
 
