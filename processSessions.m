@@ -92,6 +92,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
         end
         nhpSessions.(session) = multiSdf;
         nhpSessions.(session).info = nhpInfo;
+        nhpSessions.(session).channelMap = jouleModel.getChannelMap;
     end
     save(outputFile, '-struct', 'nhpSessions');
     
@@ -127,33 +128,48 @@ end
 %function [ figH ] = doPlot8(multiSdf, sdfDist, plotHeatmapFor, currMeasure, plotColumnOrder, channelMap, filename)
 function [ figH ] = doPlot8(session, sessionLabel)
         
-    leftRight = {'left' 'right'};
-    ipsi = contains(leftRight, lower(session.info.hemi));
-    contra = ~contains(leftRight, lower(session.info.hemi));
+%     leftRight = {'left' 'right'};
+%     ipsi = contains(leftRight, lower(session.info.hemi));
+%     contra = ~contains(leftRight, lower(session.info.hemi));
+% 
+%     conditions = fieldnames(session);
+%     conditions = conditions(~contains(conditions,'info')); %columns for plot
+% 
+%     targetPosAlignOn=cell2table(cellstr(split(conditions,'_')),'VariableNames',{'targetPos','alignOn'});
+%     ic = targetPosAlignOn.targetPos;
+%     ic = regexprep(ic,leftRight{ipsi},'ipsi');
+%     ic = regexprep(ic,leftRight{contra},'contra');
+%     targetPosAlignOn.ipsiContra = ic;
+%     targetPosAlignOn.conditions = conditions;
+%     % row order is the plot order
+%     targetPosAlignOn = sortrows(targetPosAlignOn,'alignOn','descend');
 
     conditions = fieldnames(session);
     conditions = conditions(~contains(conditions,'info')); %columns for plot
 
-    targetPosAlignOn=cell2table(cellstr(split(conditions,'_')),'VariableNames',{'targetPos','alignOn'});
-    ic = targetPosAlignOn.targetPos;
-    ic = regexprep(ic,leftRight{ipsi},'ipsi');
-    ic = regexprep(ic,leftRight{contra},'contra');
-    targetPosAlignOn.ipsiContra = ic;
-    targetPosAlignOn.conditions = conditions;
-    % row order is the plot order
-    targetPosAlignOn = sortrows(targetPosAlignOn,'alignOn','descend');
-
     firingRateHeatmap = 'sdfPopulationZscoredMean';
     distMeasure = 'rsquared';
-
+    
+    ipsiContraOrder = {'ipsi','contra'};
+    alignOnOrder = {'targOn', 'responseOnset'};
+    
     frPlots = cell(4,1);
     distPlots = cell(4,1);
+    titlePlots = cell(4,1);
     % get SDFs / zscores to plot there will be 4 of these
     % create in column order
-    for p = 1:size(targetPosAlignOn)
-        frPlots{p} = session.(targetPosAlignOn.conditions{p}).(firingRateHeatmap);
-        distPlots{p} = session.(targetPosAlignOn.conditions{p}).(distMeasure);
-    end    
+    plotNo = 0;
+    for align = 1:numel(alignOnOrder)
+        for ic = 1:numel(ipsiContraOrder)
+            charIc = ipsiContraOrder{ic};
+            CharAlignOn = alignOnOrder{align};
+            plotNo = plotNo+1;
+            fieldnameIndex = contains(conditions, join({charIc,CharAlignOn},'_'));
+            frPlots{plotNo} = session.(conditions{fieldnameIndex}).(firingRateHeatmap);
+            distPlots{plotNo} = session.(conditions{fieldnameIndex}).(distMeasure);
+            titlePlots{plotNo} = conditions{fieldnameIndex};
+        end
+    end
     
     temp = cell2mat(frPlots);
     frMinMax = minmax(temp(:)');
@@ -164,13 +180,12 @@ function [ figH ] = doPlot8(session, sessionLabel)
     plotHandles = plot8axes;
     figH = get(plotHandles(1),'Parent');
 
-    channelMap = 1 : size(frPlots{1},1);
-    channelTicks = 2:2:numel(channelMap);
-    channelTickLabels = arrayfun(@(x) ['#' num2str(x)],channelTicks,'UniformOutput',false);
+    channelTicks = 2:2:numel(session.channelMap);
+    channelTickLabels = arrayfun(@(x) ['#' num2str(session.channelMap(x))],channelTicks,'UniformOutput',false);
     plotIndicesByRowHandles = [1:2:8;2:2:8];
     for co = 1:4
         currPlotsIndex = plotIndicesByRowHandles(:,co);
-        colCond = targetPosAlignOn.conditions{co};
+        colCond = titlePlots{co};
         for ro = 1:2
             ro1Plot = frPlots{co};
             ro2Plot = distPlots{co};
@@ -194,18 +209,13 @@ function [ figH ] = doPlot8(session, sessionLabel)
                     currAxes.YTickLabel = channelTickLabels;
 
                     titleXpos = range(timeWin)/2;
-                    titleYpos1 = min(ylim) - range(ylim)/12;
-                    titleYpos2 = min(ylim) - 1.5*(range(ylim)/12);
-                    text(titleXpos,titleYpos1,upper(targetPosAlignOn.conditions(co)),...
+                    titleYpos = min(ylim) - range(ylim)/12;
+                    text(titleXpos,titleYpos,upper(colCond),...
                         'FontWeight','bold','FontAngle','italic','FontSize',14,'Color','b',...
                         'HorizontalAlignment', 'center', 'VerticalAlignment', 'cap',...
                         'Interpreter','none');
-                     text(titleXpos,titleYpos2,upper(targetPosAlignOn.ipsiContra(co)),...
-                        'FontWeight','bold','FontAngle','italic','FontSize',16,'Color','m',...
-                        'HorizontalAlignment', 'center', 'VerticalAlignment', 'cap',...
-                        'Interpreter','none');
                     if co == 1
-                        ylabel([firingRateHeatmap ' heatmap'],'VerticalAlignment','bottom');
+                        ylabel([firingRateHeatmap ' heatmap'],'VerticalAlignment','bottom','FontWeight','bold');
                     end
 
                 case 2 % distance matrix for sdf_mean
@@ -219,7 +229,7 @@ function [ figH ] = doPlot8(session, sessionLabel)
                     currAxes.YTickLabel = channelTickLabels;
 
                     if co == 1
-                        ylabel([distMeasure ' (r^2)'],'VerticalAlignment','bottom');
+                        ylabel([distMeasure ' (r^2)'],'VerticalAlignment','bottom','FontWeight','bold');
                     end
             end
             drawnow
