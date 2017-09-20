@@ -15,6 +15,8 @@ function [ sdfOrdered ] = orderSdfByChannelMap( sdfStruct, channelOrder )
     sdfOrdered.sdfMean = sdfOrdered.sdfMean(channelOrder,:);
     sdfOrdered.sdfPopulationZscoredMean = cell2mat({sdfStruct.sdfPopulationZscoredMean}');
     sdfOrdered.sdfPopulationZscoredMean = sdfOrdered.sdfPopulationZscoredMean(channelOrder,:);
+    sdfOrdered.populationMean = sdfStruct.populationMean;
+    sdfOrdered.populationStd = sdfStruct.populationStd;
     
     sdfOrdered.spikeIds = {sdfStruct(channelOrder).spikeIds}';
     sdfOrdered.sdfWindow = sdfStruct(1).sdfWindow;

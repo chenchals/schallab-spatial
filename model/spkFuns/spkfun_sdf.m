@@ -148,8 +148,8 @@ function [ oStruct ] = computeSdfs(rasters,bins,kernel,sdfWindow,spikeIds,vararg
     oStruct.sdfWindow = sdfWindow;
     oStruct.rasters = rasters(:,find(bins == minWin):find(bins == maxWin));
     oStruct.sdf = sdf_full(:,find(bins == minWin):find(bins == maxWin));
-    oStruct.sdfMean = mean(oStruct.sdf);
-    oStruct.sdfStd = std(oStruct.sdf);    
+    oStruct.sdfMean = nanmean(oStruct.sdf);
+    oStruct.sdfStd = nanstd(oStruct.sdf);    
 end
 
 %%
