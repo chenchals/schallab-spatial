@@ -2,7 +2,6 @@ function [ nhpSessions ] = processJoule()
 %PROCESSJOULE Summary of this function goes here
 %   Detailed explanation goes here
 
-% $Id$
 
     nhpConfig.nhp = 'joule';
     nhpConfig.srcNhpDataFolder = '/Volumes/schalllab/data/Joule';
