@@ -1,2 +1,5 @@
-testData
-processed
+# Ignore all
+processed/*
+# Excepte
+!processed/readme.txt
+
