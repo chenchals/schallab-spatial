@@ -4,6 +4,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
 
     nhp = nhpConfig.nhp;
     srcNhpDataFolder = nhpConfig.srcNhpDataFolder;
+    sessionsHandle = nhpConfig.getSessions;
     excelFile = nhpConfig.excelFile;
     nhpSheetName = nhpConfig.nhpSheetName;
     outputFolder = nhpConfig.outputFolder;
@@ -20,7 +21,6 @@ function [ nhpSessions ] = processSessions(nhpConfig)
         str2num(char(split(nhpTable.ephysChannelMap{x},', '))),...
         1:size(nhpTable,1),'UniformOutput',false)';
 
-
     outcome ='saccToTarget';
     % Specify conditions to for creating multiSdf
     %condition{x} = {alignOnEventName, TargetLeftOrRight, sdfWindow}
@@ -32,10 +32,13 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     distancesToCompute = {'correlation'};
     nhpSessions = struct();
     % fix filenames - remove single quotes
-    sessions =  strcat(srcNhpDataFolder, filesep, regexprep(nhpTable.filename,'''',''));
-    for s = 1:size(nhpTable,1)
+    sessions = sessionsHandle(srcNhpDataFolder, nhpTable);
+    
+    %strcat(srcNhpDataFolder, filesep, regexprep(nhpTable.filename,'''',''));
+    for s = 1:1%size(nhpTable,1)
         nhpInfo = nhpTable(s,:);
         sessionLocation = sessions{s};
+        channelMap = nhpTable.ephysChannelMap{1};
         if contains(lower(nhpInfo.chamberLoc),'left')
             ipsi = 'left';
         else
@@ -45,7 +48,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
         [~,session,~] = fileparts(sessionLocation);
 
         % Create instance of MemoryTypeModel
-        jouleModel = EphysModel.newEphysModel('memory',sessionLocation);
+        jouleModel = EphysModel.newEphysModel('memory',sessionLocation, channelMap);
 
         zscoreMinMax = nan(numel(conditions),2);
         distMinMax = struct();
@@ -91,8 +94,6 @@ function [ nhpSessions ] = processSessions(nhpConfig)
         saveas(figH,fullfile(nhpOutputFolder,sessionLabel), 'fig');
         saveas(figH,fullfile(nhpOutputFolder,sessionLabel), 'jpg');
     end
-    
-    
 end
 
 function [ condStr ] = convertToChar(condCellArray, ipsiSide)
@@ -106,7 +107,6 @@ function [ condStr ] = convertToChar(condCellArray, ipsiSide)
 end
 
 
-%function [ figH ] = doPlot8(multiSdf, sdfDist, plotHeatmapFor, currMeasure, plotColumnOrder, channelMap, filename)
 function [ figH ] = doPlot8(session, sessionLabel)
 
     firingRateHeatmap = 'sdfPopulationZscoredMean';
@@ -199,9 +199,7 @@ function [ figH ] = doPlot8(session, sessionLabel)
         end
     end
     addFigureTitleAndInfo(sessionLabel, session.info);
-    addDateStr()
-
-
+    addDateStr();
 end
 
 function addFigureTitleAndInfo(figureTitle, infoTable)

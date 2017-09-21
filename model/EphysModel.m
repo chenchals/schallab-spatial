@@ -6,6 +6,7 @@ classdef (Abstract=true) EphysModel < handle
         %
         eventVars
         spikeVars
+        channelMap
         %
         eventData
         spikeData
@@ -16,7 +17,6 @@ classdef (Abstract=true) EphysModel < handle
         getEventData(obj, varargin)
         getSpikeData(obj, varargin)
         getTrialList(obj, varargin)
-        %SDF
         getSingleUnitSdf(obj,varargin)
         getMultiUnitSdf(obj,varargin)
         getChannelMap(obj)
@@ -35,13 +35,13 @@ classdef (Abstract=true) EphysModel < handle
     end
     
     methods (Static)
-        function adapter = newEphysModel(sessionType, source)
+        function adapter = newEphysModel(sessionType, source, channelMap)
             % sessionType : recordings from Joule by Pauls has diff.
             % structure
             
             switch lower(sessionType)
                 case 'memory'
-                    adapter = MemoryTypeModel(source);
+                    adapter = MemoryTypeModel(source, channelMap);
                 otherwise
                     error('Type can only be ''memory'' for now...');
             end
@@ -66,12 +66,7 @@ classdef (Abstract=true) EphysModel < handle
             spikeVars = {'spikeIdVar','SessionData.spikeUnitArray',...
                          'spiketimeVar','spikeData'};
         end
-        
-         function [ electrodeMap ] = getElectrodeMap()
-            %neuronexusMap = ([9:16,25:32,17:24,1:8]);
-            electrodeMap = {'channelMap', [9:16,25:32,17:24,1:8]};
-        end
-       
+               
     end
     
 end
