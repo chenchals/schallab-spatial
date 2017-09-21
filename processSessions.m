@@ -91,17 +91,11 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     
     %% Plot and save Figures
     sessionLabels = fieldnames(nhpSessions);
-%     conditionLabels = fieldnames(nhpSessions.(sessionLabels{1}));
-%     conditionLabels = ~contains(conditionLabels,'info'); %columns for plot
     for s = 1:numel(sessionLabels)
         sessionLabel = sessionLabels{s};
-        doPlot8(nhpSessions.(sessionLabel),sessionLabel);
-            
-%         for c = 1 : numel(conditionLabels) % plot by columns
-%             conditionLabel = conditionLabels{c};
-%             session = nhpSessions.()
-%         end
-        
+        figH = doPlot8(nhpSessions.(sessionLabel),sessionLabel);
+        saveas(figH,fullfile(nhpOutputFolder,sessionLabel), 'fig');
+        saveas(figH,fullfile(nhpOutputFolder,sessionLabel), 'jpg');
     end
     
     
@@ -120,25 +114,6 @@ end
 
 %function [ figH ] = doPlot8(multiSdf, sdfDist, plotHeatmapFor, currMeasure, plotColumnOrder, channelMap, filename)
 function [ figH ] = doPlot8(session, sessionLabel)
-        
-%     leftRight = {'left' 'right'};
-%     ipsi = contains(leftRight, lower(session.info.hemi));
-%     contra = ~contains(leftRight, lower(session.info.hemi));
-% 
-%     conditions = fieldnames(session);
-%     conditions = conditions(~contains(conditions,'info')); %columns for plot
-% 
-%     targetPosAlignOn=cell2table(cellstr(split(conditions,'_')),'VariableNames',{'targetPos','alignOn'});
-%     ic = targetPosAlignOn.targetPos;
-%     ic = regexprep(ic,leftRight{ipsi},'ipsi');
-%     ic = regexprep(ic,leftRight{contra},'contra');
-%     targetPosAlignOn.ipsiContra = ic;
-%     targetPosAlignOn.conditions = conditions;
-%     % row order is the plot order
-%     targetPosAlignOn = sortrows(targetPosAlignOn,'alignOn','descend');
-
-    conditions = fieldnames(session);
-    conditions = conditions(~contains(conditions,'info')); %columns for plot
 
     firingRateHeatmap = 'sdfPopulationZscoredMean';
     distMeasure = 'rsquared';
@@ -146,6 +121,7 @@ function [ figH ] = doPlot8(session, sessionLabel)
     ipsiContraOrder = {'ipsi','contra'};
     alignOnOrder = {'targOn', 'responseOnset'};
     
+    conditions = fieldnames(session);
     frPlots = cell(4,1);
     distPlots = cell(4,1);
     titlePlots = cell(4,1);
