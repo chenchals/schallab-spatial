@@ -2,21 +2,6 @@ function [ nhpSessions ] = processSessions(nhpConfig)
 %PROCESSSESSIONS Summary of this function goes here
 %   Detailed explanation goes here
 
-%% TODOs
-%  change:
-%     'left_targOn'
-%     'left_responseOnset'
-%     'right_targOn'
-%     'right_responseOnset'
-%    ipis/contra based on the excel sheet
-%     'ipsi_targOn_left'
-%     'ipsi_responseOnset_left'
-%     'contra_targOn_right'
-%     'contra_responseOnset_right'
-
-
-%%
-
     nhpConfig.nhp = 'joule';
     nhpConfig.srcNhpDataFolder = '/Volumes/schalllab/data/Joule';
     nhpConfig.excelFile = '/Users/subravcr/Projects/lab-schall/schalllab-clustering/matlab/SFN_NHP_Coordinates_All.xlsx';
@@ -28,10 +13,18 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     excelFile = nhpConfig.excelFile;
     nhpSheetName = nhpConfig.nhpSheetName;
     outputFolder = nhpConfig.outputFolder;
-    outputFile = fullfile(outputFolder,nhp,[nhp 'Spatial.mat']);
+    nhpOutputFolder = fullfile(outputFolder,nhp);
+    if ~exist(nhpOutputFolder,'dir')
+        mkdir(nhpOutputFolder);
+    end
+    outputFile = fullfile(nhpOutputFolder,[nhp 'Spatial.mat']);
     
     % Read excel sheet
     nhpTable = readtable(excelFile, 'Sheet', nhpSheetName);
+    nhpTable.date = datestr(nhpTable.date,'mm/dd/yyyy');
+    nhpTable.ephysChannelMap = arrayfun(@(x) ...
+        str2num(char(split(nhpTable.ephysChannelMap{x},', '))),...
+        1:size(nhpTable,1),'UniformOutput',false)';
 
 
     outcome ='saccToTarget';
@@ -46,7 +39,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     nhpSessions = struct();
     % fix filenames - remove single quotes
     sessions =  strcat(srcNhpDataFolder, filesep, regexprep(nhpTable.filename,'''',''));
-    for s = 1: 1 %size(nhpTable,1)
+    for s = 1:size(nhpTable,1)
         nhpInfo = nhpTable(s,:);
         sessionLocation = sessions{s};
         if contains(lower(nhpInfo.chamberLoc),'left')
@@ -233,30 +226,54 @@ function [ figH ] = doPlot8(session, sessionLabel)
                     end
             end
             drawnow
-            %addFigureTitle(sessionLabel);
-            %addDateStr()
-    
-            figureTitle = sessionLabel;
-    ht = axes('Units','Normal','Position',[.02 .90 .94 .06],'Visible','on');
-    set(get(h,'Title'),'Visible','on');
-    title(figureTitle,'fontSize',20,'fontWeight','bold')
-    
-    
-    hd = axes('Units','Normal','Position',[.9 .02 .06 .04],'Visible','off');
-    text(0.1,0.1,datestr(now))
-
         end
     end
+    addFigureTitleAndInfo(sessionLabel, session.info);
+    addDateStr()
+
+
 end
 
-function addFigureTitle(figureTitle)
-    h = axes('Units','Normal','Position',[.02 .02 .94 .94],'Visible','off');
+function addFigureTitleAndInfo(figureTitle, infoTable)
+    h = axes('Units','Normal','Position',[.02 .90 .94 .06]);
     set(get(h,'Title'),'Visible','on');
-    title(figureTitle,'fontSize',20,'fontWeight','bold')
+    title(figureTitle,'fontSize',20,'fontWeight','bold');
+    h.XTick = [];
+    h.YTick = [];
+    h.Visible = 'on';
+    h.Box = 'on';
+    varNames=infoTable.Properties.VariableNames;
+    % remove channelMap from varnames
+    varNames = varNames(~contains(varNames,'ephysChannelMap'));
+    propsPerCol = 4;
+    nCols = ceil(numel(varNames)/propsPerCol)+1;
+    xPos=(0:1.0/nCols:1.0)+0.01;
+    xPos = xPos(1:end-1);
+    for c = 1:nCols-1 % last col channelMap
+        t = cell(propsPerCol,1);
+        ind = (c-1)*propsPerCol+1:c*propsPerCol;
+        ind = ind(ind<=numel(varNames));
+        for i = 1:numel(ind)
+            name = varNames{ind(i)};
+            value = infoTable.(name);
+            if isnumeric(value)
+                value = num2str(value);
+            else
+                value = char(value);
+            end
+            t{i} = strcat(name,':',value);
+        end
+        text(xPos(c),0.5,t,'Interpreter','none','FontWeight','bold','FontSize',11);
+    end
+    text(xPos(end),0.5,{'ePhysChannelMap'; ...
+        num2str(reshape(infoTable.ephysChannelMap{:},8,4)','%02d, ')},...
+        'Interpreter','none','FontWeight','bold','FontSize',11)
 end
 
 function addDateStr()
-    h = axes('Units','Normal','Position',[.9 .02 .06 .04],'Visible','off');
+    axes('Units','Normal','Position',[.9 .02 .06 .04],'Visible','off');
     text(0.1,0.1,datestr(now))
 end
+
+
 
