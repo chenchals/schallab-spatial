@@ -1,21 +1,44 @@
 function [ nhpSessions ] = processSessions(nhpConfig)
-%PROCESSSESSIONS Summary of this function goes here
-%   Detailed explanation goes here
+%PROCESSSESSIONS Process each recording session.
+%   Inputs:
+%     nhpConfig: A structured variable with fields that define how to
+%     process matalb datafile for this NHP.
+%     struct with fields:
+%               nhp: 'Joule'                    NHP name. Used as prefix for output filename
+%      nhpSourceDir: '[full-path]/Joule'        Fullpath to source data folder
+%         excelFile: '[full-path]/excel.xlsx'   Column names correspond to property names [**DO NOT CHANGE**]
+%         sheetName: 'Jo'                       Sheet name of excel file for this NHP
+%      nhpOutputDir: '[full-path]/output/Joule' Fullpath to folder for processed data
+%       getSessions: @getSessions               A function handle to get sessions for processing
+%                    Note: Used column names in excel sheet above to derive
+%                    the location of sessions. The output of this function must be                  
+%                       (1) cellstr : Each element is a fullpath to a .mat file. 
+%                                     Single mat file contains data for all channels
+%                                 {'full-path-session-1-file',...,  'full-path-session-n-file'}
+%                       (2) cell array of cellstr : Each element is a cellstr. 
+%                                     Each cellstr contains fullpath to all channelNN.mat files.
+%                                     Each file contains data for a single channel
+%                                {
+%                                   {'full-path-channel-1-file',...,  'full-path-channel-n-file'}
+%                                   ...
+%                                   {'full-path-channel-1-file',...,  'full-path-channel-n-file'}
+%                                }
+% See also PROCESSJOULE
 
     nhp = nhpConfig.nhp;
-    srcNhpDataFolder = nhpConfig.srcNhpDataFolder;
-    sessionsHandle = nhpConfig.getSessions;
+    nhpSourceDir = nhpConfig.nhpSourceDir;
     excelFile = nhpConfig.excelFile;
-    nhpSheetName = nhpConfig.nhpSheetName;
-    outputFolder = nhpConfig.outputFolder;
-    nhpOutputFolder = fullfile(outputFolder,nhp);
-    if ~exist(nhpOutputFolder,'dir')
-        mkdir(nhpOutputFolder);
-    end
-    outputFile = fullfile(nhpOutputFolder,[nhp 'Spatial.mat']);
+    sheetName = nhpConfig.sheetName;
+    nhpOutputDir = nhpConfig.nhpOutputDir;
+    getSessions = nhpConfig.getSessions;
+       
+    if ~exist(nhpOutputDir,'dir')
+        mkdir(nhpOutputDir);
+    end    
+    outputFile = fullfile(nhpOutputDir,[nhp 'Spatial.mat']);
     
     % Read excel sheet
-    nhpTable = readtable(excelFile, 'Sheet', nhpSheetName);
+    nhpTable = readtable(excelFile, 'Sheet', sheetName);
     nhpTable.date = datestr(nhpTable.date,'mm/dd/yyyy');
     nhpTable.ephysChannelMap = arrayfun(@(x) ...
         str2num(char(split(nhpTable.ephysChannelMap{x},', '))),...
@@ -31,14 +54,14 @@ function [ nhpSessions ] = processSessions(nhpConfig)
 
     distancesToCompute = {'correlation'};
     nhpSessions = struct();
-    % fix filenames - remove single quotes
-    sessions = sessionsHandle(srcNhpDataFolder, nhpTable);
-    
+    sessions = getSessions(nhpSourceDir, nhpTable);
+        
     %strcat(srcNhpDataFolder, filesep, regexprep(nhpTable.filename,'''',''));
-    for s = 1:1%size(nhpTable,1)
+    parfor s = 1:numel(sessions)
+        multiSdf = struct();
         nhpInfo = nhpTable(s,:);
         sessionLocation = sessions{s};
-        channelMap = nhpTable.ephysChannelMap{1};
+        channelMap = nhpInfo.ephysChannelMap{1};
         if contains(lower(nhpInfo.chamberLoc),'left')
             ipsi = 'left';
         else
@@ -80,19 +103,31 @@ function [ nhpSessions ] = processSessions(nhpConfig)
                 end
             end
         end
-        nhpSessions.(session) = multiSdf;
-        nhpSessions.(session).info = nhpInfo;
-        nhpSessions.(session).channelMap = jouleModel.getChannelMap;
+        nhpSessions(s).session = session;
+        nhpSessions(s).mutilSdf = multiSdf;
+        nhpSessions(s).info = nhpInfo;
+        nhpSessions(s).channelMap = jouleModel.getChannelMap;
     end
-    save(outputFile, '-struct', 'nhpSessions');
+    toc
+    zz = struct();
+    for ii = 1:size(nhpSessions,1)
+        session = nhpSessions(ii).session
+        
+        
+        
+    end
+    
+    
+    
+    %save(outputFile, '-struct', 'nhpSessions');
     
     %% Plot and save Figures
     sessionLabels = fieldnames(nhpSessions);
     for s = 1:numel(sessionLabels)
         sessionLabel = sessionLabels{s};
         figH = doPlot8(nhpSessions.(sessionLabel),sessionLabel);
-        saveas(figH,fullfile(nhpOutputFolder,sessionLabel), 'fig');
-        saveas(figH,fullfile(nhpOutputFolder,sessionLabel), 'jpg');
+        saveas(figH,fullfile(nhpOutputRoot,sessionLabel), 'fig');
+        saveas(figH,fullfile(nhpOutputRoot,sessionLabel), 'jpg');
     end
 end
 
