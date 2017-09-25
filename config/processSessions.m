@@ -11,11 +11,11 @@ function [ nhpSessions ] = processSessions(nhpConfig)
 %      nhpOutputDir: '[full-path]/output/Joule' Fullpath to folder for processed data
 %       getSessions: @getSessions               A function handle to get sessions for processing
 %                    Note: Used column names in excel sheet above to derive
-%                    the location of sessions. The output of this function must be                  
-%                       (1) cellstr : Each element is a fullpath to a .mat file. 
+%                    the location of sessions. The output of this function must be
+%                       (1) cellstr : Each element is a fullpath to a .mat file.
 %                                     Single mat file contains data for all channels
 %                                 {'full-path-session-1-file',...,  'full-path-session-n-file'}
-%                       (2) cell array of cellstr : Each element is a cellstr. 
+%                       (2) cell array of cellstr : Each element is a cellstr.
 %                                     Each cellstr contains fullpath to all channelNN.mat files.
 %                                     Each file contains data for a single channel
 %                                {
@@ -31,12 +31,13 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     sheetName = nhpConfig.sheetName;
     nhpOutputDir = nhpConfig.nhpOutputDir;
     getSessions = nhpConfig.getSessions;
-       
+
     if ~exist(nhpOutputDir,'dir')
         mkdir(nhpOutputDir);
-    end    
+    end
     outputFile = fullfile(nhpOutputDir,[nhp 'Spatial.mat']);
-    
+    outputFile2 = fullfile(nhpOutputDir,[nhp 'Spatial2.mat']);
+    save(outputFile, 'nhpConfig');
     % Read excel sheet
     nhpTable = readtable(excelFile, 'Sheet', sheetName);
     nhpTable.date = datestr(nhpTable.date,'mm/dd/yyyy');
@@ -55,23 +56,29 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     distancesToCompute = {'correlation'};
     nhpSessions = struct();
     sessions = getSessions(nhpSourceDir, nhpTable);
-        
-    %strcat(srcNhpDataFolder, filesep, regexprep(nhpTable.filename,'''',''));
-    parfor s = 1:4 %numel(sessions)
+
+    %parfor s = 1:numel(sessions)
+    for s = 1:numel(sessions)
         multiSdf = struct();
         nhpInfo = nhpTable(s,:);
         sessionLocation = sessions{s};
-        channelMap = nhpInfo.ephysChannelMap{1};
+        channelMap = nhpInfo.ephysChannelMap{1};        
+        fprintf('Processing file %s\n',sessionLocation);
+        [~,session,~] = fileparts(sessionLocation);
+                       
         if contains(lower(nhpInfo.chamberLoc),'left')
             ipsi = 'left';
         else
             ipsi = 'right';
         end
-        fprintf('Processing file %s\n',sessionLocation);
-        [~,session,~] = fileparts(sessionLocation);
 
         % Create instance of MemoryTypeModel
         jouleModel = EphysModel.newEphysModel('memory',sessionLocation, channelMap);
+        
+        nhpSessions(s).session = datestr(now);
+        nhpSessions(s).session = session;
+        nhpSessions(s).info = nhpInfo;
+        nhpSessions(s).channelMap = jouleModel.getChannelMap;       
 
         for c = 1:numel(conditions)
             currCondition = conditions{c};
@@ -99,9 +106,6 @@ function [ nhpSessions ] = processSessions(nhpConfig)
             end
             nhpSessions(s).(condStr)=multiSdf.(condStr);
         end
-        nhpSessions(s).session = session;
-        nhpSessions(s).info = nhpInfo;
-        nhpSessions(s).channelMap = jouleModel.getChannelMap;
     end
     
     % since we are using parfor to compute, reconvert from struct array
@@ -117,7 +121,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     fprintf('Saving processed output to %s...',outputFile);
     save(outputFile, '-struct', 'nhpSessions');
     fprintf('done\n');
-    
+
     %% Plot and save Figures
     sessionLabels = fieldnames(nhpSessions);
     for s = 1:numel(sessionLabels)
@@ -127,6 +131,10 @@ function [ nhpSessions ] = processSessions(nhpConfig)
         saveas(figH,fullfile(nhpOutputDir,sessionLabel), 'fig');
     end
 
+end
+
+function [] = saveToFile(outputFile,structVar)
+         save(outputFile, '-append', '-struct', structVar)
 end
 
 function [ condStr ] = convertToChar(condCellArray, ipsiSide)
@@ -144,10 +152,10 @@ function [ figH ] = doPlot8(session, sessionLabel)
 
     firingRateHeatmap = 'sdfPopulationZscoredMean';
     distMeasure = 'rsquared';
-    
+
     ipsiContraOrder = {'ipsi','contra'};
     alignOnOrder = {'targOn', 'responseOnset'};
-    
+
     conditions = fieldnames(session);
     frPlots = cell(4,1);
     distPlots = cell(4,1);
@@ -166,7 +174,7 @@ function [ figH ] = doPlot8(session, sessionLabel)
             titlePlots{plotNo} = conditions{fieldnameIndex};
         end
     end
-    
+
     temp = cell2mat(frPlots);
     frMinMax = minmax(temp(:)');
     temp = cell2mat(distPlots);
@@ -235,7 +243,7 @@ function [ figH ] = doPlot8(session, sessionLabel)
     addFigureTitleAndInfo(sessionLabel, session.info, infosHandle);
     addDateStr();
     drawnow
-    
+
 end
 
 function addFigureTitleAndInfo(figureTitle, infoTable, varargin)
@@ -245,9 +253,7 @@ function addFigureTitleAndInfo(figureTitle, infoTable, varargin)
     else
         h = varargin{1};
     end
-    
     set(get(h,'Title'),'Visible','on');
-  
     title(figureTitle,'fontSize',20,'fontWeight','bold');
     h.XTick = [];
     h.YTick = [];
@@ -282,7 +288,7 @@ function addFigureTitleAndInfo(figureTitle, infoTable, varargin)
 end
 
 function addDateStr()
-    axes('Units','Normal','Position',[.9 .02 .06 .04],'Visible','off');
+    axes('Units','normalized','Position',[.9 .02 .06 .04],'Visible','off');
     text(0.1,0.1,datestr(now))
 end
 
