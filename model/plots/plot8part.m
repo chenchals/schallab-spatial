@@ -1,4 +1,4 @@
-function [ axesHandles ] = plot8axes()
+function [ axesHandles, infosHandle ] = plot8part()
 %PLOT28AXES Create handle for 2 rows by 4 columns plots
 %  Uses plot8axesTemplate.m file.
 
@@ -9,16 +9,17 @@ function [ axesHandles ] = plot8axes()
     cmd = ['grep -A 1 "Tag.*axes" ' templateName ' | grep "Position" | cut -d , -f 2'];
     [~,axesPositions] = system(cmd);
     axesPositions = cell2mat(textscan(axesPositions,'[%f %f %f %f]'));
-    % scoot right all plots
-    axesPositions(:,1) = axesPositions(:,1) + 0.02;
-    %scoot down all plots
-    axesPositions(:,2) = axesPositions(:,2) - 0.02;
+    
+    cmd = ['grep -A 1 "Tag.*infos" ' templateName ' | grep "Position" | cut -d , -f 2'];
+    [~,axesInfosPosition] = system(cmd);
+    axesInfosPosition = cell2mat(textscan(axesInfosPosition,'[%f %f %f %f]'));
  
     axesHandles = nan(size(axesPositions,1),1);
-    figure('Units','normalized','Position',[0.02 0.02 0.97 0.97]);
+    figH = figure('Units','inches','Position',[17.6 14.0 15.0 9.5]);
     for ii = 1:size(axesPositions,1)
-        axesHandles(ii) = axes('Position',axesPositions(ii,:),'Units','normalized');
-        text(0.5,0.5,['axes' num2str(ii)])
+        axesHandles(ii) = axes('parent', figH, 'Position',axesPositions(ii,:));
+        title(['axes' num2str(ii)])
     end
+    infosHandle = axes('Parent',figH,'Position',axesInfosPosition);
 end
 

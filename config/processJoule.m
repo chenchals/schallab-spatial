@@ -5,13 +5,13 @@ function [ nhpSessions ] = processJoule()
 % see also PROCESSSESSIONS for how to define nhpConfig 
 
     nhpConfig.nhp = 'joule';
-    nhpConfig.nhpSourceDir = '/Volumes/schalllab/data/Joule';
-    nhpConfig.excelFile = '/Users/subravcr/Projects/lab-schall/schalllab-spatial/config/SFN_NHP_Coordinates_All.xlsx';
+    nhpConfig.nhpSourceDir = '/Users/chenchals/Projects/lab-schall/schalllab-clustering/data/joule';
+    nhpConfig.excelFile = '/Users/chenchals/Projects/lab-schall/schalllab-spatial/config/SFN_NHP_Coordinates_All.xlsx';
     nhpConfig.sheetName = 'Jo';
-    nhpConfig.nhpOutputDir = '/Users/subravcr/Projects/lab-schall/schalllab-spatial/processed';
+    nhpConfig.nhpOutputDir = '/Users/chenchals/Projects/lab-schall/schalllab-spatial/processed/Joule';
     % a function handle for getting sessions
     nhpConfig.getSessions = @getSessions;  
-    tic
+    
     nhpSessions = processSessions(nhpConfig);
     
 end

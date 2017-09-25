@@ -57,7 +57,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     sessions = getSessions(nhpSourceDir, nhpTable);
         
     %strcat(srcNhpDataFolder, filesep, regexprep(nhpTable.filename,'''',''));
-    parfor s = 1:numel(sessions)
+    parfor s = 1:4 %numel(sessions)
         multiSdf = struct();
         nhpInfo = nhpTable(s,:);
         sessionLocation = sessions{s};
@@ -73,8 +73,6 @@ function [ nhpSessions ] = processSessions(nhpConfig)
         % Create instance of MemoryTypeModel
         jouleModel = EphysModel.newEphysModel('memory',sessionLocation, channelMap);
 
-        zscoreMinMax = nan(numel(conditions),2);
-        distMinMax = struct();
         for c = 1:numel(conditions)
             currCondition = conditions{c};
             condStr = convertToChar(currCondition,ipsi);
@@ -87,7 +85,6 @@ function [ nhpSessions ] = processSessions(nhpConfig)
             % Get MultiUnitSdf -> has sdf_mean matrix and sdf matrix
             [~, multiSdf.(condStr)] = jouleModel.getMultiUnitSdf(jouleModel.getTrialList(outcome,targetCondition), alignOn, sdfWindow);
             sdfPopulationZscoredMean = multiSdf.(condStr).sdfPopulationZscoredMean;
-            zscoreMinMax(c,:) = minmax(sdfPopulationZscoredMean(:)');
             for d = 1: numel(distancesToCompute)
                 distMeasureOption = distancesToCompute{d};
                 dMeasure = pdist2(sdfPopulationZscoredMean, sdfPopulationZscoredMean,distMeasureOption);
@@ -95,40 +92,41 @@ function [ nhpSessions ] = processSessions(nhpConfig)
                     case 'correlation'
                         temp = (1-dMeasure).^2;
                         multiSdf.(condStr).rsquared = temp;
-                        distMinMax.(distMeasureOption)(c,:) = minmax(temp(:)');
                     case {'euclidean', 'cosine'}
                         multiSdf.(condStr).rsquared = dMeasure;
-                        distMinMax.(distMeasureOption )(c,:) = minmax(dMeasure(:)');
                     otherwise
                 end
             end
+            nhpSessions(s).(condStr)=multiSdf.(condStr);
         end
         nhpSessions(s).session = session;
-        nhpSessions(s).mutilSdf = multiSdf;
         nhpSessions(s).info = nhpInfo;
         nhpSessions(s).channelMap = jouleModel.getChannelMap;
     end
-    toc
-    zz = struct();
-    for ii = 1:size(nhpSessions,1)
-        session = nhpSessions(ii).session
-        
-        
-        
+    
+    % since we are using parfor to compute, reconvert from struct array
+    % back to struct with session as fieldname
+    finalVar = struct();
+    for ro =1:numel(nhpSessions)
+        finalVar.(nhpSessions(ro).session) = nhpSessions(ro);
     end
+    nhpSessions = finalVar;
+    clearvars 'finalVar';
     
-    
-    
-    %save(outputFile, '-struct', 'nhpSessions');
+    % save fieldnames (session) as individual vars in file
+    fprintf('Saving processed output to %s...',outputFile);
+    save(outputFile, '-struct', 'nhpSessions');
+    fprintf('done\n');
     
     %% Plot and save Figures
     sessionLabels = fieldnames(nhpSessions);
     for s = 1:numel(sessionLabels)
         sessionLabel = sessionLabels{s};
         figH = doPlot8(nhpSessions.(sessionLabel),sessionLabel);
-        saveas(figH,fullfile(nhpOutputRoot,sessionLabel), 'fig');
-        saveas(figH,fullfile(nhpOutputRoot,sessionLabel), 'jpg');
+        saveas(figH,fullfile(nhpOutputDir,sessionLabel),'jpg');
+        saveas(figH,fullfile(nhpOutputDir,sessionLabel), 'fig');
     end
+
 end
 
 function [ condStr ] = convertToChar(condCellArray, ipsiSide)
@@ -175,7 +173,9 @@ function [ figH ] = doPlot8(session, sessionLabel)
     distMinMax = minmax(temp(:)');
 
     %plot by columns
+    infosHandle = [];
     plotHandles = plot8axes;
+    %[plotHandles, infosHandle] = plot8part;
     figH = get(plotHandles(1),'Parent');
 
     channelTicks = 2:2:numel(session.channelMap);
@@ -230,16 +230,24 @@ function [ figH ] = doPlot8(session, sessionLabel)
                         ylabel([distMeasure ' (r^2)'],'VerticalAlignment','bottom','FontWeight','bold');
                     end
             end
-            drawnow
         end
     end
-    addFigureTitleAndInfo(sessionLabel, session.info);
+    addFigureTitleAndInfo(sessionLabel, session.info, infosHandle);
     addDateStr();
+    drawnow
+    
 end
 
-function addFigureTitleAndInfo(figureTitle, infoTable)
-    h = axes('Units','Normal','Position',[.02 .90 .94 .06]);
+function addFigureTitleAndInfo(figureTitle, infoTable, varargin)
+
+    if numel(varargin)==0 || isempty(varargin{1})
+        h = axes('Units','normalized','Position',[.01 .87 .98 .09]);
+    else
+        h = varargin{1};
+    end
+    
     set(get(h,'Title'),'Visible','on');
+  
     title(figureTitle,'fontSize',20,'fontWeight','bold');
     h.XTick = [];
     h.YTick = [];
@@ -266,11 +274,11 @@ function addFigureTitleAndInfo(figureTitle, infoTable)
             end
             t{i} = strcat(name,':',value);
         end
-        text(xPos(c),0.5,t,'Interpreter','none','FontWeight','bold','FontSize',11);
+        text(xPos(c),0.5,t,'Interpreter','none','FontWeight','bold','FontSize',10);
     end
     text(xPos(end),0.5,{'ePhysChannelMap'; ...
         num2str(reshape(infoTable.ephysChannelMap{:},8,4)','%02d, ')},...
-        'Interpreter','none','FontWeight','bold','FontSize',11)
+        'Interpreter','none','FontWeight','bold','FontSize',10)
 end
 
 function addDateStr()
