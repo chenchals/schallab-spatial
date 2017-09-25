@@ -54,11 +54,11 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     conditions{4} = {'responseOnset', 'right', [-300 200]};
 
     distancesToCompute = {'correlation'};
-    nhpSessions = struct();
+    nhpSessions = {};
     sessions = getSessions(nhpSourceDir, nhpTable);
 
     %parfor s = 1:numel(sessions)
-    for s = 1:numel(sessions)
+    for s = 1:5 %numel(sessions)
         multiSdf = struct();
         nhpInfo = nhpTable(s,:);
         sessionLocation = sessions{s};
@@ -75,10 +75,10 @@ function [ nhpSessions ] = processSessions(nhpConfig)
         % Create instance of MemoryTypeModel
         jouleModel = EphysModel.newEphysModel('memory',sessionLocation, channelMap);
         
-        nhpSessions(s).session = datestr(now);
-        nhpSessions(s).session = session;
-        nhpSessions(s).info = nhpInfo;
-        nhpSessions(s).channelMap = jouleModel.getChannelMap;       
+        multiSdf.analysisDate = datestr(now);
+        multiSdf.session = session;
+        multiSdf.info = nhpInfo;
+        multiSdf.channelMap = jouleModel.getChannelMap;       
 
         for c = 1:numel(conditions)
             currCondition = conditions{c};
@@ -104,15 +104,16 @@ function [ nhpSessions ] = processSessions(nhpConfig)
                     otherwise
                 end
             end
-            nhpSessions(s).(condStr)=multiSdf.(condStr);
+           
         end
+         nhpSessions{s}=multiSdf;
     end
     
     % since we are using parfor to compute, reconvert from struct array
     % back to struct with session as fieldname
-    finalVar = struct();
-    for ro =1:numel(nhpSessions)
-        finalVar.(nhpSessions(ro).session) = nhpSessions(ro);
+    finalVar = struct;
+    for ii = 1:numel(nhpSessions)
+           finalVar.(nhpSessions{ii}.session)=nhpSessions{ii};
     end
     nhpSessions = finalVar;
     clearvars 'finalVar';
@@ -131,10 +132,6 @@ function [ nhpSessions ] = processSessions(nhpConfig)
         saveas(figH,fullfile(nhpOutputDir,sessionLabel), 'fig');
     end
 
-end
-
-function [] = saveToFile(outputFile,structVar)
-         save(outputFile, '-append', '-struct', structVar)
 end
 
 function [ condStr ] = convertToChar(condCellArray, ipsiSide)
@@ -282,8 +279,11 @@ function addFigureTitleAndInfo(figureTitle, infoTable, varargin)
         end
         text(xPos(c),0.5,t,'Interpreter','none','FontWeight','bold','FontSize',10);
     end
+    chanMap = infoTable.ephysChannelMap{:};
+    chanRows = 4; 
+    chanCols = ceil(numel(chanMap)/chanRows);
     text(xPos(end),0.5,{'ePhysChannelMap'; ...
-        num2str(reshape(infoTable.ephysChannelMap{:},8,4)','%02d, ')},...
+        num2str(reshape(chanMap,chanCols,chanRows)','%02d, ')},...
         'Interpreter','none','FontWeight','bold','FontSize',10)
 end
 
