@@ -1,24 +1,33 @@
 classdef MemoryTypeModel < EphysModel
-    %MEMORYTYPEMODEL Summary of this class goes here
-    %   Detailed explanation goes here
+    %MEMORYTYPEMODEL Model class for reading data from different recordings
+    %  Inputs:
+    %    source : A char. Must point to the matlab data file or folder
+    %    channelMap : The mapping of cell ID and the channel lovcation on the probe.
+    %               For example for neuronexus for Joule the
+    %               DSP01a corresponds to position 25 fo the probe.
+    %               [9 10 11 12 13 14 15 16 25 26 27 28 29 30 31 32 17 18 19 20 21 22 23 24  1  2  3  4  5  6  7  8]
+    %               DSP09 is at one end and DSP08 is at the other end
+    %               For Darwin the map the locations [1:32] correspond
+    %               linearly to DSP01 to DSP32
     
-    % dataSource =
-    % '/Volumes/schalllab/Users/Chenchal/Jacob/data/joule/jp121n01.mat'
-    %% Public methods
+    %Public methods
     methods
-        %% Constructor
-        function obj = MemoryTypeModel(source)
+        %MEMORYTYPEMODEL Constructor
+        function obj = MemoryTypeModel(source, channelMap )           
             obj.dataSource = source;
             [~,f,e] = fileparts(source);
             obj.sourceFile = [f e];
             obj.checkFileExists;
             obj.trialList = containers.Map;
+            assert(isnumeric(channelMap) || numel(channelMap) > 1,...
+                'Input channelMap but be a numeric vector');
+            obj.channelMap = {'channelMap', channelMap};
         end
         
-        %% Abstract Functions implemented
         %% GETEVENTDATA
         function [ eventData ] = getEventData(obj, varargin)
-            % Repeated call for eventData returns eventData already read            
+            % Repeated call for eventData returns eventData already read .
+            
             if ~isempty(obj.eventData)
                 eventData = obj.eventData;
                 return
@@ -41,11 +50,11 @@ classdef MemoryTypeModel < EphysModel
         
         %% GETSPIKEDATA
         function [ spikeData ] = getSpikeData(obj, varargin)
-            % Vargars:
+            %getSpikeData(obj, varargin)
             %    spikeIdPattern : For mat file with vars DSP01a, DSP09b
             %    spikeIdVar : Spike IDs are in a variable: SessionData.spikeUnitArray
             %    spiketimeVar : A cell array of { nTrials x nUnits}
-            %    channelMap : Linear mapping of channels. 
+            %    channelMap : Linear mapping of channels.
             %
             % Usage:
             % [ out ] = obj.getSpikeData(...
@@ -53,9 +62,9 @@ classdef MemoryTypeModel < EphysModel
             %           'spiketimeVar', 'spikeData',...
             %           'channelMap', [9:16,25:32,17:24,1:8])
             
-           
+            
             % Repeated call for spikeData returns spikeData already read
-            if ~isempty(obj.spikeData)   
+            if ~isempty(obj.spikeData)
                 spikeData = obj.spikeData;
                 return
             end
@@ -63,10 +72,10 @@ classdef MemoryTypeModel < EphysModel
             % Get spike data first time
             try
                 if numel(varargin) == 0
-                    temp = {EphysModel.getSpikeVarNames(),EphysModel.getElectrodeMap()};
-                    args = parseArgs(obj,[temp{:}]);                    
+                    temp = {EphysModel.getSpikeVarNames(),obj.channelMap};
+                    args = parseArgs(obj,[temp{:}]);
                 else
-                   args = parseArgs(obj, varargin);
+                    args = parseArgs(obj, varargin);
                 end
                 
                 if ~isempty(args.spikeIdPattern)
@@ -108,17 +117,17 @@ classdef MemoryTypeModel < EphysModel
                 msg = [ME.message, char(10), char(10), help('MemoryTypeModel.getSpikeData') ];
                 error('MemoryTypeModel:getSpikeData', msg);
             end
-
+            
         end
         
-        %% GETTRILALIST
+        % GETTRILALIST
         function [ selectedTrials ] = getTrialList(obj, selectedOutcomes, targetHemifield)
             %Convert inputs to cellstr
             outcomes = selectedOutcomes;
             if ischar(outcomes)
-              outcomes = {outcomes};
+                outcomes = {outcomes};
             end
-            locations = targetHemifield; 
+            locations = targetHemifield;
             if ischar(locations)
                 locations = {locations};
             end
@@ -129,27 +138,26 @@ classdef MemoryTypeModel < EphysModel
                 selectedTrials = obj.trialList(key);
                 return
             end
-             % Get trial list first time
+            % Get trial list first time
             obj.trialList(key) = memTrialSelector(obj.getEventData(), outcomes, locations);
             selectedTrials = obj.trialList(key);
         end
         
-        %% GETSINGLEUNITSDF
-        function [ sdf ] = getSingleUnitSdf(obj, selectedTrials, alignEventName, sdfWindow)            
+        % GETSINGLEUNITSDF
+        function [ sdf ] = getSingleUnitSdf(obj, selectedTrials, alignEventName, sdfWindow)
             sdf = getSdf(obj, selectedTrials, alignEventName, sdfWindow, false);
             % Ordering singleUnits by channelMap is not implemented
         end
         
-        %% GETMULTIUNITSDF
+        % GETMULTIUNITSDF
         function [ sdf, sdfOrdered ] = getMultiUnitSdf(obj, selectedTrials, alignEventName, sdfWindow)
-            sdf = getSdf(obj, selectedTrials, alignEventName, sdfWindow, true);      
+            sdf = getSdf(obj, selectedTrials, alignEventName, sdfWindow, true);
             sdfOrdered = orderSdfByChannelMap(sdf, getChannelMap(obj));
         end
         
-        %% GETCHANNELMAP
+        % GETCHANNELMAP
         function [ channelMap ] = getChannelMap(obj)
-            electrodeMap = EphysModel.getElectrodeMap();
-            channelMap = electrodeMap{2};
+            channelMap = obj.channelMap{2};
         end
         
     end
@@ -161,8 +169,8 @@ classdef MemoryTypeModel < EphysModel
             eventData = obj.getEventData();
             spikeIds = obj.getSpikeData().spikeIdsTable.spikeIds;
             maxChannels = max(getChannelMap(obj));
-            sdf = spkfun_sdf(spikeTimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeIds, maxChannels, singleOrMultiFlag);            
-        
+            sdf = spkfun_sdf(spikeTimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeIds, maxChannels, singleOrMultiFlag);
+            
             % Find population mean and Std of firing rate
             allSdf = cell2mat({sdf.sdf}');
             allSdf = allSdf(:);
@@ -175,7 +183,7 @@ classdef MemoryTypeModel < EphysModel
                 sdf(ii).sdfPopulationZscored = (sdf(ii).sdf-popMean)/popStd;
                 sdf(ii).sdfPopulationZscoredMean = mean(sdf(ii).sdfPopulationZscored);
             end
-        end       
+        end
         
         function [ vars ] = coerceCell2Mat(obj,vars)
             fields = fieldnames(vars);
