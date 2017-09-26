@@ -9,8 +9,13 @@ function [ axesHandles ] = plot8axes()
     cmd = ['grep -A 1 "Tag.*axes" ' templateName ' | grep "Position" | cut -d , -f 2'];
     [~,axesPositions] = system(cmd);
     axesPositions = cell2mat(textscan(axesPositions,'[%f %f %f %f]'));
+    % scoot right all plots
+    axesPositions(:,1) = axesPositions(:,1) + 0.02;
+    %scoot down all plots
+    axesPositions(:,2) = axesPositions(:,2) - 0.02;
+ 
     axesHandles = nan(size(axesPositions,1),1);
-    figure('Units','normalized','Position',[0.05 0.05 0.85 0.85]);
+    figure('Units','normalized','Position',[0.02 0.02 0.97 0.97]);
     for ii = 1:size(axesPositions,1)
         axesHandles(ii) = axes('Position',axesPositions(ii,:),'Units','normalized');
         text(0.5,0.5,['axes' num2str(ii)])
