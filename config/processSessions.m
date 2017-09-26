@@ -36,14 +36,13 @@ function [ nhpSessions ] = processSessions(nhpConfig)
         mkdir(nhpOutputDir);
     end
     outputFile = fullfile(nhpOutputDir,[nhp 'Spatial.mat']);
-    outputFile2 = fullfile(nhpOutputDir,[nhp 'Spatial2.mat']);
     save(outputFile, 'nhpConfig');
     % Read excel sheet
     nhpTable = readtable(excelFile, 'Sheet', sheetName);
     nhpTable.date = datestr(nhpTable.date,'mm/dd/yyyy');
     nhpTable.ephysChannelMap = arrayfun(@(x) ...
         str2num(char(split(nhpTable.ephysChannelMap{x},', '))),...
-        1:size(nhpTable,1),'UniformOutput',false)';
+        1:size(nhpTable,1),'UniformOutput',false)';   %#ok<ST2NM>
 
     outcome ='saccToTarget';
     % Specify conditions to for creating multiSdf
@@ -54,70 +53,75 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     conditions{4} = {'responseOnset', 'right', [-300 200]};
 
     distancesToCompute = {'correlation'};
-    nhpSessions = {};
     sessions = getSessions(nhpSourceDir, nhpTable);
-
+    nhpSessions = cell(numel(sessions),1);
     %parfor s = 1:numel(sessions)
-    for s = 1:5 %numel(sessions)
-        multiSdf = struct();
-        nhpInfo = nhpTable(s,:);
-        sessionLocation = sessions{s};
-        channelMap = nhpInfo.ephysChannelMap{1};        
-        fprintf('Processing file %s\n',sessionLocation);
-        [~,session,~] = fileparts(sessionLocation);
-                       
-        if contains(lower(nhpInfo.chamberLoc),'left')
-            ipsi = 'left';
-        else
-            ipsi = 'right';
-        end
+    for s = 1:numel(sessions)
+        try
+            multiSdf = struct();
+            nhpInfo = nhpTable(s,:);
+            sessionLocation = sessions{s};
+            channelMap = nhpInfo.ephysChannelMap{1};
+            fprintf('Processing file %s\n',sessionLocation);
+            [~,session,~] = fileparts(sessionLocation);
 
-        % Create instance of MemoryTypeModel
-        jouleModel = EphysModel.newEphysModel('memory',sessionLocation, channelMap);
-        
-        multiSdf.analysisDate = datestr(now);
-        multiSdf.session = session;
-        multiSdf.info = nhpInfo;
-        multiSdf.channelMap = jouleModel.getChannelMap;       
+            if contains(lower(nhpInfo.chamberLoc),'left')
+                ipsi = 'left';
+            else
+                ipsi = 'right';
+            end
 
-        for c = 1:numel(conditions)
-            currCondition = conditions{c};
-            condStr = convertToChar(currCondition,ipsi);
-            % make conditions explicit for understanding
-            alignOn = currCondition{1};
-            targetCondition = currCondition{2};
-            sdfWindow = currCondition{3};
-            fprintf('Doing condition: outcome %s, alignOn %s, sdfWindow [%s]\n',...
-                targetCondition, alignOn, num2str(sdfWindow));
-            % Get MultiUnitSdf -> has sdf_mean matrix and sdf matrix
-            [~, multiSdf.(condStr)] = jouleModel.getMultiUnitSdf(jouleModel.getTrialList(outcome,targetCondition), alignOn, sdfWindow);
-            sdfPopulationZscoredMean = multiSdf.(condStr).sdfPopulationZscoredMean;
-            for d = 1: numel(distancesToCompute)
-                distMeasureOption = distancesToCompute{d};
-                dMeasure = pdist2(sdfPopulationZscoredMean, sdfPopulationZscoredMean,distMeasureOption);
-                switch distMeasureOption
-                    case 'correlation'
-                        temp = (1-dMeasure).^2;
-                        multiSdf.(condStr).rsquared = temp;
-                    case {'euclidean', 'cosine'}
-                        multiSdf.(condStr).rsquared = dMeasure;
-                    otherwise
+            % Create instance of MemoryTypeModel
+            jouleModel = EphysModel.newEphysModel('memory',sessionLocation, channelMap);
+
+            multiSdf.analysisDate = datestr(now);
+            multiSdf.session = session;
+            multiSdf.info = nhpInfo;
+            multiSdf.channelMap = jouleModel.getChannelMap;
+
+            for c = 1:numel(conditions)
+                currCondition = conditions{c};
+                condStr = convertToChar(currCondition,ipsi);
+                % make conditions explicit for understanding
+                alignOn = currCondition{1};
+                targetCondition = currCondition{2};
+                sdfWindow = currCondition{3};
+                fprintf('Doing condition: outcome %s, alignOn %s, sdfWindow [%s]\n',...
+                    targetCondition, alignOn, num2str(sdfWindow));
+                % Get MultiUnitSdf -> has sdf_mean matrix and sdf matrix
+                [~, multiSdf.(condStr)] = jouleModel.getMultiUnitSdf(jouleModel.getTrialList(outcome,targetCondition), alignOn, sdfWindow);
+                sdfPopulationZscoredMean = multiSdf.(condStr).sdfPopulationZscoredMean;
+                for d = 1: numel(distancesToCompute)
+                    distMeasureOption = distancesToCompute{d};
+                    dMeasure = pdist2(sdfPopulationZscoredMean, sdfPopulationZscoredMean,distMeasureOption);
+                    switch distMeasureOption
+                        case 'correlation'
+                            temp = (1-dMeasure).^2;
+                            multiSdf.(condStr).rsquared = temp;
+                        case {'euclidean', 'cosine'}
+                            multiSdf.(condStr).rsquared = dMeasure;
+                        otherwise
+                    end
                 end
             end
-           
+            nhpSessions{s}=multiSdf;
+        catch me
+            % log the error/exception causing failure and continue
+            disp(me)
         end
-         nhpSessions{s}=multiSdf;
     end
-    
+    %Since there may be processing errors for one or more sessions
+    nhpSessions = nhpSessions(~cellfun(@isempty,nhpSessions));
+
     % since we are using parfor to compute, reconvert from struct array
     % back to struct with session as fieldname
     finalVar = struct;
     for ii = 1:numel(nhpSessions)
-           finalVar.(nhpSessions{ii}.session)=nhpSessions{ii};
+        finalVar.(nhpSessions{ii}.session)=nhpSessions{ii};
     end
     nhpSessions = finalVar;
     clearvars 'finalVar';
-    
+
     % save fieldnames (session) as individual vars in file
     fprintf('Saving processed output to %s...',outputFile);
     save(outputFile, '-struct', 'nhpSessions');
@@ -126,14 +130,19 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     %% Plot and save Figures
     sessionLabels = fieldnames(nhpSessions);
     for s = 1:numel(sessionLabels)
-        sessionLabel = sessionLabels{s};
-        figH = doPlot8(nhpSessions.(sessionLabel),sessionLabel);
-        saveas(figH,fullfile(nhpOutputDir,sessionLabel),'jpg');
-        saveas(figH,fullfile(nhpOutputDir,sessionLabel), 'fig');
+        try
+            sessionLabel = sessionLabels{s};
+            figH = doPlot8(nhpSessions.(sessionLabel),sessionLabel);
+            saveas(figH,fullfile(nhpOutputDir,sessionLabel),'jpg');
+            saveas(figH,fullfile(nhpOutputDir,sessionLabel), 'fig');
+        catch me
+            % log the error/exception causing failure and continue
+            disp(me)
+        end
     end
-
 end
 
+%% For converting cell array to string (only char are converted)
 function [ condStr ] = convertToChar(condCellArray, ipsiSide)
     indexChars = cellfun(@(x) ischar(x),condCellArray);
     charStr = char(join(condCellArray(indexChars),'_'));
@@ -144,7 +153,7 @@ function [ condStr ] = convertToChar(condCellArray, ipsiSide)
     end
 end
 
-
+%% Do a 8 part figure plot - move to plots folder?
 function [ figH ] = doPlot8(session, sessionLabel)
 
     firingRateHeatmap = 'sdfPopulationZscoredMean';
@@ -240,11 +249,9 @@ function [ figH ] = doPlot8(session, sessionLabel)
     addFigureTitleAndInfo(sessionLabel, session.info, infosHandle);
     addDateStr();
     drawnow
-
 end
-
+%% Add figure title and Info
 function addFigureTitleAndInfo(figureTitle, infoTable, varargin)
-
     if numel(varargin)==0 || isempty(varargin{1})
         h = axes('Units','normalized','Position',[.01 .87 .98 .09]);
     else
@@ -280,17 +287,14 @@ function addFigureTitleAndInfo(figureTitle, infoTable, varargin)
         text(xPos(c),0.5,t,'Interpreter','none','FontWeight','bold','FontSize',10);
     end
     chanMap = infoTable.ephysChannelMap{:};
-    chanRows = 4; 
+    chanRows = 4;
     chanCols = ceil(numel(chanMap)/chanRows);
     text(xPos(end),0.5,{'ePhysChannelMap'; ...
         num2str(reshape(chanMap,chanCols,chanRows)','%02d, ')},...
         'Interpreter','none','FontWeight','bold','FontSize',10)
 end
-
+%% Add Plot date time 
 function addDateStr()
     axes('Units','normalized','Position',[.9 .02 .06 .04],'Visible','off');
     text(0.1,0.1,datestr(now))
 end
-
-
-
