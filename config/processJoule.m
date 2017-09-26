@@ -3,9 +3,9 @@ function [ nhpSessions ] = processJoule()
 
     nhpConfig.nhp = 'joule';
     nhpConfig.srcNhpDataFolder = '/Volumes/schalllab/data/Joule';
-    nhpConfig.excelFile = '/Users/subravcr/Projects/lab-schall/schalllab-spatial/config/SFN_NHP_Coordinates_All.xlsx';
+    nhpConfig.excelFile = '/Users/elseyjg/temp/schalllab-spatial/config/SFN_NHP_Coordinates_All.xlsx';
     nhpConfig.nhpSheetName = 'Jo';
-    nhpConfig.outputFolder = '/Users/subravcr/Projects/lab-schall/schalllab-spatial/processed';
+    nhpConfig.outputFolder = '/Users/elseyjg/temp/schalllab-spatial/processed';
     nhpConfig.getSessions = @getSessions;  
     nhpSessions = processSessions(nhpConfig);
     

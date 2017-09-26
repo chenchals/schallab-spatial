@@ -35,7 +35,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     sessions = sessionsHandle(srcNhpDataFolder, nhpTable);
     
     %strcat(srcNhpDataFolder, filesep, regexprep(nhpTable.filename,'''',''));
-    for s = 1:1%size(nhpTable,1)
+    for s = 1:size(nhpTable,1)
         nhpInfo = nhpTable(s,:);
         sessionLocation = sessions{s};
         channelMap = nhpTable.ephysChannelMap{1};
