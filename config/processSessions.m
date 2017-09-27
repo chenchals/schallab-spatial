@@ -36,6 +36,9 @@ function [ nhpSessions ] = processSessions(nhpConfig)
         mkdir(nhpOutputDir);
     end
     outputFile = fullfile(nhpOutputDir,[nhp 'Spatial.mat']);
+    logger = Logger.getLogger(fullfile(nhpOutputDir,[nhp 'ProcessSessions.log']));
+    errorLogger = Logger.getLogger(fullfile(nhpOutputDir,[nhp 'ProcessSessionsErrors.log']));
+    
     save(outputFile, 'nhpConfig');
     % Read excel sheet
     nhpTable = readtable(excelFile, 'Sheet', sheetName);
@@ -62,7 +65,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
             nhpInfo = nhpTable(s,:);
             sessionLocation = sessions{s};
             channelMap = nhpInfo.ephysChannelMap{1};
-            fprintf('Processing file %s\n',sessionLocation);
+            logger.info(sprintf('Processing file %s',sessionLocation));
             [~,session,~] = fileparts(sessionLocation);
 
             if contains(lower(nhpInfo.chamberLoc),'left')
@@ -86,8 +89,8 @@ function [ nhpSessions ] = processSessions(nhpConfig)
                 alignOn = currCondition{1};
                 targetCondition = currCondition{2};
                 sdfWindow = currCondition{3};
-                fprintf('Doing condition: outcome %s, alignOn %s, sdfWindow [%s]\n',...
-                    targetCondition, alignOn, num2str(sdfWindow));
+                logger.info(sprintf('Doing condition: outcome %s, alignOn %s, sdfWindow [%s]',...
+                    targetCondition, alignOn, num2str(sdfWindow)));
                 % Get MultiUnitSdf -> has sdf_mean matrix and sdf matrix
                 [~, multiSdf.(condStr)] = jouleModel.getMultiUnitSdf(jouleModel.getTrialList(outcome,targetCondition), alignOn, sdfWindow);
                 sdfPopulationZscoredMean = multiSdf.(condStr).sdfPopulationZscoredMean;
@@ -108,6 +111,8 @@ function [ nhpSessions ] = processSessions(nhpConfig)
         catch me
             % log the error/exception causing failure and continue
             disp(me)
+            logger.error(me);
+            errorLogger.error(me);
         end
     end
     %Since there may be processing errors for one or more sessions
@@ -123,9 +128,9 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     clearvars 'finalVar';
 
     % save fieldnames (session) as individual vars in file
-    fprintf('Saving processed output to %s...',outputFile);
+    logger.info(sprintf('Saving processed output to %s...',outputFile));
     save(outputFile, '-struct', 'nhpSessions');
-    fprintf('done\n');
+    %fprintf('done');
 
     %% Plot and save Figures
     sessionLabels = fieldnames(nhpSessions);
@@ -137,7 +142,8 @@ function [ nhpSessions ] = processSessions(nhpConfig)
             saveas(figH,fullfile(nhpOutputDir,sessionLabel), 'fig');
         catch me
             % log the error/exception causing failure and continue
-            disp(me)
+            logger.error(me);
+            errorLogger.error(me);
         end
     end
 end
