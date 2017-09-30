@@ -53,55 +53,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     conditions{4} = {'responseOnset', 'right', [-300 200]};
 
     distancesToCompute = {'correlation'};
-<<<<<<< HEAD
-    nhpSessions = struct();
-    % fix filenames - remove single quotes
-    sessions = sessionsHandle(srcNhpDataFolder, nhpTable);
-    
-    %strcat(srcNhpDataFolder, filesep, regexprep(nhpTable.filename,'''',''));
-    for s = 1:size(nhpTable,1)
-        nhpInfo = nhpTable(s,:);
-        sessionLocation = sessions{s};
-        channelMap = nhpTable.ephysChannelMap{1};
-        if contains(lower(nhpInfo.chamberLoc),'left')
-            ipsi = 'left';
-        else
-            ipsi = 'right';
-        end
-        fprintf('Processing file %s\n',sessionLocation);
-        [~,session,~] = fileparts(sessionLocation);
 
-        % Create instance of MemoryTypeModel
-        jouleModel = EphysModel.newEphysModel('memory',sessionLocation, channelMap);
-
-        zscoreMinMax = nan(numel(conditions),2);
-        distMinMax = struct();
-        for c = 1:numel(conditions)
-            currCondition = conditions{c};
-            condStr = convertToChar(currCondition,ipsi);
-            % make conditions explicit for understanding
-            alignOn = currCondition{1};
-            targetCondition = currCondition{2};
-            sdfWindow = currCondition{3};
-            fprintf('Doing condition: outcome %s, alignOn %s, sdfWindow [%s]\n',...
-                targetCondition, alignOn, num2str(sdfWindow));
-            % Get MultiUnitSdf -> has sdf_mean matrix and sdf matrix
-            [~, multiSdf.(condStr)] = jouleModel.getMultiUnitSdf(jouleModel.getTrialList(outcome,targetCondition), alignOn, sdfWindow);
-            sdfPopulationZscoredMean = multiSdf.(condStr).sdfPopulationZscoredMean;
-            zscoreMinMax(c,:) = minmax(sdfPopulationZscoredMean(:)');
-            for d = 1: numel(distancesToCompute)
-                distMeasureOption = distancesToCompute{d};
-                dMeasure = pdist2(sdfPopulationZscoredMean, sdfPopulationZscoredMean,distMeasureOption);
-                switch distMeasureOption
-                    case 'correlation'
-                        temp = (1-dMeasure).^2;
-                        multiSdf.(condStr).rsquared = temp;
-                        distMinMax.(distMeasureOption)(c,:) = minmax(temp(:)');
-                    case {'euclidean', 'cosine'}
-                        multiSdf.(condStr).rsquared = dMeasure;
-                        distMinMax.(distMeasureOption )(c,:) = minmax(dMeasure(:)');
-                    otherwise
-=======
     sessions = getSessions(nhpSourceDir, nhpTable);
     nhpSessions = cell(numel(sessions),1);
     %parfor s = 1:numel(sessions)
@@ -151,7 +103,6 @@ function [ nhpSessions ] = processSessions(nhpConfig)
                             multiSdf.(condStr).rsquared = dMeasure;
                         otherwise
                     end
->>>>>>> 61e5b444aa6f562fe9559c468f56e0dc74ee2c1e
                 end
             end
             nhpSessions{s}=multiSdf;
