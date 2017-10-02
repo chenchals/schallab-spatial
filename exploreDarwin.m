@@ -51,3 +51,35 @@ chanSpks = ...
         & Task.TargetLoc == targRF(im),...
         :)...
     ); % end cat
+
+% Events
+% getEventTime(code,codeMat,timeMat) => 
+% code = TEMPO_CODES.Target_,TEMPO_CODES.Saccade_
+% codeMat = EVcodes
+% timeMat = EVtimes
+%code = TEMPO_CODES.Target_;
+codeMat = EVcodes;
+timeMat = EVtimes;
+nTrials = size(EVcodes,1);
+ev = struct();
+
+codes2get =[ 
+    TEMPO_CODES.TrialStart_
+    TEMPO_CODES.FixSpotOn_  
+    TEMPO_CODES.Target_ 
+    TEMPO_CODES.Saccade_];
+for jj = 1:numel(codes2get)
+    code = codes2get(jj);
+    name = TEMPO_CODES.names{find(TEMPO_CODES.codes==code)}; %#ok<FNDSB>
+    [ir,ic] = find(codeMat==code);
+    for ii = 1:length(ir)
+        ev.(name)(ir(ii),1) = timeMat(ir(ii),ic(ii));
+    end
+end
+
+% TEMP_CODES Names for each trial...
+zz = cell(nTrials,1);
+for ii = 1:nTrials
+   zz{ii,1}={TEMPO_CODES.names{cell2mat(arrayfun(@(x) find(TEMPO_CODES.codes==x),EVcodes(ii,:),'UniformOutput',false))}};
+end
+

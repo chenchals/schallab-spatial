@@ -9,6 +9,14 @@ function [ nhpSessions ] = processJoule()
     nhpConfig.excelFile = '/Users/chenchals/Projects/lab-schall/schalllab-spatial/config/SFN_NHP_Coordinates_All.xlsx';
     nhpConfig.sheetName = 'Jo';
     nhpConfig.nhpOutputDir = '/Users/chenchals/Projects/lab-schall/schalllab-spatial/processed/Joule';
+    
+    nhpConfig.eventVars = {
+        'targOn',...
+        'responseOnset',...
+        'trialOutcome',...
+        'targAngle'
+        };
+
     % a function handle for getting sessions
     nhpConfig.getSessions = @getSessions;  
     
@@ -21,3 +29,4 @@ function [ sessions ] = getSessions(srcFolder, nhpTable)
 %  Uses column name 'filename' ifrom the execl file used for configuration
   sessions = strcat(srcFolder, filesep, regexprep(nhpTable.filename,'''',''));
 end
+

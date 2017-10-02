@@ -1,4 +1,4 @@
-function [ nhpSessions ] = processDarwin()
+function [ nhpSessions, nhpConfig ] = processDarwin()
 %PROCESSJOULE Configure Joule sessions here
 %     nhpConfig is a structured variable with fields that define how to
 %     process matalb datafile for this NHP.
@@ -12,6 +12,7 @@ function [ nhpSessions ] = processDarwin()
     % a function handle for getting sessions
     nhpConfig.getSessions = @getSessions;  
     
+    nhpSessions = [];
     nhpSessions = processSessions(nhpConfig);
     
 end
@@ -24,4 +25,6 @@ function [ sessions ] = getSessions(srcFolder, nhpTable)
   sessionNames=cellfun(@(x) datestr(datenum(x{1},'mmddyya'),'yyyy-mm-dda') ,toks,'UniformOutput',false);  
   allSessions=cellfun(@(x) dir(fullfile(srcFolder, char(x),'DSP/DSP*/*_MG*.mat')),sessionNames,'UniformOutput',false);
   sessions = cellfun(@(x) strcat({x.folder}',filesep,{x.name}'),allSessions,'UniformOutput',false);
+  sessions = sessions(~cellfun(@isempty,sessions));
+
 end

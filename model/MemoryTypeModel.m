@@ -1,5 +1,5 @@
 classdef MemoryTypeModel < EphysModel
-    %MEMORYTYPEMODEL Model class for reading data from different recordings
+    %MEMORYTYPEMODEL Model class for reading data from Joule, Broca recordings
     %  Inputs:
     %    source : A char. Must point to the matlab data file or folder
     %    channelMap : The mapping of cell ID and the channel lovcation on the probe.

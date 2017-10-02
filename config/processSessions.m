@@ -39,13 +39,19 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     logger = Logger.getLogger(fullfile(nhpOutputDir,[nhp 'ProcessSessions.log']));
     errorLogger = Logger.getLogger(fullfile(nhpOutputDir,[nhp 'ProcessSessionsErrors.log']));
     
-    save(outputFile, 'nhpConfig');
     % Read excel sheet
     nhpTable = readtable(excelFile, 'Sheet', sheetName);
     nhpTable.date = datestr(nhpTable.date,'mm/dd/yyyy');
     nhpTable.ephysChannelMap = arrayfun(@(x) ...
         str2num(char(split(nhpTable.ephysChannelMap{x},', '))),...
         1:size(nhpTable,1),'UniformOutput',false)';   %#ok<ST2NM>
+    
+    nhpConfig.nhpTable =nhpTable;
+    
+    sessions = getSessions(nhpSourceDir, nhpTable);
+    nhpConfig.sessions =sessions;
+    
+    save(outputFile, 'nhpConfig');
 
     outcome ='saccToTarget';
     % Specify conditions to for creating multiSdf
@@ -56,7 +62,6 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     conditions{4} = {'responseOnset', 'right', [-300 200]};
 
     distancesToCompute = {'correlation'};
-    sessions = getSessions(nhpSourceDir, nhpTable);
     nhpSessions = cell(numel(sessions),1);
     %parfor s = 1:numel(sessions)
     for s = 1:numel(sessions)

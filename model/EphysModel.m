@@ -28,8 +28,20 @@ classdef (Abstract=true) EphysModel < handle
     
     methods (Access = protected)
         function []  =  checkFileExists(obj)
-            if ~exist(obj.dataSource,'file')
-                throw(MException('EPhysModel:checkFileExists', sprintf('File not found %s ',obj.dataSource)));
+            % all data is in a single file
+            if ischar(obj.dataSource)
+                if ~exist(obj.dataSource,'file')
+                    throw(MException('EPhysModel:checkFileExists', sprintf('File not found %s ',obj.dataSource)));
+                end
+                % all data is in a multiple files. One cell per file
+            elseif iscellstr(obj.dataSource)
+                if sum(~cellfun(@exist, obj.dataSource))
+                    throw(MException('EPhysModel:checkFileExists',...
+                        sprintf('Files that does not exist:\n %s',...
+                        sprintf('%s\n',obj.dataSource{~cellfun(@exist, obj.dataSource)}))));
+                end
+            else
+                throw(MException('EPhysModel:checkFileExists', 'source must be either char or cellstr'));
             end
         end
     end
@@ -42,24 +54,15 @@ classdef (Abstract=true) EphysModel < handle
             switch lower(sessionType)
                 case 'memory'
                     adapter = MemoryTypeModel(source, channelMap);
+                case 'darwin'
+                    adapter = MemoryTypeModelDa(source, channelMap);
                 otherwise
                     error('Type can only be ''memory'' for now...');
             end
         end
         
         function [ eventVars ] = getEventVarNames()
-            eventVars = {...
-                'fixWindowEntered',...
-                'targOn',...
-                'responseCueOn',...
-                'responseOnset',...
-                'toneOn',...
-                'rewardOn',...
-                'trialOutcome',...
-                'saccToTargIndex',...
-                'targAngle',...
-                'saccAngle',...
-                };
+
         end
         
         function [ spikeVars ] = getSpikeVarNames()
