@@ -46,10 +46,10 @@ function [ nhpSessions ] = processSessions(nhpConfig)
         str2num(char(split(nhpTable.ephysChannelMap{x},', '))),...
         1:size(nhpTable,1),'UniformOutput',false)';   %#ok<ST2NM>
     
-    nhpConfig.nhpTable =nhpTable;
+    nhpConfig.nhpTable = nhpTable;
     
     sessions = getSessions(nhpSourceDir, nhpTable);
-    nhpConfig.sessions =sessions;
+    nhpConfig.sessions = sessions;
     
     save(outputFile, 'nhpConfig');
 
@@ -70,22 +70,21 @@ function [ nhpSessions ] = processSessions(nhpConfig)
             nhpInfo = nhpTable(s,:);
             sessionLocation = sessions{s};
             channelMap = nhpInfo.ephysChannelMap{1};
-            logger.info(sprintf('Processing file %s',sessionLocation));
-            [~,session,~] = fileparts(sessionLocation);
-
+            sessionName = getSessionName(sessionLocation);            
+            logger.info(sprintf('Processing session %s',sessionName));
+            % Create instance of MemoryTypeModel
+            model = EphysModel.newEphysModel('memory',sessionLocation, channelMap);
+            
             if contains(lower(nhpInfo.chamberLoc),'left')
                 ipsi = 'left';
             else
                 ipsi = 'right';
             end
 
-            % Create instance of MemoryTypeModel
-            jouleModel = EphysModel.newEphysModel('memory',sessionLocation, channelMap);
-
             multiSdf.analysisDate = datestr(now);
-            multiSdf.session = session;
+            multiSdf.session = sessionName;
             multiSdf.info = nhpInfo;
-            multiSdf.channelMap = jouleModel.getChannelMap;
+            multiSdf.channelMap = model.getChannelMap;
 
             for c = 1:numel(conditions)
                 currCondition = conditions{c};
@@ -97,7 +96,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
                 logger.info(sprintf('Doing condition: outcome %s, alignOn %s, sdfWindow [%s]',...
                     targetCondition, alignOn, num2str(sdfWindow)));
                 % Get MultiUnitSdf -> has sdf_mean matrix and sdf matrix
-                [~, multiSdf.(condStr)] = jouleModel.getMultiUnitSdf(jouleModel.getTrialList(outcome,targetCondition), alignOn, sdfWindow);
+                [~, multiSdf.(condStr)] = model.getMultiUnitSdf(model.getTrialList(outcome,targetCondition), alignOn, sdfWindow);
                 sdfPopulationZscoredMean = multiSdf.(condStr).sdfPopulationZscoredMean;
                 for d = 1: numel(distancesToCompute)
                     distMeasureOption = distancesToCompute{d};
@@ -151,6 +150,16 @@ function [ nhpSessions ] = processSessions(nhpConfig)
             errorLogger.error(me);
         end
     end
+end
+
+%% Get sessionName
+function [ out ] = getSessionName(in)
+  if ischar(in)
+      temp = in; % file fullpath
+  elseif iscellstr(in)
+      temp = in{1}; % get first file fullpath
+  end
+  [~,out,~] = fileparts(temp);
 end
 
 %% For converting cell array to string (only char are converted)

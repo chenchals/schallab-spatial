@@ -15,8 +15,6 @@ classdef MemoryTypeModel < EphysModel
         %MEMORYTYPEMODEL Constructor
         function obj = MemoryTypeModel(source, channelMap )           
             obj.dataSource = source;
-            [~,f,e] = fileparts(source);
-            obj.sourceFile = [f e];
             obj.checkFileExists;
             obj.trialList = containers.Map;
             assert(isnumeric(channelMap) || numel(channelMap) > 1,...

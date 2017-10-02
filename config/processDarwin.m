@@ -7,7 +7,7 @@ function [ nhpSessions, nhpConfig ] = processDarwin()
     nhpConfig.nhp = 'darwin';
     nhpConfig.nhpSourceDir = '/Users/chenchals/Projects/lab-schall/schalllab-clustering/data/darwin';
     nhpConfig.excelFile = '/Users/chenchals/Projects/lab-schall/schalllab-spatial/config/SFN_NHP_Coordinates_All.xlsx';
-    nhpConfig.sheetName = 'Da';
+    nhpConfig.sheetName = 'Da_WJ';
     nhpConfig.nhpOutputDir = '/Users/chenchals/Projects/lab-schall/schalllab-spatial/processed/Darwin';
     % a function handle for getting sessions
     nhpConfig.getSessions = @getSessions;  
@@ -26,5 +26,8 @@ function [ sessions ] = getSessions(srcFolder, nhpTable)
   allSessions=cellfun(@(x) dir(fullfile(srcFolder, char(x),'DSP/DSP*/*_MG*.mat')),sessionNames,'UniformOutput',false);
   sessions = cellfun(@(x) strcat({x.folder}',filesep,{x.name}'),allSessions,'UniformOutput',false);
   sessions = sessions(~cellfun(@isempty,sessions));
+end
+
+function [ sessionName ] = getSessionName(sessionLocations)
 
 end
