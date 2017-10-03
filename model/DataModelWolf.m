@@ -1,5 +1,5 @@
-classdef MemoryTypeModel < EphysModel
-    %MEMORYTYPEMODEL Model class for reading data from Joule, Broca recordings
+classdef DataModelWolf < DataModel
+    %DATAMODELWOLF Model class for reading data from Joule, Broca recordings
     %  Inputs:
     %    source : A char. Must point to the matlab data file or folder
     %    channelMap : The mapping of cell ID and the channel lovcation on the probe.
@@ -10,50 +10,55 @@ classdef MemoryTypeModel < EphysModel
     %               For Darwin the map the locations [1:32] correspond
     %               linearly to DSP01 to DSP32
     
+    %  f='data/Joule/jp054n01.mat';chMap=[8, 7, 6, 5, 4, 3, 2, 1, 24, 23, 22, 21, 20, 19, 18, 17, 32, 31, 30, 29, 28, 27, 26, 25, 16, 15, 14, 13, 12, 11, 10, 9]';
+    % m=JouleModel(f,chMap)
+    
+    properties (Access=private)
+                 
+        eventVariables = {
+            'targOn'
+            'responseOnset'
+            'targAngle'
+            'trialOutcome'
+            };
+        
+        
+        spikeVariables = {
+            'spikeIdVar', 'SessionData.spikeUnitArray',...
+            'spiketimeVar', 'spikeData'
+            };
+
+    end
+    
     %Public methods
     methods
-        %MEMORYTYPEMODEL Constructor
-        function obj = MemoryTypeModel(source, channelMap )           
+
+        function obj = DataModelPaul(source, channelMap )           
             obj.dataSource = source;
             obj.checkFileExists;
             obj.trialList = containers.Map;
+            
+            obj.eventVars = obj.eventVariables;
+            obj.spikeVars = obj.spikeVariables;
+                       
             assert(isnumeric(channelMap) || numel(channelMap) > 1,...
                 'Input channelMap but be a numeric vector');
-            obj.channelMap = {'channelMap', channelMap};
+            obj.channelMap =  channelMap;
         end
         
         %% GETEVENTDATA
-        function [ eventData ] = getEventData(obj, varargin)
-            % Repeated call for eventData returns eventData already read .
-            
+        function [ eventData ] = getEventData(obj)
+            % Repeated call for eventData returns eventData already read .            
             if ~isempty(obj.eventData)
                 eventData = obj.eventData;
                 return
             end
-            % Get event data first time
-            if numel(varargin) == 1
-                eventMap = varargin{1};
-            end
-            
-            eventNames = eventMap.keys;
-            for i=1:numel(eventNames)
-                key = eventNames{i};
-                eventData.(key) = eventMap(key);
-            end
-            
-            
-            if iscellstr(eventNames)
-                eventData = load(obj.dataSource, eventNames{:});
-            elseif ischar(eventNames)
-                eventData = load(obj.dataSource, eventNames);
-            else
-                throw(MException('MemoryTypeModel:getVariables','eventNames must be cellstr or char'));
-            end
+            eventData = load(obj.dataSource, obj.eventVars{:});
             obj.eventData = coerceCell2Mat(obj, eventData);
         end
         
         %% GETSPIKEDATA
-        function [ spikeData ] = getSpikeData(obj, varargin)
+        function [ spikeData ] = getSpikeData(obj)
             %getSpikeData(obj, varargin)
             %    spikeIdPattern : For mat file with vars DSP01a, DSP09b
             %    spikeIdVar : Spike IDs are in a variable: SessionData.spikeUnitArray
@@ -75,13 +80,8 @@ classdef MemoryTypeModel < EphysModel
             
             % Get spike data first time
             try
-                if numel(varargin) == 0
-                    temp = {EphysModel.getSpikeVarNames(),obj.channelMap};
-                    args = parseArgs(obj,[temp{:}]);
-                else
-                    args = parseArgs(obj, varargin);
-                end
-                
+               args = parseArgs(obj,obj.spikeVars);
+               
                 if ~isempty(args.spikeIdPattern)
                     throw(MException('MemoryTypeModel:getSpikeData','Not yet implemented for spikeIdPattern'));
                 elseif ~isempty(args.spikeIdVar)
@@ -105,7 +105,7 @@ classdef MemoryTypeModel < EphysModel
                 end
                 tempSpk.spikeIds =tempSpk.spikeIds';
                 %Channel map order for spike Ids
-                channelMap = args.channelMap;
+                channelMap = obj.channelMap;
                 for ch = 1:max(channelMap)
                     channel = channelMap(ch);
                     spikeChannels = ~cellfun(@isempty,regexp(tempSpk.spikeIds,num2str(ch,'%02d')));
@@ -146,48 +146,9 @@ classdef MemoryTypeModel < EphysModel
             obj.trialList(key) = memTrialSelector(obj.getEventData(), outcomes, locations);
             selectedTrials = obj.trialList(key);
         end
-        
-        % GETSINGLEUNITSDF
-        function [ sdf ] = getSingleUnitSdf(obj, selectedTrials, alignEventName, sdfWindow)
-            sdf = getSdf(obj, selectedTrials, alignEventName, sdfWindow, false);
-            % Ordering singleUnits by channelMap is not implemented
-        end
-        
-        % GETMULTIUNITSDF
-        function [ sdf, sdfOrdered ] = getMultiUnitSdf(obj, selectedTrials, alignEventName, sdfWindow)
-            sdf = getSdf(obj, selectedTrials, alignEventName, sdfWindow, true);
-            sdfOrdered = orderSdfByChannelMap(sdf, getChannelMap(obj));
-        end
-        
-        % GETCHANNELMAP
-        function [ channelMap ] = getChannelMap(obj)
-            channelMap = obj.channelMap{2};
-        end
-        
     end
     %% Helper Functions
     methods (Access=private)
-        
-        function [ sdf ] = getSdf(obj, selectedTrials, alignEventName, sdfWindow, singleOrMultiFlag)
-            spikeTimes = obj.getSpikeData().spikeTimes;
-            eventData = obj.getEventData();
-            spikeIds = obj.getSpikeData().spikeIdsTable.spikeIds;
-            maxChannels = max(getChannelMap(obj));
-            sdf = spkfun_sdf(spikeTimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeIds, maxChannels, singleOrMultiFlag);
-            
-            % Find population mean and Std of firing rate
-            allSdf = cell2mat({sdf.sdf}');
-            allSdf = allSdf(:);
-            popMean = nanmean(allSdf);
-            popStd = nanstd(allSdf);
-            % compute z-scores for each cell/channel
-            for ii = 1:size(sdf,1)
-                sdf(ii).populationMean = popMean;
-                sdf(ii).populationStd = popStd;
-                sdf(ii).sdfPopulationZscored = (sdf(ii).sdf-popMean)/popStd;
-                sdf(ii).sdfPopulationZscoredMean = mean(sdf(ii).sdfPopulationZscored);
-            end
-        end
         
         function [ vars ] = coerceCell2Mat(obj,vars)
             fields = fieldnames(vars);
