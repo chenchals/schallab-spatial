@@ -5,20 +5,15 @@ function [ nhpSessions ] = processJoule()
 % see also PROCESSSESSIONS for how to define nhpConfig 
 
     nhpConfig.nhp = 'joule';
-    nhpConfig.nhpSourceDir = '/Users/chenchals/Projects/lab-schall/schalllab-clustering/data/joule';
+    nhpConfig.nhpSourceDir = '/Users/chenchals/Projects/lab-schall/schalllab-clustering';
     nhpConfig.excelFile = '/Users/chenchals/Projects/lab-schall/schalllab-spatial/config/SFN_NHP_Coordinates_All.xlsx';
     nhpConfig.sheetName = 'Jo';
     nhpConfig.nhpOutputDir = '/Users/chenchals/Projects/lab-schall/schalllab-spatial/processed/Joule';
     
-    nhpConfig.eventVars = {
-        'targOn',...
-        'responseOnset',...
-        'trialOutcome',...
-        'targAngle'
-        };
-
     % a function handle for getting sessions
     nhpConfig.getSessions = @getSessions;  
+    % DataModel to use
+    nhpConfig.dataModelName = DataModel.PAUL_DATA_MODEL;
     
     nhpSessions = processSessions(nhpConfig);
     
@@ -26,7 +21,7 @@ end
 
 function [ sessions ] = getSessions(srcFolder, nhpTable)
 % Function to output the location of joule source data files as cellstr
-%  Uses column name 'filename' ifrom the execl file used for configuration
-  sessions = strcat(srcFolder, filesep, regexprep(nhpTable.filename,'''',''));
+%  Uses column name 'matPath' from the execl file used for configuration
+  sessions = strcat(srcFolder, filesep, nhpTable.matPath);
 end
 

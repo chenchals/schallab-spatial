@@ -31,6 +31,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     sheetName = nhpConfig.sheetName;
     nhpOutputDir = nhpConfig.nhpOutputDir;
     getSessions = nhpConfig.getSessions;
+    dataModelName = nhpConfig.dataModelName;
 
     if ~exist(nhpOutputDir,'dir')
         mkdir(nhpOutputDir);
@@ -48,32 +49,32 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     
     nhpConfig.nhpTable = nhpTable;
     
-    sessions = getSessions(nhpSourceDir, nhpTable);
-    nhpConfig.sessions = sessions;
+    sessionLocations = getSessions(nhpSourceDir, nhpTable);
+    nhpConfig.sessions = sessionLocations;
     
     save(outputFile, 'nhpConfig');
 
     outcome ='saccToTarget';
     % Specify conditions to for creating multiSdf
     %condition{x} = {alignOnEventName, TargetLeftOrRight, sdfWindow}
-    conditions{1} = {'targOn', 'left', [-100 400]};
+    conditions{1} = {'targetOnset', 'left', [-100 400]};
     conditions{2} = {'responseOnset', 'left', [-300 200]};
-    conditions{3} = {'targOn', 'right', [-100 400]};
+    conditions{3} = {'targetOnset', 'right', [-100 400]};
     conditions{4} = {'responseOnset', 'right', [-300 200]};
 
     distancesToCompute = {'correlation'};
-    nhpSessions = cell(numel(sessions),1);
+    nhpSessions = cell(numel(sessionLocations),1);
     %parfor s = 1:numel(sessions)
-    for s = 1:numel(sessions)
+    for s = 1:numel(sessionLocations)
         try
             multiSdf = struct();
             nhpInfo = nhpTable(s,:);
-            sessionLocation = sessions{s};
+            sessionLocation = sessionLocations{s};
             channelMap = nhpInfo.ephysChannelMap{1};
-            sessionName = getSessionName(sessionLocation);            
+            sessionName =  nhpInfo.session{1};            
             logger.info(sprintf('Processing session %s',sessionName));
             % Create instance of MemoryTypeModel
-            model = EphysModel.newEphysModel('memory',sessionLocation, channelMap);
+            model = DataModel.newInstance(dataModelName, sessionLocation, channelMap);
             
             if contains(lower(nhpInfo.chamberLoc),'left')
                 ipsi = 'left';
