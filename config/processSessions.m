@@ -31,6 +31,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     sheetName = nhpConfig.sheetName;
     nhpOutputDir = nhpConfig.nhpOutputDir;
     getSessions = nhpConfig.getSessions;
+    dataModelName = nhpConfig.dataModelName;
 
     if ~exist(nhpOutputDir,'dir')
         mkdir(nhpOutputDir);
@@ -39,48 +40,52 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     logger = Logger.getLogger(fullfile(nhpOutputDir,[nhp 'ProcessSessions.log']));
     errorLogger = Logger.getLogger(fullfile(nhpOutputDir,[nhp 'ProcessSessionsErrors.log']));
     
-    save(outputFile, 'nhpConfig');
     % Read excel sheet
     nhpTable = readtable(excelFile, 'Sheet', sheetName);
     nhpTable.date = datestr(nhpTable.date,'mm/dd/yyyy');
     nhpTable.ephysChannelMap = arrayfun(@(x) ...
         str2num(char(split(nhpTable.ephysChannelMap{x},', '))),...
         1:size(nhpTable,1),'UniformOutput',false)';   %#ok<ST2NM>
+    
+    nhpConfig.nhpTable = nhpTable;
+    
+    sessionLocations = getSessions(nhpSourceDir, nhpTable);
+    nhpConfig.sessions = sessionLocations;
+    
+    save(outputFile, 'nhpConfig');
 
     outcome ='saccToTarget';
     % Specify conditions to for creating multiSdf
     %condition{x} = {alignOnEventName, TargetLeftOrRight, sdfWindow}
-    conditions{1} = {'targOn', 'left', [-100 400]};
+    conditions{1} = {'targetOnset', 'left', [-100 400]};
     conditions{2} = {'responseOnset', 'left', [-300 200]};
-    conditions{3} = {'targOn', 'right', [-100 400]};
+    conditions{3} = {'targetOnset', 'right', [-100 400]};
     conditions{4} = {'responseOnset', 'right', [-300 200]};
 
     distancesToCompute = {'correlation'};
-    sessions = getSessions(nhpSourceDir, nhpTable);
-    nhpSessions = cell(numel(sessions),1);
+    nhpSessions = cell(numel(sessionLocations),1);
     %parfor s = 1:numel(sessions)
-    for s = 1:numel(sessions)
+    for s = 1:numel(sessionLocations)
         try
             multiSdf = struct();
             nhpInfo = nhpTable(s,:);
-            sessionLocation = sessions{s};
+            sessionLocation = sessionLocations{s};
             channelMap = nhpInfo.ephysChannelMap{1};
-            logger.info(sprintf('Processing file %s',sessionLocation));
-            [~,session,~] = fileparts(sessionLocation);
-
+            sessionName =  nhpInfo.session{1};            
+            logger.info(sprintf('Processing session %s',sessionName));
+            % Create instance of MemoryTypeModel
+            model = DataModel.newInstance(dataModelName, sessionLocation, channelMap);
+            
             if contains(lower(nhpInfo.chamberLoc),'left')
                 ipsi = 'left';
             else
                 ipsi = 'right';
             end
 
-            % Create instance of MemoryTypeModel
-            jouleModel = EphysModel.newEphysModel('memory',sessionLocation, channelMap);
-
             multiSdf.analysisDate = datestr(now);
-            multiSdf.session = session;
+            multiSdf.session = sessionName;
             multiSdf.info = nhpInfo;
-            multiSdf.channelMap = jouleModel.getChannelMap;
+            multiSdf.channelMap = model.getChannelMap;
 
             for c = 1:numel(conditions)
                 currCondition = conditions{c};
@@ -92,7 +97,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
                 logger.info(sprintf('Doing condition: outcome %s, alignOn %s, sdfWindow [%s]',...
                     targetCondition, alignOn, num2str(sdfWindow)));
                 % Get MultiUnitSdf -> has sdf_mean matrix and sdf matrix
-                [~, multiSdf.(condStr)] = jouleModel.getMultiUnitSdf(jouleModel.getTrialList(outcome,targetCondition), alignOn, sdfWindow);
+                [~, multiSdf.(condStr)] = model.getMultiUnitSdf(model.getTrialList(outcome,targetCondition), alignOn, sdfWindow);
                 sdfPopulationZscoredMean = multiSdf.(condStr).sdfPopulationZscoredMean;
                 for d = 1: numel(distancesToCompute)
                     distMeasureOption = distancesToCompute{d};
@@ -146,6 +151,16 @@ function [ nhpSessions ] = processSessions(nhpConfig)
             errorLogger.error(me);
         end
     end
+end
+
+%% Get sessionName
+function [ out ] = getSessionName(in)
+  if ischar(in)
+      temp = in; % file fullpath
+  elseif iscellstr(in)
+      temp = in{1}; % get first file fullpath
+  end
+  [~,out,~] = fileparts(temp);
 end
 
 %% For converting cell array to string (only char are converted)

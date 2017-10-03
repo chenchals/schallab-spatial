@@ -102,9 +102,9 @@ function [ outSdfStruct ] = spkfun_sdf(spikeTimes, selectedTrials, eventData, al
     else % if multiunitTrueFalse = true
         %% Compute for Multi Unit: rasters, sdf, sdf_mean, sdf_std
         % Merge units for each channel
-        fprintf('Doing channel ');
+        sprintf('Doing channel ');
         for chanIndex = 1:maxChannels
-            fprintf('#%02d ',chanIndex);
+            sprintf('#%02d ',chanIndex);
             cellIndex = find(~cellfun(@isempty,regexp(spikeIds,num2str(chanIndex,'%02d'))));
             if numel(cellIndex)>0
                 temp_spikes = arrayfun(@(x) cell2mat(spikeTimes(x,cellIndex)'),selectedTrials,'UniformOutput',false);
@@ -121,7 +121,7 @@ function [ outSdfStruct ] = spkfun_sdf(spikeTimes, selectedTrials, eventData, al
                 outNew.multiUnit(chanIndex,1) = computeSdfNans(nTrials,sdfWindow,{},[],[]);
             end            
         end
-        fprintf('\n');
+        sprintf('\n');
         outSdfStruct = outNew.multiUnit;
     end
     
