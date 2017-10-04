@@ -13,6 +13,7 @@ function [ nhpSessions ] = processBroca()
     nhpConfig.getSessions = @getSessions;  
     % DataModel to use
     nhpConfig.dataModelName = DataModel.PAUL_DATA_MODEL;
+    nhpConfig.outcome = 'saccToTarget';
 
     nhpSessions = processSessions(nhpConfig);
     

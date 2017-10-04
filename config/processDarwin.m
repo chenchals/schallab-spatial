@@ -13,6 +13,7 @@ function [ nhpSessions, nhpConfig ] = processDarwin()
     nhpConfig.getSessions = @getSessions;  
     % DataModel to use
     nhpConfig.dataModelName = DataModel.WOLF_DATA_MODEL;
+    nhpConfig.outcome = 'Correct';
     
     nhpSessions = processSessions(nhpConfig);
     

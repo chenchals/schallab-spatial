@@ -32,6 +32,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     nhpOutputDir = nhpConfig.nhpOutputDir;
     getSessions = nhpConfig.getSessions;
     dataModelName = nhpConfig.dataModelName;
+    outcome = nhpConfig.outcome; %'saccToTarget';
 
     if ~exist(nhpOutputDir,'dir')
         mkdir(nhpOutputDir);
@@ -54,7 +55,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     
     save(outputFile, 'nhpConfig');
 
-    outcome ='saccToTarget';
+  
     % Specify conditions to for creating multiSdf
     %condition{x} = {alignOnEventName, TargetLeftOrRight, sdfWindow}
     conditions{1} = {'targetOnset', 'left', [-100 400]};
@@ -181,7 +182,7 @@ function [ figH ] = doPlot8(session, sessionLabel)
     distMeasure = 'rsquared';
 
     ipsiContraOrder = {'ipsi','contra'};
-    alignOnOrder = {'targOn', 'responseOnset'};
+    alignOnOrder = {'targetOnset', 'responseOnset'};
 
     conditions = fieldnames(session);
     frPlots = cell(4,1);

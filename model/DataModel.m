@@ -93,17 +93,15 @@ classdef (Abstract=true) DataModel < handle
                 case DataModel.PAUL_DATA_MODEL
                     dataModel = DataModelPaul(source,channelMap);
                 case DataModel.WOLF_DATA_MODEL
-                    throw(MException('DataModel:newInstance', 'Not yet implemented'));
+                    dataModel = DataModelWolf(source,channelMap);
                 otherwise
                     throw(MException('DataModel:newInstance', 'Not yet implemented'));
             end
         end
         
         function [ varMap ] = asMap(obj,colonSeparatedKeyVal)
-            temp = regexp(colonSeparatedKeyVal,'^(.*):(.*)$','tokens');
-            keys=arrayfun(@(x) x{1}{1}{1},temp,'UniformOutput',false);
-            vals=arrayfun(@(x) x{1}{1}{2},temp,'UniformOutput',false);
-            varMap = containers.Map(keys,vals);
+            kv=split(colonSeparatedKeyVal,':');
+            varMap=containers.Map({kv{:,1}},{kv{:,2}});
         end
         
     end

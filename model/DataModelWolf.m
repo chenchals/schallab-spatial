@@ -12,20 +12,61 @@ classdef DataModelWolf < DataModel
     
     %  f='data/Joule/jp054n01.mat';chMap=[8, 7, 6, 5, 4, 3, 2, 1, 24, 23, 22, 21, 20, 19, 18, 17, 32, 31, 30, 29, 28, 27, 26, 25, 16, 15, 14, 13, 12, 11, 10, 9]';
     % m=JouleModel(f,chMap)
+    % See PLX_get_paradigm.m (Wolf's code)
+    % Line# 237 - line# 239
+    % tempoStimOn = PLXin_get_event_time(EV.Target_, t);
+    %     
+    % plxMat.Task.refresh_offset(t)  = plxMat.Task.StimOnsetToTrial(t) - tempoStimOn;
+    % ...
+    % Line# 263 - line#277
+    % % define stimulus onset as zero
+    % %plxMat.Task.Task.SRT       = plxMat.Task.SRT              - plxMat.Task.StimOnsetToTrial;
+    % plxMat.Task.Saccade         = plxMat.Task.Saccade          - plxMat.Task.StimOnsetToTrial;  % time of saccade relative to trial start
+    % plxMat.Task.SaccEnd         = plxMat.Task.SaccEnd          - plxMat.Task.StimOnsetToTrial;
+    % plxMat.Task.Reward          = plxMat.Task.Reward           - plxMat.Task.StimOnsetToTrial;
+    % plxMat.Task.Tone            = plxMat.Task.Tone             - plxMat.Task.StimOnsetToTrial;
+    % plxMat.Task.RewardTone      = plxMat.Task.RewardTone       - plxMat.Task.StimOnsetToTrial;
+    % plxMat.Task.ErrorTone       = plxMat.Task.ErrorTone        - plxMat.Task.StimOnsetToTrial;
+    % plxMat.Task.FixSpotOn       = plxMat.Task.FixSpotOn        - plxMat.Task.StimOnsetToTrial;
+    % plxMat.Task.FixSpotOff      = plxMat.Task.FixSpotOff       - plxMat.Task.StimOnsetToTrial;
+    % plxMat.Task.StimOnset       = plxMat.Task.StimOnsetToTrial - plxMat.Task.StimOnsetToTrial; % should be all zero aferwards
+    % plxMat.Task.FixSpotOnTEMPO  = plxMat.Task.FixSpotOnTEMPO   - plxMat.Task.StimOnsetToTrial;
+    % plxMat.Task.FixSpotOffTEMPO = plxMat.Task.FixSpotOffTEMPO  - plxMat.Task.StimOnsetToTrial;
+    % 
+    % plxMat.Task.SaccDur         = plxMat.Task.SaccEnd          - plxMat.Task.Saccade;
+    %     
+    %
+    % # Line# 383 - line# 398
+    % the numerical values that are subtracted are defined in the tempo
+    % configuration files. Unfortunately this has to be hard coded and is
+    % arbitrary in its definition. Be careful and double check thouroughy.
+    %
+    % position and angle assignment
+    %      ____________________
+    %     |  135 |  90  |   45 |
+    %     |  (7) |  (0) |  (1) |
+    %     |______|______|______|
+    %     |  180 |      |   0  |
+    %     |  (6) |  *   |  (2) |
+    %     |______|______|______|
+    %     |  225 |  270 |  315 |
+    %     |  (5) |  (4) |  (3) |
+    %     |______|______|______|
+    %    
+    % Task.TargetLoc = TargetAngle, 
     
     properties (Access=private)
                  
         eventVariables = {
-            'targOn'
-            'responseOnset'
-            'targAngle'
-            'trialOutcome'
+            'targetOnset:StimOnset'
+            'responseOnset:Saccade'
+            'targetLocation:TargetLoc'
             };
-        
-        
+        % build 'trialOutcome' var from Task.error, Task.errorNames, Task.error==0 are cCorrect trials          
+  
         spikeVariables = {
-            'spikeIdVar', 'SessionData.spikeUnitArray',...
-            'spiketimeVar', 'spikeData'
+            'spikeIdVar:DSPname'
+            'spiketimeVar:spiketimes'
             };
 
     end
@@ -33,12 +74,12 @@ classdef DataModelWolf < DataModel
     %Public methods
     methods
 
-        function obj = DataModelPaul(source, channelMap )           
+        function obj = DataModelWolf(source, channelMap )           
             obj.dataSource = source;
             obj.checkFileExists;
             obj.trialList = containers.Map;
             
-            obj.eventVars = obj.eventVariables;
+            obj.eventVars = DataModel.asMap(obj, obj.eventVariables);
             obj.spikeVars = obj.spikeVariables;
                        
             assert(isnumeric(channelMap) || numel(channelMap) > 1,...
@@ -53,8 +94,20 @@ classdef DataModelWolf < DataModel
                 eventData = obj.eventData;
                 return
             end
-            eventData = load(obj.dataSource, obj.eventVars{:});
+            keys = obj.eventVars.keys;
+            vars = obj.eventVars.values;
+            % Task variable as all the necessary events
+            % use one of the source files to get task
+            behaviorFile = obj.dataSource{1};
+            temp = load(behaviorFile,'Task');            
+            for i=1:numel(vars)
+                eventData.(keys{i}) = temp.Task.(vars{i});
+
+            end
+            % Build trialOutcome variable
+            eventData.trialOutcome = buildTrialOutcomeVar(obj,temp.Task);
             obj.eventData = coerceCell2Mat(obj, eventData);
+            clear temp
         end
         
         %% GETSPIKEDATA
@@ -80,18 +133,10 @@ classdef DataModelWolf < DataModel
             
             % Get spike data first time
             try
-               args = parseArgs(obj,obj.spikeVars);
-               
-                if ~isempty(args.spikeIdPattern)
-                    throw(MException('MemoryTypeModel:getSpikeData','Not yet implemented for spikeIdPattern'));
-                elseif ~isempty(args.spikeIdVar)
-                    if ~contains(who('-file',obj.dataSource),args.spiketimeVar)
-                        throw(MException('MemoryTypeModel:getSpikeData',...
-                            sprintf('Spike data variable [ %s ] does not exist  in file %s',...
-                            args.spiketimeVar,obj.dataSource)));
-                    end
+                for f = 1:numel(obj.dataSource)
+                    spikeFile = obj.dataSource{f};
                     % spiketimes
-                    t = load(obj.dataSource,args.spiketimeVar);
+                    t = load(spikeFile,);
                     spikeData.spikeTimes = t.(args.spiketimeVar);
                     clear t
                     % spikeIds - in a struct variable
@@ -143,14 +188,15 @@ classdef DataModelWolf < DataModel
                 return
             end
             % Get trial list first time
-            obj.trialList(key) = memTrialSelector(obj.getEventData(), outcomes, locations);
+            obj.trialList(key) = memTrialSelector(obj.getEventData().trialOutcome, outcomes,...
+                obj.getEventData().targetLocation, targetHemifield);
             selectedTrials = obj.trialList(key);
         end
     end
     %% Helper Functions
     methods (Access=private)
         
-        function [ vars ] = coerceCell2Mat(obj,vars)
+        function [ vars ] = coerceCell2Mat(obj,vars) %#ok<INUSL>
             fields = fieldnames(vars);
             for jj=1:numel(fields)
                 field = fields{jj};
@@ -166,8 +212,22 @@ classdef DataModelWolf < DataModel
                 end
             end
         end
+
+       function [ trialOutcome ] = buildTrialOutcomeVar(obj, taskVar) %#ok<INUSL>
+            trialOutcome = repmat({''},taskVar.NTrials,1);
+            uniqErrIndex=unique(taskVar.error(isfinite(taskVar.error)));
+            for ii = 1:numel(uniqErrIndex)
+                outcome = taskVar.error_names{ii};
+                if strcmpi(outcome,'False') % no error
+                    outcome = 'Correct';
+                end
+                
+                ind = find(taskVar.error==uniqErrIndex(ii));
+                trialOutcome(ind) = {outcome}; %#ok<FNDSB>
+            end
+        end
         
-        function [ args ] = parseArgs(obj,inArgs)
+        function [ args ] = parseArgs(obj,inArgs) %#ok<INUSL>
             argsObj = inputParser;
             argsObj.addParameter('spikeIdPattern', '', @(x) assert(ischar(x),'Value must be a char array'));
             argsObj.addParameter('spikeIdVar', '', @(x) assert(ischar(x),'Value must be a char array'));

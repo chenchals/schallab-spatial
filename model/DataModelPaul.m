@@ -14,33 +14,38 @@ classdef DataModelPaul < DataModel
     % m=JouleModel(f,chMap)
     
     properties (Access=private)
-                 
+        
         eventVariables = {
             'targetOnset:targOn'
             'responseOnset:responseOnset'
             'targetLocation:targAngle'
             'trialOutcome:trialOutcome'
-            };       
+            };
         
-        spikeVariables = {
+        spikeVariables_ori = {
             'spikeIdVar', 'SessionData.spikeUnitArray',...
             'spiketimeVar', 'spikeData'
             };
-
+        
+        spikeVariables = {
+            'spikeIds:SessionData.spikeUnitArray' % from SessionData
+            'spikeTimes:spikeData'
+            };
+        
     end
     
     %Public methods
     methods
-
-        function obj = DataModelPaul(source, channelMap )     
-            
+        
+        function obj = DataModelPaul(source, channelMap )
             obj.dataSource = source;
             obj.checkFileExists;
             obj.trialList = containers.Map;
             
             obj.eventVars = DataModel.asMap(obj, obj.eventVariables);
-            obj.spikeVars = obj.spikeVariables;
-                       
+            %obj.spikeVars = obj.spikeVariables;
+            obj.spikeVars = DataModel.asMap(obj, obj.spikeVariables);
+            
             assert(isnumeric(channelMap) || numel(channelMap) > 1,...
                 'Input channelMap but be a numeric vector');
             obj.channelMap =  channelMap;
@@ -48,7 +53,7 @@ classdef DataModelPaul < DataModel
         
         %% GETEVENTDATA
         function [ eventData ] = getEventData(obj)
-            % Repeated call for eventData returns eventData already read .            
+            % Repeated call for eventData returns eventData already read .
             if ~isempty(obj.eventData)
                 eventData = obj.eventData;
                 return
@@ -70,64 +75,38 @@ classdef DataModelPaul < DataModel
             %    spikeIdVar : Spike IDs are in a variable: SessionData.spikeUnitArray
             %    spiketimeVar : A cell array of { nTrials x nUnits}
             %    channelMap : Linear mapping of channels.
-            %
-            % Usage:
-            % [ out ] = obj.getSpikeData(...
-            %           'spikeIdVar', 'SessionData.spikeUnitArray',...
-            %           'spiketimeVar', 'spikeData',...
-            %           'channelMap', [9:16,25:32,17:24,1:8])
-            
-            
-            % Repeated call for spikeData returns spikeData already read
-            if ~isempty(obj.spikeData)
-                spikeData = obj.spikeData;
-                return
-            end
-            
-            % Get spike data first time
-            try
-               args = parseArgs(obj,obj.spikeVars);
-               
-                if ~isempty(args.spikeIdPattern)
-                    throw(MException('MemoryTypeModel:getSpikeData','Not yet implemented for spikeIdPattern'));
-                elseif ~isempty(args.spikeIdVar)
-                    if ~contains(who('-file',obj.dataSource),args.spiketimeVar)
-                        throw(MException('MemoryTypeModel:getSpikeData',...
-                            sprintf('Spike data variable [ %s ] does not exist  in file %s',...
-                            args.spiketimeVar,obj.dataSource)));
-                    end
-                    % spiketimes
-                    t = load(obj.dataSource,args.spiketimeVar);
-                    spikeData.spikeTimes = t.(args.spiketimeVar);
-                    clear t
-                    % spikeIds - in a struct variable
-                    v = cellstr(split(args.spikeIdVar,'.'));
-                    s = load(obj.dataSource,v{1});
-                    s = s.(v{1});
-                    tempSpk.spikeIds = s.(v{2});
-                    clear s v
+            keys = obj.spikeVars.keys;
+            vars = obj.spikeVars.values;
+            for i = 1:numel(keys)
+                key = keys{i};
+                var = vars{i};
+                if contains(var,'.')
+                    varParts = split(var,'.');
+                    assert(sum(cell2mat(strfind(who('-file',obj.dataSource),varParts{1})))==1, ...
+                        sprintf('Spike data variable [ %s ] does not exist  in file %s',...
+                        varParts{1},obj.dataSource));
+                    temp = load(obj.dataSource, varParts{1});
+                    tempSpk.spikeIds = temp.(varParts{1}).(varParts{2})';
+                    clear t temp
                 else
-                    throw(MException('MemoryTypeModel:getSpikeData','Unknown process to get spikeData'));
+                    temp = load(obj.dataSource,var);
+                    spikeData.(key) = temp.(var);
+                    clear temp
                 end
-                tempSpk.spikeIds =tempSpk.spikeIds';
-                %Channel map order for spike Ids
-                channelMap = obj.channelMap;
-                for ch = 1:max(channelMap)
-                    channel = channelMap(ch);
-                    spikeChannels = ~cellfun(@isempty,regexp(tempSpk.spikeIds,num2str(ch,'%02d')));
-                    tempSpk.unitSortOrder(spikeChannels,1)= channel;
-                    tempChan.channelIds{ch,1} =  ['chan',num2str(ch,'%02d')];
-                end
-                tempChan.channelSortOrder(:,1)= channelMap';
-                spikeData.spikeIdsTable = struct2table(tempSpk);
-                spikeData.channelIdsTable = struct2table(tempChan);
-                obj.spikeData = spikeData;
-                
-            catch ME
-                msg = [ME.message, char(10), char(10), help('MemoryTypeModel.getSpikeData') ];
-                error('MemoryTypeModel:getSpikeData', msg);
             end
             
+            %Channel map order for spike Ids
+            channelMap = obj.channelMap;
+            for ch = 1:max(channelMap)
+                channel = channelMap(ch);
+                spikeChannels = ~cellfun(@isempty,regexp(tempSpk.spikeIds,num2str(ch,'%02d')));
+                tempSpk.unitSortOrder(spikeChannels,1)= channel;
+                tempChan.channelIds{ch,1} =  ['chan',num2str(ch,'%02d')];
+            end
+            tempChan.channelSortOrder(:,1)= channelMap';
+            spikeData.spikeIdsTable = struct2table(tempSpk);
+            spikeData.channelIdsTable = struct2table(tempChan);
+            obj.spikeData = spikeData;
         end
         
         % GETTRILALIST
@@ -173,17 +152,7 @@ classdef DataModelPaul < DataModel
                 end
             end
         end
-        
-        function [ args ] = parseArgs(obj,inArgs)
-            argsObj = inputParser;
-            argsObj.addParameter('spikeIdPattern', '', @(x) assert(ischar(x),'Value must be a char array'));
-            argsObj.addParameter('spikeIdVar', '', @(x) assert(ischar(x),'Value must be a char array'));
-            argsObj.addParameter('spiketimeVar', '', @(x) assert(ischar(x),'Value must be a char array'));
-            argsObj.addParameter('channelMap', [], @(x) assert(isnumeric(x),'Value must be a vector of channel numbers'));
-            argsObj.parse(inArgs{:});
-            args = argsObj.Results;
-        end
-        
+                
     end
 end
 
