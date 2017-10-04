@@ -65,8 +65,8 @@ classdef DataModelWolf < DataModel
         % build 'trialOutcome' var from Task.error, Task.errorNames, Task.error==0 are cCorrect trials          
   
         spikeVariables = {
-            'spikeIdVar:DSPname'
-            'spiketimeVar:spiketimes'
+            'spikeIds:DSPname'
+            'spikeTimes:spiketimes'
             };
 
     end
@@ -80,7 +80,7 @@ classdef DataModelWolf < DataModel
             obj.trialList = containers.Map;
             
             obj.eventVars = DataModel.asMap(obj, obj.eventVariables);
-            obj.spikeVars = obj.spikeVariables;
+            obj.spikeVars =  DataModel.asMap(obj, obj.spikeVariables);
                        
             assert(isnumeric(channelMap) || numel(channelMap) > 1,...
                 'Input channelMap but be a numeric vector');
@@ -112,61 +112,49 @@ classdef DataModelWolf < DataModel
         
         %% GETSPIKEDATA
         function [ spikeData ] = getSpikeData(obj)
-            %getSpikeData(obj, varargin)
-            %    spikeIdPattern : For mat file with vars DSP01a, DSP09b
-            %    spikeIdVar : Spike IDs are in a variable: SessionData.spikeUnitArray
-            %    spiketimeVar : A cell array of { nTrials x nUnits}
-            %    channelMap : Linear mapping of channels.
-            %
-            % Usage:
-            % [ out ] = obj.getSpikeData(...
-            %           'spikeIdVar', 'SessionData.spikeUnitArray',...
-            %           'spiketimeVar', 'spikeData',...
-            %           'channelMap', [9:16,25:32,17:24,1:8])
+            %getSpikeData(obj)
+            %    spikeIds : SessionData.spikeUnitArray - A cellstr
+            %    spiketimes : spikeData - A cell array of { nTrials x nUnits}
             
-            
-            % Repeated call for spikeData returns spikeData already read
+             % Repeated call for spikeData returns spikeData already read
             if ~isempty(obj.spikeData)
                 spikeData = obj.spikeData;
                 return
             end
+            tempSpk = struct();
+            spikeData = struct();
+            keys = obj.spikeVars.keys;
+            vars = obj.spikeVars.values;
+            for f = 1:numel(obj.dataSource)
+                datafile = obj.dataSource{f};
+                tempVars = load(datafile,vars{:});
+                for i = 1:numel(keys)
+                    key = keys{i};
+                    var = vars{i};
+                    if strcmp('spikeIds',key)
+                        tempSpk.(key){f}=tempVars.(var);
+                    else % key if spikeTimes
+                        nTrials = size(tempVars.(var),1);
+                        for t = 1:nTrials
+                            spikeData.(key){t,f}=tempVars.(var)(t,~isnan(tempVars.(var)(t,:)))';
+                        end
+                     end
+                end
+                clear temVars;
+            end % for each unit file
             
-            % Get spike data first time
-            try
-                for f = 1:numel(obj.dataSource)
-                    spikeFile = obj.dataSource{f};
-                    % spiketimes
-                    t = load(spikeFile,);
-                    spikeData.spikeTimes = t.(args.spiketimeVar);
-                    clear t
-                    % spikeIds - in a struct variable
-                    v = cellstr(split(args.spikeIdVar,'.'));
-                    s = load(obj.dataSource,v{1});
-                    s = s.(v{1});
-                    tempSpk.spikeIds = s.(v{2});
-                    clear s v
-                else
-                    throw(MException('MemoryTypeModel:getSpikeData','Unknown process to get spikeData'));
-                end
-                tempSpk.spikeIds =tempSpk.spikeIds';
-                %Channel map order for spike Ids
-                channelMap = obj.channelMap;
-                for ch = 1:max(channelMap)
-                    channel = channelMap(ch);
-                    spikeChannels = ~cellfun(@isempty,regexp(tempSpk.spikeIds,num2str(ch,'%02d')));
-                    tempSpk.unitSortOrder(spikeChannels,1)= channel;
-                    tempChan.channelIds{ch,1} =  ['chan',num2str(ch,'%02d')];
-                end
-                tempChan.channelSortOrder(:,1)= channelMap';
-                spikeData.spikeIdsTable = struct2table(tempSpk);
-                spikeData.channelIdsTable = struct2table(tempChan);
-                obj.spikeData = spikeData;
-                
-            catch ME
-                msg = [ME.message, char(10), char(10), help('MemoryTypeModel.getSpikeData') ];
-                error('MemoryTypeModel:getSpikeData', msg);
+            %Channel map order for spike Ids
+            channelMap = obj.channelMap;
+            for ch = 1:max(channelMap)
+                channel = channelMap(ch);
+                spikeChannels = ~cellfun(@isempty,regexp(tempSpk.spikeIds,num2str(ch,'%02d')));
+                tempSpk.unitSortOrder(spikeChannels,1)= channel;
+                tempChan.channelIds{ch,1} =  ['chan',num2str(ch,'%02d')];
             end
-            
+            tempChan.channelSortOrder(:,1)= channelMap';
+            spikeData.spikeIdsTable = struct2table(tempSpk);
+            spikeData.channelIdsTable = struct2table(tempChan);
+            obj.spikeData = spikeData;
         end
         
         % GETTRILALIST

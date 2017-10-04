@@ -70,11 +70,16 @@ classdef DataModelPaul < DataModel
         
         %% GETSPIKEDATA
         function [ spikeData ] = getSpikeData(obj)
-            %getSpikeData(obj, varargin)
-            %    spikeIdPattern : For mat file with vars DSP01a, DSP09b
-            %    spikeIdVar : Spike IDs are in a variable: SessionData.spikeUnitArray
-            %    spiketimeVar : A cell array of { nTrials x nUnits}
-            %    channelMap : Linear mapping of channels.
+            %getSpikeData(obj)
+            %    spikeIds : SessionData.spikeUnitArray - A cellstr
+            %    spiketimes : spikeData - A cell array of { nTrials x nUnits}
+            
+             % Repeated call for spikeData returns spikeData already read
+            if ~isempty(obj.spikeData)
+                spikeData = obj.spikeData;
+                return
+            end
+
             keys = obj.spikeVars.keys;
             vars = obj.spikeVars.values;
             for i = 1:numel(keys)
@@ -83,7 +88,7 @@ classdef DataModelPaul < DataModel
                 if contains(var,'.')
                     varParts = split(var,'.');
                     assert(sum(cell2mat(strfind(who('-file',obj.dataSource),varParts{1})))==1, ...
-                        sprintf('Spike data variable [ %s ] does not exist  in file %s',...
+                        sprintf('Spike Id variable [ %s ] does not exist  in file %s',...
                         varParts{1},obj.dataSource));
                     temp = load(obj.dataSource, varParts{1});
                     tempSpk.spikeIds = temp.(varParts{1}).(varParts{2})';
