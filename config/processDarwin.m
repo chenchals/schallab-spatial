@@ -8,7 +8,9 @@ function [ nhpSessions, nhpConfig ] = processDarwin()
     nhpConfig.nhpSourceDir = '/Volumes/schalllab';
     nhpConfig.excelFile = 'SFN_NHP_Coordinates_All.xlsx';
     nhpConfig.sheetName = 'Da_WJ';
-    nhpConfig.nhpOutputDir = '../processed/Darwin';
+    % Write to one dir above the config dir
+    [thisDir,~,~] = fileparts(mfilename('fullpath'));    
+    nhpConfig.nhpOutputDir = fullfile(thisDir, '../processed/Joule');
     % a function handle for getting sessions
     nhpConfig.getSessions = @getSessions;  
     % DataModel to use

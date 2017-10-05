@@ -8,7 +8,9 @@ function [ nhpSessions ] = processJoule()
     nhpConfig.nhpSourceDir = '/Volumes/schalllab';
     nhpConfig.excelFile = 'SFN_NHP_Coordinates_All.xlsx';
     nhpConfig.sheetName = 'Jo';
-    nhpConfig.nhpOutputDir = '../processed/Joule';
+    % Write to one dir above the config dir
+    [thisDir,~,~] = fileparts(mfilename('fullpath'));    
+    nhpConfig.nhpOutputDir = fullfile(thisDir, '../processed/Joule');
     
     % a function handle for getting sessions
     nhpConfig.getSessions = @getSessions;  
