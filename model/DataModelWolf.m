@@ -10,8 +10,6 @@ classdef DataModelWolf < DataModel
     %               For Darwin the map the locations [1:32] correspond
     %               linearly to DSP01 to DSP32
     
-    %  f='data/Joule/jp054n01.mat';chMap=[8, 7, 6, 5, 4, 3, 2, 1, 24, 23, 22, 21, 20, 19, 18, 17, 32, 31, 30, 29, 28, 27, 26, 25, 16, 15, 14, 13, 12, 11, 10, 9]';
-    % m=JouleModel(f,chMap)
     % See PLX_get_paradigm.m (Wolf's code)
     % Line# 237 - line# 239
     % tempoStimOn = PLXin_get_event_time(EV.Target_, t);
@@ -132,7 +130,7 @@ classdef DataModelWolf < DataModel
                     key = keys{i};
                     var = vars{i};
                     if strcmp('spikeIds',key)
-                        tempSpk.(key){f}=tempVars.(var);
+                        tempSpk.(key){f,1}=tempVars.(var);
                     else % key if spikeTimes
                         nTrials = size(tempVars.(var),1);
                         for t = 1:nTrials

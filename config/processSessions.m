@@ -43,6 +43,8 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     
     % Read excel sheet
     nhpTable = readtable(excelFile, 'Sheet', sheetName);
+    %remove empty rows
+    nhpTable(strcmp(nhpTable.matPath,''),:) = [];
     nhpTable.date = datestr(nhpTable.date,'mm/dd/yyyy');
     nhpTable.ephysChannelMap = arrayfun(@(x) ...
         str2num(char(split(nhpTable.ephysChannelMap{x},', '))),...
@@ -128,7 +130,11 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     % back to struct with session as fieldname
     finalVar = struct;
     for ii = 1:numel(nhpSessions)
-        finalVar.(nhpSessions{ii}.session)=nhpSessions{ii};
+        %fieldname cannot start with a number. Foir example darwin, session
+        %names are 2016-*
+        validSessionName = [nhp '_' nhpSessions{ii}.session];
+        validSessionName = regexprep(regexprep(validSessionName,'[^a-zA-Z0-9-]',''),'-','_');
+        finalVar.(validSessionName)=nhpSessions{ii};
     end
     nhpSessions = finalVar;
     clearvars 'finalVar';
@@ -280,7 +286,7 @@ function addFigureTitleAndInfo(figureTitle, infoTable, varargin)
         h = varargin{1};
     end
     set(get(h,'Title'),'Visible','on');
-    title(figureTitle,'fontSize',20,'fontWeight','bold');
+    title(figureTitle,'fontSize',20,'fontWeight','bold','Interpreter','none');
     h.XTick = [];
     h.YTick = [];
     h.Visible = 'on';
