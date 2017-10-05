@@ -10,8 +10,7 @@ function [ nhpSessions ] = processJoule()
     nhpConfig.sheetName = 'Jo';
     % Write to one dir above the config dir
     [thisDir,~,~] = fileparts(mfilename('fullpath'));    
-    nhpConfig.nhpOutputDir = fullfile(thisDir, '../processed/Joule');
-    
+    nhpConfig.nhpOutputDir = fullfile(thisDir, '../processed', nhp);  
     % a function handle for getting sessions
     nhpConfig.getSessions = @getSessions;  
     % DataModel to use
