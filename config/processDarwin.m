@@ -6,9 +6,9 @@ function [ nhpSessions, nhpConfig ] = processDarwin()
 
     nhpConfig.nhp = 'darwin';
     nhpConfig.nhpSourceDir = '/Volumes/schalllab';
-    nhpConfig.excelFile = '/Users/subravcr/Projects/lab-schall/schalllab-spatial/config/SFN_NHP_Coordinates_All.xlsx';
+    nhpConfig.excelFile = 'SFN_NHP_Coordinates_All.xlsx';
     nhpConfig.sheetName = 'Da_WJ';
-    nhpConfig.nhpOutputDir = '/Users/subravcr/Projects/lab-schall/schalllab-spatial/processed/Darwin';
+    nhpConfig.nhpOutputDir = '../processed/Darwin';
     % a function handle for getting sessions
     nhpConfig.getSessions = @getSessions;  
     % DataModel to use
