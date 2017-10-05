@@ -1,8 +1,16 @@
-function [ figH ] = doPlot8(session, sessionLabel)
+function [ figH ] = doPlot8(session, sessionLabel, varargin)
 %DOPLOT8 Summary of this function goes here
 %   Detailed explanation goes here
 
-%% Do a 8 part figure plot - move to plots folder?
+%% Do a 8 part figure plot
+
+    if numel(varargin)==1
+        outputFolder = varargin{1};
+        saveFig = true;
+    else
+        saveFig = false;
+    end
+    
     firingRateHeatmap = 'sdfPopulationZscoredMean';
     distMeasure = 'rsquared';
 
@@ -96,6 +104,11 @@ function [ figH ] = doPlot8(session, sessionLabel)
     addFigureTitleAndInfo(sessionLabel, session.info, infosHandle);
     addDateStr();
     drawnow
+    if saveFig
+        saveas(figH,fullfile(outputFolder,sessionLabel),'jpg');
+        saveas(figH,fullfile(outputFolder,sessionLabel), 'fig');
+    end
+    
 end
 %% Add figure title and Info
 function addFigureTitleAndInfo(figureTitle, infoTable, varargin)

@@ -174,7 +174,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     for ii = 1:numel(nhpSessions)
         %fieldname cannot start with a number. Foir example darwin, session
         %names are 2016-*
-        validSessionName = [nhp '_' nhpSessions{ii}.session];
+        validSessionName = [nhp '-' nhpSessions{ii}.session];
         validSessionName = regexprep(regexprep(validSessionName,'[^a-zA-Z0-9-]',''),'-','_');
         finalVar.(validSessionName)=nhpSessions{ii};
     end
@@ -191,9 +191,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     for s = 1:numel(sessionLabels)
         try
             sessionLabel = sessionLabels{s};
-            figH = doPlot8(nhpSessions.(sessionLabel),sessionLabel);
-            saveas(figH,fullfile(nhpOutputDir,sessionLabel),'jpg');
-            saveas(figH,fullfile(nhpOutputDir,sessionLabel), 'fig');
+            doPlot8(nhpSessions.(sessionLabel),sessionLabel, nhpOutputDir);
         catch me
             % log the error/exception causing failure and continue
             logger.error(me);
