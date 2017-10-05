@@ -1,5 +1,5 @@
 function [ nhpSessions, nhpConfig ] = processDarwin()
-%PROCESSJOULE Configure Joule sessions here
+%PROCESSJOULE Configure Darwin (WJ) sessions here
 %     nhpConfig is a structured variable with fields that define how to
 %     process matalb datafile for this NHP.
 % see also PROCESSSESSIONS for how to define nhpConfig 

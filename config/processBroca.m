@@ -1,14 +1,14 @@
 function [ nhpSessions ] = processBroca()
-%PROCESSJOULE Configure Joule sessions here
+%PROCESSJOULE Configure Broca sessions here
 %     nhpConfig is a structured variable with fields that define how to
 %     process matalb datafile for this NHP.
 % see also PROCESSSESSIONS for how to define nhpConfig 
 
     nhpConfig.nhp = 'broca';
-    nhpConfig.nhpSourceDir = '/Users/chenchals/Projects/lab-schall/schalllab-clustering';
-    nhpConfig.excelFile = '/Users/chenchals/Projects/lab-schall/schalllab-spatial/config/SFN_NHP_Coordinates_All.xlsx';
+    nhpConfig.nhpSourceDir = '/Volumes/schalllab';
+    nhpConfig.excelFile = 'SFN_NHP_Coordinates_All.xlsx';
     nhpConfig.sheetName = 'Br';
-    nhpConfig.nhpOutputDir = '/Users/chenchals/Projects/lab-schall/schalllab-spatial/processed/Broca';
+    nhpConfig.nhpOutputDir = '../processed/Broca';
     % a function handle for getting sessions
     nhpConfig.getSessions = @getSessions;  
     % DataModel to use
