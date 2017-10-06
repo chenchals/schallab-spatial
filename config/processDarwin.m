@@ -10,7 +10,7 @@ function [ nhpSessions, nhpConfig ] = processDarwin()
     nhpConfig.sheetName = 'Da_WJ';
     % Write to one dir above the config dir
     [thisDir,~,~] = fileparts(mfilename('fullpath'));    
-    nhpConfig.nhpOutputDir = fullfile(thisDir, '../processed', config.nhp);
+    nhpConfig.nhpOutputDir = fullfile(thisDir, '../processed', nhpConfig.nhp);
     % a function handle for getting sessions
     nhpConfig.getSessions = @getSessions;  
     % DataModel to use
