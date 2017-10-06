@@ -10,7 +10,7 @@ function [ nhpSessions, nhpConfig ] = processHelmholtz()
     nhpConfig.sheetName = 'He';
     % Write to one dir above the config dir
     [thisDir,~,~] = fileparts(mfilename('fullpath'));    
-    nhpConfig.nhpOutputDir = fullfile(thisDir, '../processed/Helmholtz');
+    nhpConfig.nhpOutputDir = fullfile(thisDir, '../processed', nhp');
     % a function handle for getting sessions
     nhpConfig.getSessions = @getSessions;  
     % DataModel to use
