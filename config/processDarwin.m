@@ -31,10 +31,10 @@ function [ sessions ] = getSessions(srcFolder, nhpTable)
 end
 
 function [ outSessions ] = sessionFilter(sessions,nhpTable)
-   outSessions = cell(size(sessions,1));
+   outSessions = cell(size(sessions,1),1);
     for s = 1:numel(sessions)
-    channelStr = arrayfun(@(x) ['DSP' num2str(x,'%02d')],nhpTable.ePhysChannelMap,'UniformOutput',false)';
+    channelStr = arrayfun(@(x) ['DSP', num2str(x,'%02d')],nhpTable.ephysChannelMap{s},'UniformOutput',false)';
     matched = regexp(sessions{s},char(join(channelStr,'|')),'match');
-    outSessions{s} = sessions{s}(find(cellfun(@(x) numel(x),matched)>0));
+    outSessions{s} = sessions{s}(find(cellfun(@(x) numel(x),matched)>0)); %#ok<FNDSB>
     end
 end
