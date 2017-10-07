@@ -30,6 +30,7 @@ function [ sessions ] = getSessions(srcFolder, nhpTable)
   sessions = sessionFilter(sessions, nhpTable);
 end
 
+% Cases where A seesion folder ha recodings from multiple probes.
 function [ outSessions ] = sessionFilter(sessions,nhpTable)
    outSessions = cell(size(sessions,1),1);
     for s = 1:numel(sessions)
