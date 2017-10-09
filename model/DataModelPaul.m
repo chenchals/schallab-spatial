@@ -47,7 +47,7 @@ classdef DataModelPaul < DataModel
             obj.spikeVars = DataModel.asMap(obj, obj.spikeVariables);
             
             assert(isnumeric(channelMap) || numel(channelMap) > 1,...
-                'Input channelMap but be a numeric vector');
+                'Input channelMap must be a numeric vector');
             obj.channelMap =  channelMap;
         end
         

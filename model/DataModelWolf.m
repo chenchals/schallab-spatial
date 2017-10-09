@@ -81,7 +81,7 @@ classdef DataModelWolf < DataModel
             obj.spikeVars =  DataModel.asMap(obj, obj.spikeVariables);
                        
             assert(isnumeric(channelMap) || numel(channelMap) > 1,...
-                'Input channelMap but be a numeric vector');
+                'Input channelMap must be a numeric vector');
             obj.channelMap =  channelMap;
         end
         
@@ -211,16 +211,6 @@ classdef DataModelWolf < DataModel
                 ind = find(taskVar.error==uniqErrIndex(ii));
                 trialOutcome(ind) = {outcome}; %#ok<FNDSB>
             end
-        end
-        
-        function [ args ] = parseArgs(obj,inArgs) %#ok<INUSL>
-            argsObj = inputParser;
-            argsObj.addParameter('spikeIdPattern', '', @(x) assert(ischar(x),'Value must be a char array'));
-            argsObj.addParameter('spikeIdVar', '', @(x) assert(ischar(x),'Value must be a char array'));
-            argsObj.addParameter('spiketimeVar', '', @(x) assert(ischar(x),'Value must be a char array'));
-            argsObj.addParameter('channelMap', [], @(x) assert(isnumeric(x),'Value must be a vector of channel numbers'));
-            argsObj.parse(inArgs{:});
-            args = argsObj.Results;
         end
         
     end

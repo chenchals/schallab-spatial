@@ -94,6 +94,8 @@ classdef (Abstract=true) DataModel < handle
                     dataModel = DataModelPaul(source,channelMap);
                 case DataModel.WOLF_DATA_MODEL
                     dataModel = DataModelWolf(source,channelMap);
+                case DataModel.KALEB_DATA_MODEL
+                    dataModel = DataModelKaleb(source,channelMap);
                 otherwise
                     throw(MException('DataModel:newInstance', 'Not yet implemented'));
             end

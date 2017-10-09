@@ -26,16 +26,21 @@ function [ sessions ] = getSessions(srcFolder, nhpTable)
 %  Uses column name 'matPath' from the excel file used for configuration
   allSessions=cellfun(@(x) dir(fullfile(srcFolder,x)),nhpTable.matPath,'UniformOutput',false);
   sessions = cellfun(@(x) strcat({x.folder}',filesep,{x.name}'),allSessions,'UniformOutput',false);
-  sessions = sessions(~cellfun(@isempty,sessions));  
   sessions = sessionFilter(sessions, nhpTable);
 end
 
 % Cases where A seesion folder ha recodings from multiple probes.
 function [ outSessions ] = sessionFilter(sessions,nhpTable)
-   outSessions = cell(size(sessions,1),1);
+    outSessions = cell(size(sessions,1),1);
     for s = 1:numel(sessions)
-    channelStr = arrayfun(@(x) ['DSP', num2str(x,'%02d')],nhpTable.ephysChannelMap{s},'UniformOutput',false)';
-    matched = regexp(sessions{s},char(join(channelStr,'|')),'match');
-    outSessions{s} = sessions{s}(find(cellfun(@(x) numel(x),matched)>0)); %#ok<FNDSB>
+        if isempty(sessions{s})
+            continue
+        end
+        channelStr = arrayfun(@(x) ['DSP', num2str(x,'%02d')],nhpTable.ephysChannelMap{s},'UniformOutput',false)';
+        matched = regexp(sessions{s},char(join(channelStr,'|')),'match');
+        outSessions{s} = sessions{s}(find(cellfun(@(x) numel(x),matched)>0)); %#ok<FNDSB>
     end
 end
+
+
+

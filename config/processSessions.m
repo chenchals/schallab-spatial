@@ -112,11 +112,17 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     %parfor s = 1:numel(sessions)
     for s = 1:numel(sessionLocations)
         try
-            multiSdf = struct();
-            nhpInfo = nhpTable(s,:);
             sessionLocation = sessionLocations{s};
+            nhpInfo = nhpTable(s,:);
+            sessionName =  nhpInfo.session{1};
+            if isempty(sessionLocation)
+                errorLogger.error(sprintf('Session %s has no datafiles. Using [ %s ] for spike file locations',...
+                    sessionName, char(nhpInfo.matPath)));
+                continue
+            end
+            
+            multiSdf = struct();
             channelMap = nhpInfo.ephysChannelMap{1};
-            sessionName =  nhpInfo.session{1};            
             logger.info(sprintf('Processing session %s',sessionName));
             % Create instance of MemoryTypeModel
             model = DataModel.newInstance(dataModelName, sessionLocation, channelMap);
@@ -162,6 +168,8 @@ function [ nhpSessions ] = processSessions(nhpConfig)
             % log the error/exception causing failure and continue
             disp(me)
             logger.error(me);
+            errorLogger.error(sprintf('Error processing session %s. Using [ %s ] for spike file locations',...
+                sessionName, char(nhpInfo.matPath)));
             errorLogger.error(me);
         end
     end

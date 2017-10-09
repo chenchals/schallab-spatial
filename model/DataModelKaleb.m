@@ -55,6 +55,9 @@ classdef DataModelKaleb < DataModel
     % Task.TargetLoc = TargetAngle, 
     
     properties (Access=private)
+        
+        behaviorFile ='';
+        
         % These behavioral variables are in Behav.mat/Task structure         
         % build 'trialOutcome' var from Task.error, Task.errorNames, Task.error==0 are Correct trials          
         eventVariables = {
@@ -66,24 +69,27 @@ classdef DataModelKaleb < DataModel
        % The spikeIds are not labelled as DSPNN
        % Build spikeIds and spikeTimes variables
        % spike variable names
-       spikeIdsField = 'spikeIds';
-       spikeTimesField = 'spikeTimes';
+        spikeVariables = {
+            'spikeIds:'
+            'spikeTimes:spiketimes'
+            };
        
     end
     
     %Public methods
     methods
 
-        function obj = DataModelWolf(source, channelMap )           
+        function obj = DataModelKaleb(source, channelMap )           
             obj.dataSource = source;
             obj.checkFileExists;
+            obj.behaviorFile = checkAndGetBehaviorFile(obj);
             obj.trialList = containers.Map;
             
             obj.eventVars = DataModel.asMap(obj, obj.eventVariables);
             obj.spikeVars =  DataModel.asMap(obj, obj.spikeVariables);
                        
             assert(isnumeric(channelMap) || numel(channelMap) > 1,...
-                'Input channelMap but be a numeric vector');
+                'Input channelMap must be a numeric vector');
             obj.channelMap =  channelMap;
         end
         
@@ -96,13 +102,10 @@ classdef DataModelKaleb < DataModel
             end
             keys = obj.eventVars.keys;
             vars = obj.eventVars.values;
-            % Task variable as all the necessary events
-            % use one of the source files to get task
-            behaviorFile = obj.dataSource{1};
-            temp = load(behaviorFile,'Task');            
+            % Task variable from behaviorFile as all the necessary events
+            temp = load(obj.behaviorFile,'Task');            
             for i=1:numel(vars)
                 eventData.(keys{i}) = temp.Task.(vars{i});
-
             end
             % Build trialOutcome variable
             eventData.trialOutcome = buildTrialOutcomeVar(obj,temp.Task);
@@ -208,22 +211,22 @@ classdef DataModelKaleb < DataModel
                 outcome = taskVar.error_names{ii};
                 if strcmpi(outcome,'False') % no error
                     outcome = 'Correct';
-                end
-                
+                end                
                 ind = find(taskVar.error==uniqErrIndex(ii));
                 trialOutcome(ind) = {outcome}; %#ok<FNDSB>
             end
-        end
-        
-        function [ args ] = parseArgs(obj,inArgs) %#ok<INUSL>
-            argsObj = inputParser;
-            argsObj.addParameter('spikeIdPattern', '', @(x) assert(ischar(x),'Value must be a char array'));
-            argsObj.addParameter('spikeIdVar', '', @(x) assert(ischar(x),'Value must be a char array'));
-            argsObj.addParameter('spiketimeVar', '', @(x) assert(ischar(x),'Value must be a char array'));
-            argsObj.addParameter('channelMap', [], @(x) assert(isnumeric(x),'Value must be a vector of channel numbers'));
-            argsObj.parse(inArgs{:});
-            args = argsObj.Results;
-        end
+       end
+       
+       function [ behaviorFile ] = checkAndGetBehaviorFile(obj)
+           % Behavior file, throw exception if file does not exist
+           behaviorFile = fullfile(char(...
+               cellfun(@char,regexp(obj.dataSource{1},'^(.*-\d*)/.*','tokens'),'UniformOutput',false)...
+               ),'Behav.mat');
+           
+           if ~exist(behaviorFile,'file')
+               throw(MException('DataModelKaleb:constructor', sprintf('File not found %s ',behaviorFile)));
+           end 
+       end
         
     end
 end
