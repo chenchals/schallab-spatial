@@ -1,5 +1,5 @@
-classdef DataModelWolf < DataModel
-    %DATAMODELWOLF Model class for reading data from Darwin_WJ, Gauss, Helmholtz recordings
+classdef DataModelKaleb < DataModel
+    %DATAMODELWOLF Model class for reading data from Darwin_K ... recordings
     %  Inputs:
     %    source : A char. Must point to the matlab data file or folder
     %    channelMap : The mapping of cell ID and the channel lovcation on the probe.
@@ -10,6 +10,7 @@ classdef DataModelWolf < DataModel
     %               For Darwin the map the locations [1:32] correspond
     %               linearly to DSP01 to DSP32
     
+    % In general uses KiloSOrt, then the model closely fits Wolf's model
     % See PLX_get_paradigm.m (Wolf's code)
     % Line# 237 - line# 239
     % tempoStimOn = PLXin_get_event_time(EV.Target_, t);
@@ -54,19 +55,20 @@ classdef DataModelWolf < DataModel
     % Task.TargetLoc = TargetAngle, 
     
     properties (Access=private)
-                 
+        % These behavioral variables are in Behav.mat/Task structure         
+        % build 'trialOutcome' var from Task.error, Task.errorNames, Task.error==0 are Correct trials          
         eventVariables = {
             'targetOnset:StimOnset'
             'responseOnset:Saccade'
             'targetLocation:TargetLoc'
             };
-        % build 'trialOutcome' var from Task.error, Task.errorNames, Task.error==0 are cCorrect trials          
-  
-        spikeVariables = {
-            'spikeIds:DSPname'
-            'spikeTimes:spiketimes'
-            };
-
+       % Singel units are at ChannelN/UnitN/Spikes.mat
+       % The spikeIds are not labelled as DSPNN
+       % Build spikeIds and spikeTimes variables
+       % spike variable names
+       spikeIdsField = 'spikeIds';
+       spikeTimesField = 'spikeTimes';
+       
     end
     
     %Public methods

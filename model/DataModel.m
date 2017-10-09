@@ -3,7 +3,7 @@ classdef (Abstract=true) DataModel < handle
     properties (Constant)
         PAUL_DATA_MODEL = 'DataModelPaul';
         WOLF_DATA_MODEL = 'DataModelWolf';
-        
+        KALEB_DATA_MODEL = 'DataModelKaleb';        
     end
     
     properties (Access=protected)
