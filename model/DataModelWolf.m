@@ -138,7 +138,7 @@ classdef DataModelWolf < DataModel
                         end
                      end
                 end
-                clear temVars;
+                clear tempVars;
             end % for each unit file
             
             %Channel map order for spike Ids

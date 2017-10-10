@@ -57,13 +57,17 @@ classdef DataModelKaleb < DataModel
     properties (Access=private)
         
         behaviorFile ='';
+        default_error_names = {'False'    'Early'    'Late'    'FixBreak'    'HoldError'    'CatchErrorGo'    'CatchErrorNoGo'};
         
         % These behavioral variables are in Behav.mat/Task structure         
         % build 'trialOutcome' var from Task.error, Task.errorNames, Task.error==0 are Correct trials          
         eventVariables = {
             'targetOnset:StimOnset'
-            'responseOnset:Saccade'
+            'responseOnset:SRT'
             'targetLocation:TargetLoc'
+            'alignTimes:AlignTimes' % used for aligning the vector of spikeTimes
+            'trStarts:trStarts'
+            'trEnds:trEnds'
             };
        % Singel units are at ChannelN/UnitN/Spikes.mat
        % The spikeIds are not labelled as DSPNN
@@ -71,7 +75,7 @@ classdef DataModelKaleb < DataModel
        % spike variable names
         spikeVariables = {
             'spikeIds:'
-            'spikeTimes:spiketimes'
+            'spikeTimes:spkTimes'
             };
        
     end
@@ -124,35 +128,43 @@ classdef DataModelKaleb < DataModel
                 spikeData = obj.spikeData;
                 return
             end
+            evData = obj.getEventData();
+            channelMap = obj.channelMap;
             tempSpk = struct();
             spikeData = struct();
             keys = obj.spikeVars.keys;
             vars = obj.spikeVars.values;
+            fprintf('Reading spikeData...');
             for f = 1:numel(obj.dataSource)
-                datafile = obj.dataSource{f};
-                tempVars = load(datafile,vars{:});
+                datafile = obj.dataSource{f}; 
+                fprintf('#%02d ',channelMap(f));
                 for i = 1:numel(keys)
                     key = keys{i};
                     var = vars{i};
                     if strcmp('spikeIds',key)
-                        tempSpk.(key){f,1}=tempVars.(var);
+                        % parse out chanN[a-z] into DSPNN[a-z] from the
+                        % datafile filename
+                        [~,unitId,~] = fileparts(datafile);
+                        temp = regexp(unitId,'chan(\d*)([a-z])$','tokens');
+                        tempSpk.(key){f,1}=['DSP' num2str(str2num(temp{1}{1}),'%02d') temp{1}{2}];
                     else % key if spikeTimes
-                        nTrials = size(tempVars.(var),1);
-                        for t = 1:nTrials
-                            spikeData.(key){t,f}=tempVars.(var)(t,~isnan(tempVars.(var)(t,:)))';
-                        end
+                        tempVars = load(datafile,var);
+                        tempVars = tempVars.spkTimes;
+                        spikeData.(key)(:,f) = arrayfun(@(x,y,z) tempVars(tempVars>=x & tempVars<=y)-z,...
+                           evData.trStarts,evData.trEnds,evData.alignTimes,'UniformOutput',false);
                      end
                 end
-                clear temVars;
+                clear tempVars;
             end % for each unit file
+            fprintf('\n');
             
             %Channel map order for spike Ids
-            channelMap = obj.channelMap;
-            for ch = 1:max(channelMap)
-                channel = channelMap(ch);
-                spikeChannels = ~cellfun(@isempty,regexp(tempSpk.spikeIds,num2str(ch,'%02d')));
+
+            for chIndex = 1:numel(channelMap)
+                channel = channelMap(chIndex);
+                spikeChannels = ~cellfun(@isempty,regexp(tempSpk.spikeIds,num2str(channel,'%02d')));
                 tempSpk.unitSortOrder(spikeChannels,1)= channel;
-                tempChan.channelIds{ch,1} =  ['chan',num2str(ch,'%02d')];
+                tempChan.channelIds{chIndex,1} =  ['chan',num2str(channel,'%02d')];
             end
             tempChan.channelSortOrder(:,1)= channelMap';
             spikeData.spikeIdsTable = struct2table(tempSpk);
@@ -204,11 +216,19 @@ classdef DataModelKaleb < DataModel
             end
         end
 
-       function [ trialOutcome ] = buildTrialOutcomeVar(obj, taskVar) %#ok<INUSL>
-            trialOutcome = repmat({''},taskVar.NTrials,1);
+       function [ trialOutcome ] = buildTrialOutcomeVar(obj, taskVar) 
+            nTrials = size(taskVar.Correct,1);
+            trialOutcome = repmat({''},nTrials,1);
             uniqErrIndex=unique(taskVar.error(isfinite(taskVar.error)));
+            if isfield(taskVar,'error_names')
+                error_names = taskVar.error_names;
+            end
+            if isempty(error_names)
+                error_names = obj.default_error_names;
+            end
+                        
             for ii = 1:numel(uniqErrIndex)
-                outcome = taskVar.error_names{ii};
+                outcome = error_names{ii};
                 if strcmpi(outcome,'False') % no error
                     outcome = 'Correct';
                 end                
