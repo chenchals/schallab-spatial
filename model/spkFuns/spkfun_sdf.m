@@ -109,10 +109,16 @@ function [ outSdfStruct ] = spkfun_sdf(spikeTimes, selectedTrials, eventData, al
             cellIndex = find(~cellfun(@isempty,regexp(spikeIds,num2str(channelNo,'%02d'))));
             if numel(cellIndex)>0
                 temp_spikes = arrayfun(@(x) cell2mat(spikeTimes(x,cellIndex)'),selectedTrials,'UniformOutput',false);
-                [ bins, rasters_full ] = spkfun_getRasters(temp_spikes, alignTimes);
                 currSpikeIds = spikeIds(cellIndex);
-                % If there are bins that include sdfWindow, then we have
-                % spikes in sdfWindow
+
+                % if there are atleast 1 spike
+                if isempty(cell2mat(temp_spikes))
+                    outNew.multiUnit(chanIndex,1) = computeSdfNans(nTrials,sdfWindow,currSpikeIds,cellIndex,channelNo);
+                    continue
+                end
+                [ bins, rasters_full ] = spkfun_getRasters(temp_spikes, alignTimes);
+                
+                % If there are bins that include sdfWindow, then we have spikes in sdfWindow
                 if numel(find(ismember(bins,sdfWindow))) == 2 
                     outNew.multiUnit(chanIndex,1) = computeSdfs(rasters_full,bins,kernel,sdfWindow,currSpikeIds,cellIndex,channelNo);
                 else

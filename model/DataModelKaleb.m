@@ -135,9 +135,10 @@ classdef DataModelKaleb < DataModel
             keys = obj.spikeVars.keys;
             vars = obj.spikeVars.values;
             fprintf('Reading spikeData...');
-            for f = 1:numel(obj.dataSource)
-                datafile = obj.dataSource{f}; 
-                fprintf('#%02d ',channelMap(f));
+            for fileIndex = 1:numel(obj.dataSource)
+                datafile = obj.dataSource{fileIndex}; 
+                [~,unit,~] = fileparts(datafile);
+                fprintf('#%s ',unit);
                 for i = 1:numel(keys)
                     key = keys{i};
                     var = vars{i};
@@ -146,18 +147,18 @@ classdef DataModelKaleb < DataModel
                         % datafile filename
                         [~,unitId,~] = fileparts(datafile);
                         temp = regexp(unitId,'chan(\d*)([a-z])$','tokens');
-                        tempSpk.(key){f,1}=['DSP' num2str(str2num(temp{1}{1}),'%02d') temp{1}{2}];
+                        tempSpk.(key){fileIndex,1}=['DSP' num2str(str2num(temp{1}{1}),'%02d') temp{1}{2}];
                     else % key if spikeTimes
                         tempVars = load(datafile,var);
                         tempVars = tempVars.spkTimes;
-                        spikeData.(key)(:,f) = arrayfun(@(x,y,z) tempVars(tempVars>=x & tempVars<=y)-z,...
+                        spikeData.(key)(:,fileIndex) = arrayfun(@(x,y,z) tempVars(tempVars>=x & tempVars<=y)-z,...
                            evData.trStarts,evData.trEnds,evData.alignTimes,'UniformOutput',false);
                      end
                 end
                 clear tempVars
             end % for each unit file
             fprintf('\n');
-            spikeData.spikeTimes = cellfun(@(x) transpose(x),spikeData.spikeTimes,'UniformOutput',false)
+            spikeData.spikeTimes = cellfun(@(x) transpose(x),spikeData.spikeTimes,'UniformOutput',false);
             %Channel map order for spike Ids 
             for chIndex = 1:numel(channelMap)
                 channel = channelMap(chIndex);

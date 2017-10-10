@@ -75,6 +75,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     getSessions = nhpConfig.getSessions;
     dataModelName = nhpConfig.dataModelName;
     outcome = nhpConfig.outcome; %'saccToTarget';
+    minTrialsPerCondition = 7;
 
     if ~exist(nhpOutputDir,'dir')
         mkdir(nhpOutputDir);
@@ -124,15 +125,17 @@ function [ nhpSessions ] = processSessions(nhpConfig)
             multiSdf = struct();
             channelMap = nhpInfo.ephysChannelMap{1};
             logger.info(sprintf('Processing session %s',sessionName));
-            % Create instance of MemoryTypeModel
-            model = DataModel.newInstance(dataModelName, sessionLocation, channelMap);
-            
             if contains(lower(nhpInfo.chamberLoc),'left')
                 ipsi = 'left';
             else
                 ipsi = 'right';
             end
-
+            % Create instance of MemoryTypeModel
+            model = DataModel.newInstance(dataModelName, sessionLocation, channelMap);
+            
+            %check minTrialsPerCondition is satisfied
+            checkMinTrialsPerCondition(model, outcome, conditions, minTrialsPerCondition);
+            
             multiSdf.analysisDate = datestr(now);
             multiSdf.session = sessionName;
             multiSdf.info = nhpInfo;
@@ -217,4 +220,12 @@ function [ condStr ] = convertToChar(condCellArray, ipsiSide)
     else
         condStr = ['contra_' charStr];
     end
+end
+
+function checkMinTrialsPerCondition(model, outcome, conditions, minTrials)
+        tl = cell2mat(cellfun(@(x) numel(model.getTrialList(outcome,x{2})),conditions,'UniformOutput',false));
+        if ~all(tl>minTrials)
+            throw(MException('processSessions:checkMinTrialsPerCondition', 'MinTrialsPerCondition %d, failed!'));
+
+        end
 end
