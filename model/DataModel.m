@@ -69,8 +69,9 @@ classdef (Abstract=true) DataModel < handle
             spikeTimes = obj.getSpikeData().spikeTimes;
             events = obj.getEventData();
             spikeIds = obj.getSpikeData().spikeIdsTable.spikeIds;
-            maxChannels = max(getChannelMap(obj));
-            sdf = spkfun_sdf(spikeTimes, selectedTrials, events, alignEventName, sdfWindow, spikeIds, maxChannels, singleOrMultiFlag);
+            %maxChannels = max(getChannelMap(obj));
+            chMap = getChannelMap(obj);
+            sdf = spkfun_sdf(spikeTimes, selectedTrials, events, alignEventName, sdfWindow, spikeIds, chMap, singleOrMultiFlag);
             
             % Find population mean and Std of firing rate
             allSdf = cell2mat({sdf.sdf}');

@@ -154,12 +154,11 @@ classdef DataModelKaleb < DataModel
                            evData.trStarts,evData.trEnds,evData.alignTimes,'UniformOutput',false);
                      end
                 end
-                clear tempVars;
+                clear tempVars
             end % for each unit file
             fprintf('\n');
-            
-            %Channel map order for spike Ids
-
+            spikeData.spikeTimes = cellfun(@(x) transpose(x),spikeData.spikeTimes,'UniformOutput',false)
+            %Channel map order for spike Ids 
             for chIndex = 1:numel(channelMap)
                 channel = channelMap(chIndex);
                 spikeChannels = ~cellfun(@isempty,regexp(tempSpk.spikeIds,num2str(channel,'%02d')));
