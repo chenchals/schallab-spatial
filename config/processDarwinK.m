@@ -1,20 +1,20 @@
-function [ nhpSessions, nhpConfig ] = processDarwin()
-%PROCESSJOULE Configure Darwin (WJ) sessions here
+function [ nhpSessions, nhpConfig ] = processDarwinK()
+%PROCESSJOULE Configure Darwin (K) sessions here
 %     nhpConfig is a structured variable with fields that define how to
 %     process matalb datafile for this NHP.
 % see also PROCESSSESSIONS for how to define nhpConfig 
 
-    nhpConfig.nhp = 'darwin';
+    nhpConfig.nhp = 'darwink';
     nhpConfig.nhpSourceDir = '/Volumes/schalllab';
     nhpConfig.excelFile = 'SFN_NHP_Coordinates_All.xlsx';
-    nhpConfig.sheetName = 'Da_WJ';
+    nhpConfig.sheetName = 'Da_K';
     % Write to one dir above the config dir
     [thisDir,~,~] = fileparts(mfilename('fullpath'));    
     nhpConfig.nhpOutputDir = fullfile(thisDir, '../processed', nhpConfig.nhp);
     % a function handle for getting sessions
     nhpConfig.getSessions = @getSessions;  
     % DataModel to use
-    nhpConfig.dataModelName = DataModel.WOLF_DATA_MODEL;
+    nhpConfig.dataModelName = DataModel.KALEB_DATA_MODEL;
     nhpConfig.outcome = 'Correct';
     
     nhpSessions = processSessions(nhpConfig);
@@ -27,20 +27,27 @@ function [ sessions ] = getSessions(srcFolder, nhpTable)
   allSessions=cellfun(@(x) dir(fullfile(srcFolder,x)),nhpTable.matPath,'UniformOutput',false);
   sessions = cellfun(@(x) strcat({x.folder}',filesep,{x.name}'),allSessions,'UniformOutput',false);
   sessions = sessionFilter(sessions, nhpTable);
+  % order files by channel Number since the channels are not zero padded
+  for i = 1:numel(sessions)
+      if isempty(sessions{i})
+          continue
+      end
+      sessionO = regexprep(sessions{i},'/Channel(\d)/','/Channel0$1/');
+      sessionO = sortrows(sessionO);
+      sessions{i} = regexprep(sessionO,'/Channel0(\d)/','/Channel$1/');
+  end
 end
 
 % Cases where A seesion folder ha recodings from multiple probes.
 function [ outSessions ] = sessionFilter(sessions,nhpTable)
-    outSessions = cell(size(sessions,1),1);
+   outSessions = cell(size(sessions,1),1);
     for s = 1:numel(sessions)
         if isempty(sessions{s})
             continue
-        end
-        channelStr = arrayfun(@(x) ['DSP', num2str(x,'%02d')],nhpTable.ephysChannelMap{s},'UniformOutput',false)';
-        matched = regexp(sessions{s},char(join(channelStr,'|')),'match');
-        outSessions{s} = sessions{s}(find(cellfun(@(x) numel(x),matched)>0)); %#ok<FNDSB>
+        end    
+    channelStr = arrayfun(@(x) ['Channel', num2str(x,'%d'),'/chan'],nhpTable.ephysChannelMap{s},'UniformOutput',false)';
+    matched = regexp(sessions{s},char(join(channelStr,'|')),'match');
+    outSessions{s} = sessions{s}(find(cellfun(@(x) numel(x),matched)>0)); %#ok<FNDSB>
+    
     end
 end
-
-
-

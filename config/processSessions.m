@@ -23,7 +23,49 @@ function [ nhpSessions ] = processSessions(nhpConfig)
 %                                   ...
 %                                   {'full-path-channel-1-file',...,  'full-path-channel-n-file'}
 %                                }
-% See also PROCESSJOULE
+%     dataModelName: DataModel.WOLF_DATA_MODEL or DataModel.PAUL_DATA_MODEL
+%           outcome: Trial outcome to use: Valid values are  
+%                    DataModel.WOLF_DATA_MODEL: 'Correct';
+%                    DataModel.PAUL_DATA_MODEL: 'saccToTarget'
+%
+%     Output:
+%       nhpSessions: A struct.
+%                    Fieldnames = session_name
+%                    Each session field is a struct
+%                    Example:
+%                       nhpSessions struct with fields:
+%                     **Field is a Session:
+%                         darwin2016_02_15a: [1×1 struct]
+%                         darwin2016_02_16a: [1×1 struct]
+%                         darwin2016_02_19a: [1×1 struct]
+%                     **Session:
+%                          Darwin.darwin2016_02_15a
+%                           struct with fields:
+%                                           analysisDate: '04-Oct-2017 21:34:28'
+%                                                session: '2016-02-15a'
+%                                                   info: [1×27 table]
+%                                             channelMap: [32×1 double]
+%                                  ipsi_targetOnset_left: [1×1 struct]
+%                                ipsi_responseOnset_left: [1×1 struct]
+%                               contra_targetOnset_right: [1×1 struct]
+%                             contra_responseOnset_right: [1×1 struct]
+%                     **Session.Condition:
+%                          Darwin.darwin2016_02_15a.ipsi_responseOnset_left
+%                            struct with fields:
+%                                           channelMap: [32×1 double]
+%                                              sdfMean: [32×501 double]
+%                             sdfPopulationZscoredMean: [32×501 double]
+%                                       populationMean: 24.127
+%                                        populationStd: 35.02
+%                                             spikeIds: {32×1 cell}
+%                                            sdfWindow: [1×501 double]
+%                                              nTrials: 203
+%                                             trialMap: [203×32 double]
+%                                                  sdf: [6496×501 double]
+%                                 sdfPopulationZscored: [6496×501 double]
+%                                             rsquared: [32×32 double]
+%
+% See also PROCESSJOULE, PROCESSBROCA, PROCESSDARWIN, DOPLOT8
 
     nhp = nhpConfig.nhp;
     nhpSourceDir = nhpConfig.nhpSourceDir;
@@ -32,16 +74,22 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     nhpOutputDir = nhpConfig.nhpOutputDir;
     getSessions = nhpConfig.getSessions;
     dataModelName = nhpConfig.dataModelName;
+    outcome = nhpConfig.outcome; %'saccToTarget';
+    minTrialsPerCondition = 7;
 
     if ~exist(nhpOutputDir,'dir')
         mkdir(nhpOutputDir);
     end
-    outputFile = fullfile(nhpOutputDir,[nhp 'Spatial.mat']);
+    
     logger = Logger.getLogger(fullfile(nhpOutputDir,[nhp 'ProcessSessions.log']));
     errorLogger = Logger.getLogger(fullfile(nhpOutputDir,[nhp 'ProcessSessionsErrors.log']));
     
     % Read excel sheet
     nhpTable = readtable(excelFile, 'Sheet', sheetName);
+
+    
+    %remove empty rows
+    nhpTable(strcmp(nhpTable.matPath,''),:) = [];
     nhpTable.date = datestr(nhpTable.date,'mm/dd/yyyy');
     nhpTable.ephysChannelMap = arrayfun(@(x) ...
         str2num(char(split(nhpTable.ephysChannelMap{x},', '))),...
@@ -49,12 +97,12 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     
     nhpConfig.nhpTable = nhpTable;
     
-    sessionLocations = getSessions(nhpSourceDir, nhpTable);
-    nhpConfig.sessions = sessionLocations;
-    
+    outputFile = fullfile(nhpOutputDir,[nhp 'Config.mat']);       
     save(outputFile, 'nhpConfig');
 
-    outcome ='saccToTarget';
+    sessionLocations = getSessions(nhpSourceDir, nhpTable);
+    nhpConfig.sessions = sessionLocations;
+      
     % Specify conditions to for creating multiSdf
     %condition{x} = {alignOnEventName, TargetLeftOrRight, sdfWindow}
     conditions{1} = {'targetOnset', 'left', [-100 400]};
@@ -64,24 +112,39 @@ function [ nhpSessions ] = processSessions(nhpConfig)
 
     distancesToCompute = {'correlation'};
     nhpSessions = cell(numel(sessionLocations),1);
-    %parfor s = 1:numel(sessions)
-    for s = 1:numel(sessionLocations)
+
+    parfor sessionIndex = 1:numel(sessionLocations)
         try
+            sessionLocation = sessionLocations{sessionIndex};
+            nhpInfo = nhpTable(sessionIndex,:);
+            % Include probe number in session name
+            if find(strcmp('probeNo',nhpInfo.Properties.VariableNames))
+                sessionName = [nhpInfo.session{1} '_probe' num2str(nhpInfo.probeNo)];
+            else
+                sessionName = nhpInfo.session{1};
+            end
+
+            if isempty(sessionLocation)
+                errorLogger.error(sprintf('Session %s has no datafiles. Using [ %s ] for spike file locations',...
+                    sessionName, char(nhpInfo.matPath))); %#ok<PFBNS>
+                continue
+            end
+
+                        
             multiSdf = struct();
-            nhpInfo = nhpTable(s,:);
-            sessionLocation = sessionLocations{s};
             channelMap = nhpInfo.ephysChannelMap{1};
-            sessionName =  nhpInfo.session{1};            
-            logger.info(sprintf('Processing session %s',sessionName));
-            % Create instance of MemoryTypeModel
-            model = DataModel.newInstance(dataModelName, sessionLocation, channelMap);
-            
+            logger.info(sprintf('Processing session %s',sessionName)); %#ok<PFBNS>
             if contains(lower(nhpInfo.chamberLoc),'left')
                 ipsi = 'left';
             else
                 ipsi = 'right';
             end
-
+            % Create instance of MemoryTypeModel
+            model = DataModel.newInstance(dataModelName, sessionLocation, channelMap);
+            
+            %check minTrialsPerCondition is satisfied
+            checkMinTrialsPerCondition(model, outcome, conditions, minTrialsPerCondition);
+            
             multiSdf.analysisDate = datestr(now);
             multiSdf.session = sessionName;
             multiSdf.info = nhpInfo;
@@ -112,39 +175,30 @@ function [ nhpSessions ] = processSessions(nhpConfig)
                     end
                 end
             end
-            nhpSessions{s}=multiSdf;
+            oFile = fullfile(nhpOutputDir,[multiSdf.session '.mat']);
+            logger.info(sprintf('Saving processed session to %s...',oFile));
+            saveProcesssedSession(multiSdf, oFile);
+            nhpSessions{sessionIndex}=multiSdf;
         catch me
             % log the error/exception causing failure and continue
             disp(me)
             logger.error(me);
+            errorLogger.error(sprintf('Error processing session %s. Using [ %s ] for spike file locations',...
+                sessionName, char(nhpInfo.matPath)));
             errorLogger.error(me);
         end
     end
-    %Since there may be processing errors for one or more sessions
-    nhpSessions = nhpSessions(~cellfun(@isempty,nhpSessions));
-
-    % since we are using parfor to compute, reconvert from struct array
-    % back to struct with session as fieldname
-    finalVar = struct;
-    for ii = 1:numel(nhpSessions)
-        finalVar.(nhpSessions{ii}.session)=nhpSessions{ii};
-    end
-    nhpSessions = finalVar;
-    clearvars 'finalVar';
-
-    % save fieldnames (session) as individual vars in file
-    logger.info(sprintf('Saving processed output to %s...',outputFile));
-    save(outputFile, '-struct', 'nhpSessions');
-    %fprintf('done');
 
     %% Plot and save Figures
-    sessionLabels = fieldnames(nhpSessions);
-    for s = 1:numel(sessionLabels)
+    plotsDir = [nhpOutputDir filesep 'figs'];
+    if ~exist(plotsDir,'dir')
+        mkdir(plotsDir)
+    end
+    for sessionIndex = 1:numel(nhpSessions)
+        currSession = nhpSessions{sessionIndex};
         try
-            sessionLabel = sessionLabels{s};
-            figH = doPlot8(nhpSessions.(sessionLabel),sessionLabel);
-            saveas(figH,fullfile(nhpOutputDir,sessionLabel),'jpg');
-            saveas(figH,fullfile(nhpOutputDir,sessionLabel), 'fig');
+            sessionLabel = currSession.session;
+            doPlot8(currSession,sessionLabel, plotsDir);
         catch me
             % log the error/exception causing failure and continue
             logger.error(me);
@@ -153,14 +207,9 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     end
 end
 
-%% Get sessionName
-function [ out ] = getSessionName(in)
-  if ischar(in)
-      temp = in; % file fullpath
-  elseif iscellstr(in)
-      temp = in{1}; % get first file fullpath
-  end
-  [~,out,~] = fileparts(temp);
+%% Save processed session
+function saveProcesssedSession(currSession, oFile)   %#ok<INUSL>
+    save(oFile, '-struct', 'currSession' );
 end
 
 %% For converting cell array to string (only char are converted)
@@ -174,148 +223,10 @@ function [ condStr ] = convertToChar(condCellArray, ipsiSide)
     end
 end
 
-%% Do a 8 part figure plot - move to plots folder?
-function [ figH ] = doPlot8(session, sessionLabel)
+function checkMinTrialsPerCondition(model, outcome, conditions, minTrials)
+        tl = cell2mat(cellfun(@(x) numel(model.getTrialList(outcome,x{2})),conditions,'UniformOutput',false));
+        if ~all(tl>minTrials)
+            throw(MException('processSessions:checkMinTrialsPerCondition', 'MinTrialsPerCondition %d, failed!'));
 
-    firingRateHeatmap = 'sdfPopulationZscoredMean';
-    distMeasure = 'rsquared';
-
-    ipsiContraOrder = {'ipsi','contra'};
-    alignOnOrder = {'targOn', 'responseOnset'};
-
-    conditions = fieldnames(session);
-    frPlots = cell(4,1);
-    distPlots = cell(4,1);
-    titlePlots = cell(4,1);
-    % get SDFs / zscores to plot there will be 4 of these
-    % create in column order
-    plotNo = 0;
-    for align = 1:numel(alignOnOrder)
-        for ic = 1:numel(ipsiContraOrder)
-            charIc = ipsiContraOrder{ic};
-            CharAlignOn = alignOnOrder{align};
-            plotNo = plotNo+1;
-            fieldnameIndex = contains(conditions, join({charIc,CharAlignOn},'_'));
-            frPlots{plotNo} = session.(conditions{fieldnameIndex}).(firingRateHeatmap);
-            distPlots{plotNo} = session.(conditions{fieldnameIndex}).(distMeasure);
-            titlePlots{plotNo} = conditions{fieldnameIndex};
         end
-    end
-
-    temp = cell2mat(frPlots);
-    frMinMax = minmax(temp(:)');
-    temp = cell2mat(distPlots);
-    distMinMax = minmax(temp(:)');
-
-    %plot by columns
-    infosHandle = [];
-    plotHandles = plot8axes;
-    %[plotHandles, infosHandle] = plot8part;
-    figH = get(plotHandles(1),'Parent');
-
-    channelTicks = 2:2:numel(session.channelMap);
-    channelTickLabels = arrayfun(@(x) ['#' num2str(session.channelMap(x))],channelTicks,'UniformOutput',false);
-    plotIndicesByRowHandles = [1:2:8;2:2:8];
-    for co = 1:4
-        currPlotsIndex = plotIndicesByRowHandles(:,co);
-        colCond = titlePlots{co};
-        for ro = 1:2
-            ro1Plot = frPlots{co};
-            ro2Plot = distPlots{co};
-            currplotHandle = plotHandles(currPlotsIndex(ro));
-            set(figH, 'currentaxes', currplotHandle);
-            currAxes = gca;
-            switch ro
-                case 1 %Firing Rate heatmap
-                    imagesc(ro1Plot,frMinMax);
-                    h = colorbar;
-                    set(h,'YLim', frMinMax);
-                    timeWin = session.(colCond).sdfWindow;
-                    step = range(timeWin)/5;
-                    currAxes.XTick = 0:step:range(timeWin);
-                    currAxes.XTickLabel = arrayfun(@(x) num2str(x),min(timeWin):step:max(timeWin),'UniformOutput',false);
-
-                    align0 = find(min(timeWin):max(timeWin)==0);
-                    line([align0 align0], ylim, 'Color','r');
-
-                    currAxes.YTick = channelTicks;
-                    currAxes.YTickLabel = channelTickLabels;
-
-                    titleXpos = range(timeWin)/2;
-                    titleYpos = min(ylim) - range(ylim)/12;
-                    text(titleXpos,titleYpos,upper(colCond),...
-                        'FontWeight','bold','FontAngle','italic','FontSize',14,'Color','b',...
-                        'HorizontalAlignment', 'center', 'VerticalAlignment', 'cap',...
-                        'Interpreter','none');
-                    if co == 1
-                        ylabel([firingRateHeatmap ' heatmap'],'VerticalAlignment','bottom','FontWeight','bold');
-                    end
-
-                case 2 % distance matrix for sdf_mean
-                    imagesc(ro2Plot,distMinMax);
-                    h = colorbar;
-                    set(h,'YLim', distMinMax);
-                    currAxes.XTick = channelTicks;
-                    currAxes.XTickLabelRotation = 90;
-                    currAxes.XTickLabel = channelTickLabels;
-                    currAxes.YTick = channelTicks;
-                    currAxes.YTickLabel = channelTickLabels;
-
-                    if co == 1
-                        ylabel([distMeasure ' (r^2)'],'VerticalAlignment','bottom','FontWeight','bold');
-                    end
-            end
-        end
-    end
-    addFigureTitleAndInfo(sessionLabel, session.info, infosHandle);
-    addDateStr();
-    drawnow
-end
-%% Add figure title and Info
-function addFigureTitleAndInfo(figureTitle, infoTable, varargin)
-    if numel(varargin)==0 || isempty(varargin{1})
-        h = axes('Units','normalized','Position',[.01 .87 .98 .09]);
-    else
-        h = varargin{1};
-    end
-    set(get(h,'Title'),'Visible','on');
-    title(figureTitle,'fontSize',20,'fontWeight','bold');
-    h.XTick = [];
-    h.YTick = [];
-    h.Visible = 'on';
-    h.Box = 'on';
-    varNames=infoTable.Properties.VariableNames;
-    % remove channelMap from varnames
-    varNames = varNames(~contains(varNames,'ephysChannelMap'));
-    propsPerCol = 4;
-    nCols = ceil(numel(varNames)/propsPerCol)+1;
-    xPos=(0:1.0/nCols:1.0)+0.01;
-    xPos = xPos(1:end-1);
-    for c = 1:nCols-1 % last col channelMap
-        t = cell(propsPerCol,1);
-        ind = (c-1)*propsPerCol+1:c*propsPerCol;
-        ind = ind(ind<=numel(varNames));
-        for i = 1:numel(ind)
-            name = varNames{ind(i)};
-            value = infoTable.(name);
-            if isnumeric(value)
-                value = num2str(value);
-            else
-                value = char(value);
-            end
-            t{i} = strcat(name,':',value);
-        end
-        text(xPos(c),0.5,t,'Interpreter','none','FontWeight','bold','FontSize',10);
-    end
-    chanMap = infoTable.ephysChannelMap{:};
-    chanRows = 4;
-    chanCols = ceil(numel(chanMap)/chanRows);
-    text(xPos(end),0.5,{'ePhysChannelMap'; ...
-        num2str(reshape(chanMap,chanCols,chanRows)','%02d, ')},...
-        'Interpreter','none','FontWeight','bold','FontSize',10)
-end
-%% Add Plot date time 
-function addDateStr()
-    axes('Units','normalized','Position',[.9 .02 .06 .04],'Visible','off');
-    text(0.1,0.1,datestr(now))
 end

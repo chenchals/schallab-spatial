@@ -1,5 +1,5 @@
-classdef DataModelWolf < DataModel
-    %DATAMODELWOLF Model class for reading data from Darwin_WJ, Gauss, Helmholtz recordings
+classdef DataModelKaleb < DataModel
+    %DATAMODELWOLF Model class for reading data from Darwin_K ... recordings
     %  Inputs:
     %    source : A char. Must point to the matlab data file or folder
     %    channelMap : The mapping of cell ID and the channel lovcation on the probe.
@@ -10,6 +10,7 @@ classdef DataModelWolf < DataModel
     %               For Darwin the map the locations [1:32] correspond
     %               linearly to DSP01 to DSP32
     
+    % In general uses KiloSOrt, then the model closely fits Wolf's model
     % See PLX_get_paradigm.m (Wolf's code)
     % Line# 237 - line# 239
     % tempoStimOn = PLXin_get_event_time(EV.Target_, t);
@@ -54,27 +55,38 @@ classdef DataModelWolf < DataModel
     % Task.TargetLoc = TargetAngle, 
     
     properties (Access=private)
-                 
+        
+        behaviorFile ='';
+        default_error_names = {'False'    'Early'    'Late'    'FixBreak'    'HoldError'    'CatchErrorGo'    'CatchErrorNoGo'};
+        
+        % These behavioral variables are in Behav.mat/Task structure         
+        % build 'trialOutcome' var from Task.error, Task.errorNames, Task.error==0 are Correct trials          
         eventVariables = {
             'targetOnset:StimOnset'
-            'responseOnset:Saccade'
+            'responseOnset:SRT'
             'targetLocation:TargetLoc'
+            'alignTimes:AlignTimes' % used for aligning the vector of spikeTimes
+            'trStarts:trStarts'
+            'trEnds:trEnds'
             };
-        % build 'trialOutcome' var from Task.error, Task.errorNames, Task.error==0 are cCorrect trials          
-  
+       % Singel units are at ChannelN/UnitN/Spikes.mat
+       % The spikeIds are not labelled as DSPNN
+       % Build spikeIds and spikeTimes variables
+       % spike variable names
         spikeVariables = {
-            'spikeIds:DSPname'
-            'spikeTimes:spiketimes'
+            'spikeIds:'
+            'spikeTimes:spkTimes'
             };
-
+       
     end
     
     %Public methods
     methods
 
-        function obj = DataModelWolf(source, channelMap )           
+        function obj = DataModelKaleb(source, channelMap )           
             obj.dataSource = source;
             obj.checkFileExists;
+            obj.behaviorFile = checkAndGetBehaviorFile(obj);
             obj.trialList = containers.Map;
             
             obj.eventVars = DataModel.asMap(obj, obj.eventVariables);
@@ -94,13 +106,10 @@ classdef DataModelWolf < DataModel
             end
             keys = obj.eventVars.keys;
             vars = obj.eventVars.values;
-            % Task variable as all the necessary events
-            % use one of the source files to get task
-            behaviorFile = obj.dataSource{1};
-            temp = load(behaviorFile,'Task');            
+            % Task variable from behaviorFile as all the necessary events
+            temp = load(obj.behaviorFile,'Task');            
             for i=1:numel(vars)
                 eventData.(keys{i}) = temp.Task.(vars{i});
-
             end
             % Build trialOutcome variable
             eventData.trialOutcome = buildTrialOutcomeVar(obj,temp.Task);
@@ -119,35 +128,43 @@ classdef DataModelWolf < DataModel
                 spikeData = obj.spikeData;
                 return
             end
+            evData = obj.getEventData();
+            channelMap = obj.channelMap;
             tempSpk = struct();
             spikeData = struct();
             keys = obj.spikeVars.keys;
             vars = obj.spikeVars.values;
-            for f = 1:numel(obj.dataSource)
-                datafile = obj.dataSource{f};
-                tempVars = load(datafile,vars{:});
+            fprintf('Reading spikeData...');
+            for fileIndex = 1:numel(obj.dataSource)
+                datafile = obj.dataSource{fileIndex}; 
+                [~,unit,~] = fileparts(datafile);
+                fprintf('#%s ',unit);
                 for i = 1:numel(keys)
                     key = keys{i};
                     var = vars{i};
                     if strcmp('spikeIds',key)
-                        tempSpk.(key){f,1}=tempVars.(var);
+                        % parse out chanN[a-z] into DSPNN[a-z] from the
+                        % datafile filename
+                        [~,unitId,~] = fileparts(datafile);
+                        temp = regexp(unitId,'chan(\d*)([a-z])$','tokens');
+                        tempSpk.(key){fileIndex,1}=['DSP' num2str(str2num(temp{1}{1}),'%02d') temp{1}{2}];
                     else % key if spikeTimes
-                        nTrials = size(tempVars.(var),1);
-                        for t = 1:nTrials
-                            spikeData.(key){t,f}=tempVars.(var)(t,~isnan(tempVars.(var)(t,:)))';
-                        end
+                        tempVars = load(datafile,var);
+                        tempVars = tempVars.spkTimes;
+                        spikeData.(key)(:,fileIndex) = arrayfun(@(x,y,z) tempVars(tempVars>=x & tempVars<=y)-z,...
+                           evData.trStarts,evData.trEnds,evData.alignTimes,'UniformOutput',false);
                      end
                 end
-                clear tempVars;
+                clear tempVars
             end % for each unit file
-            
-            %Channel map order for spike Ids
-            channelMap = obj.channelMap;
-            for ch = 1:max(channelMap)
-                channel = channelMap(ch);
-                spikeChannels = ~cellfun(@isempty,regexp(tempSpk.spikeIds,num2str(ch,'%02d')));
+            fprintf('\n');
+            spikeData.spikeTimes = cellfun(@(x) transpose(x),spikeData.spikeTimes,'UniformOutput',false);
+            %Channel map order for spike Ids 
+            for chIndex = 1:numel(channelMap)
+                channel = channelMap(chIndex);
+                spikeChannels = ~cellfun(@isempty,regexp(tempSpk.spikeIds,num2str(channel,'%02d')));
                 tempSpk.unitSortOrder(spikeChannels,1)= channel;
-                tempChan.channelIds{ch,1} =  ['chan',num2str(ch,'%02d')];
+                tempChan.channelIds{chIndex,1} =  ['chan',num2str(channel,'%02d')];
             end
             tempChan.channelSortOrder(:,1)= channelMap';
             spikeData.spikeIdsTable = struct2table(tempSpk);
@@ -199,19 +216,37 @@ classdef DataModelWolf < DataModel
             end
         end
 
-       function [ trialOutcome ] = buildTrialOutcomeVar(obj, taskVar) %#ok<INUSL>
-            trialOutcome = repmat({''},taskVar.NTrials,1);
+       function [ trialOutcome ] = buildTrialOutcomeVar(obj, taskVar) 
+            nTrials = size(taskVar.Correct,1);
+            trialOutcome = repmat({''},nTrials,1);
             uniqErrIndex=unique(taskVar.error(isfinite(taskVar.error)));
+            if isfield(taskVar,'error_names')
+                error_names = taskVar.error_names;
+            end
+            if isempty(error_names)
+                error_names = obj.default_error_names;
+            end
+                        
             for ii = 1:numel(uniqErrIndex)
-                outcome = taskVar.error_names{ii};
+                outcome = error_names{ii};
                 if strcmpi(outcome,'False') % no error
                     outcome = 'Correct';
-                end
-                
+                end                
                 ind = find(taskVar.error==uniqErrIndex(ii));
                 trialOutcome(ind) = {outcome}; %#ok<FNDSB>
             end
-        end
+       end
+       
+       function [ behaviorFile ] = checkAndGetBehaviorFile(obj)
+           % Behavior file, throw exception if file does not exist
+           behaviorFile = fullfile(char(...
+               cellfun(@char,regexp(obj.dataSource{1},'^(.*-\d*)/.*','tokens'),'UniformOutput',false)...
+               ),'Behav.mat');
+           
+           if ~exist(behaviorFile,'file')
+               throw(MException('DataModelKaleb:constructor', sprintf('File not found %s ',behaviorFile)));
+           end 
+       end
         
     end
 end

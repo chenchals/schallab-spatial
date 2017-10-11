@@ -3,7 +3,7 @@ classdef (Abstract=true) DataModel < handle
     properties (Constant)
         PAUL_DATA_MODEL = 'DataModelPaul';
         WOLF_DATA_MODEL = 'DataModelWolf';
-        
+        KALEB_DATA_MODEL = 'DataModelKaleb';        
     end
     
     properties (Access=protected)
@@ -69,8 +69,9 @@ classdef (Abstract=true) DataModel < handle
             spikeTimes = obj.getSpikeData().spikeTimes;
             events = obj.getEventData();
             spikeIds = obj.getSpikeData().spikeIdsTable.spikeIds;
-            maxChannels = max(getChannelMap(obj));
-            sdf = spkfun_sdf(spikeTimes, selectedTrials, events, alignEventName, sdfWindow, spikeIds, maxChannels, singleOrMultiFlag);
+            %maxChannels = max(getChannelMap(obj));
+            chMap = getChannelMap(obj);
+            sdf = spkfun_sdf(spikeTimes, selectedTrials, events, alignEventName, sdfWindow, spikeIds, chMap, singleOrMultiFlag);
             
             % Find population mean and Std of firing rate
             allSdf = cell2mat({sdf.sdf}');
@@ -93,17 +94,17 @@ classdef (Abstract=true) DataModel < handle
                 case DataModel.PAUL_DATA_MODEL
                     dataModel = DataModelPaul(source,channelMap);
                 case DataModel.WOLF_DATA_MODEL
-                    throw(MException('DataModel:newInstance', 'Not yet implemented'));
+                    dataModel = DataModelWolf(source,channelMap);
+                case DataModel.KALEB_DATA_MODEL
+                    dataModel = DataModelKaleb(source,channelMap);
                 otherwise
                     throw(MException('DataModel:newInstance', 'Not yet implemented'));
             end
         end
         
         function [ varMap ] = asMap(obj,colonSeparatedKeyVal)
-            temp = regexp(colonSeparatedKeyVal,'^(.*):(.*)$','tokens');
-            keys=arrayfun(@(x) x{1}{1}{1},temp,'UniformOutput',false);
-            vals=arrayfun(@(x) x{1}{1}{2},temp,'UniformOutput',false);
-            varMap = containers.Map(keys,vals);
+            kv=split(colonSeparatedKeyVal,':');
+            varMap=containers.Map({kv{:,1}},{kv{:,2}});
         end
         
     end
