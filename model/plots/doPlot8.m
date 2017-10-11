@@ -3,6 +3,8 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
 %   Detailed explanation goes here
 
 %% Do a 8 part figure plot
+    fprintf('Plotting session %s\n',sessionLabel);
+    figVisible = 'off';
 
     if numel(varargin)==1
         outputFolder = varargin{1};
@@ -46,6 +48,7 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
     plotHandles = plot8axes;
     %[plotHandles, infosHandle] = plot8part;
     figH = get(plotHandles(1),'Parent');
+    set(figH,'Visible',figVisible);
 
     channelTicks = 2:2:numel(session.channelMap);
     channelTickLabels = arrayfun(@(x) ['#' num2str(session.channelMap(x))],channelTicks,'UniformOutput',false);
@@ -101,17 +104,19 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
             end
         end
     end
-    addFigureTitleAndInfo(sessionLabel, session.info, infosHandle);
+    addFigureTitleAndInfo(sessionLabel, session, infosHandle);
     addDateStr();
     drawnow
     if saveFig
-        saveas(figH,fullfile(outputFolder,sessionLabel),'jpg');
-        saveas(figH,fullfile(outputFolder,sessionLabel), 'fig');
+        oFile = fullfile(outputFolder,sessionLabel);
+        fprintf('Saving figure to file %s\n',oFile);
+        saveas(figH,oFile,'jpg');
+        saveas(figH,oFile, 'fig');
     end
     
 end
 %% Add figure title and Info
-function addFigureTitleAndInfo(figureTitle, infoTable, varargin)
+function addFigureTitleAndInfo(figureTitle, session, varargin)
     if numel(varargin)==0 || isempty(varargin{1})
         h = axes('Units','normalized','Position',[.01 .87 .98 .09]);
     else
@@ -123,13 +128,16 @@ function addFigureTitleAndInfo(figureTitle, infoTable, varargin)
     h.YTick = [];
     h.Visible = 'on';
     h.Box = 'on';
+    infoTable = session.info;
     varNames=infoTable.Properties.VariableNames;
     % remove channelMap from varnames
     varNames = varNames(~contains(varNames,'ephysChannelMap'));
-    propsPerCol = 4;
+    propsPerCol = 5;
+    fontSize = 12;
+    columnGap = 0.02;
     nCols = ceil(numel(varNames)/propsPerCol)+1;
-    xPos=(0:1.0/nCols:1.0)+0.01;
-    xPos = xPos(1:end-1);
+    xPos=0.01;
+    yPos = 0.9;
     for c = 1:nCols-1 % last col channelMap
         t = cell(propsPerCol,1);
         ind = (c-1)*propsPerCol+1:c*propsPerCol;
@@ -142,24 +150,41 @@ function addFigureTitleAndInfo(figureTitle, infoTable, varargin)
             else
                 value = char(value);
             end
-            t{i} = strcat(name,':',value);
+            t{i} = [name,' : ',value];
         end
-        text(xPos(c),0.5,t,'Interpreter','none','FontWeight','bold','FontSize',10);
+        hText = text(xPos,yPos,t,'Interpreter','none',...
+            'FontWeight','bold','FontSize',fontSize,...
+            'VerticalAlignment', 'top','HorizontalAlignment','left');
+        xPos = getNextXPos(hText, columnGap);
     end
     chanMap = infoTable.ephysChannelMap{:};
     chanRows = 4;
     chanCols = ceil(numel(chanMap)/chanRows);
-    text(xPos(end),0.5,{'ePhysChannelMap'; ...
+    hText = text(xPos,yPos,{'ePhysChannelMap'; ...
         num2str(reshape(chanMap,chanCols,chanRows)','%02d, ')},...
-        'Interpreter','none','FontWeight','bold','FontSize',10)
-end
-%% Add Plot date time 
-function addDateStr()
-    axes('Units','normalized','Position',[.9 .02 .06 .04],'Visible','off');
-    text(0.1,0.1,datestr(now))
+        'Interpreter','none','FontWeight','bold','FontSize',fontSize,...
+        'VerticalAlignment', 'top','HorizontalAlignment','left');
+     xPos = getNextXPos(hText, columnGap);
+            % write Analysis date
+    text(xPos,yPos,['Analysis Date : ' session.analysisDate],...
+        'Interpreter','none','FontWeight','bold','FontSize',fontSize,...
+        'VerticalAlignment', 'top','HorizontalAlignment','left');
 end
 
-function [ tableHeader ] = getTableHeader()
+%% Get next X position fron the previous plot extens
+function [ xPos ] = getNextXPos(hText, columnGap)
+        xPos = get(hText,'Extent');
+        xPos = xPos(1) + xPos(3) + columnGap;
+end
+
+%% Add Plot date time
+function addDateStr()
+    axes('Units','normalized','Position',[0.90 .02 .06 .04],'Visible','off');
+    text(0.1,0.1,['Plotted Date : ' datestr(now)],'FontSize',11,'HorizontalAlignment','right');
+end
+
+% Not used
+function [ tableHeader ] = getTableHeader() %#ok<DEFNU>
 tableHeader = {
     'nhp'
     'notebook'

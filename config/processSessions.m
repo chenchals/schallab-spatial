@@ -97,7 +97,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     
     nhpConfig.nhpTable = nhpTable;
     
-    outputFile = fullfile(nhpOutputDir,[nhp 'Spatial.mat']);       
+    outputFile = fullfile(nhpOutputDir,[nhp 'Config.mat']);       
     save(outputFile, 'nhpConfig');
 
     sessionLocations = getSessions(nhpSourceDir, nhpTable);
@@ -112,26 +112,28 @@ function [ nhpSessions ] = processSessions(nhpConfig)
 
     distancesToCompute = {'correlation'};
     nhpSessions = cell(numel(sessionLocations),1);
-    %parfor s = 1:numel(sessions)
-    for sessionIndex = 1:numel(sessionLocations)
+
+    parfor sessionIndex = 1:numel(sessionLocations)
         try
             sessionLocation = sessionLocations{sessionIndex};
-            if isempty(sessionLocation)
-                errorLogger.error(sprintf('Session %s has no datafiles. Using [ %s ] for spike file locations',...
-                    sessionName, char(nhpInfo.matPath)));
-                continue
-            end
             nhpInfo = nhpTable(sessionIndex,:);
-           % Include probe number in session name
+            % Include probe number in session name
             if find(strcmp('probeNo',nhpInfo.Properties.VariableNames))
                 sessionName = [nhpInfo.session{1} '_probe' num2str(nhpInfo.probeNo)];
             else
                 sessionName = nhpInfo.session{1};
             end
+
+            if isempty(sessionLocation)
+                errorLogger.error(sprintf('Session %s has no datafiles. Using [ %s ] for spike file locations',...
+                    sessionName, char(nhpInfo.matPath))); %#ok<PFBNS>
+                continue
+            end
+
                         
             multiSdf = struct();
             channelMap = nhpInfo.ephysChannelMap{1};
-            logger.info(sprintf('Processing session %s',sessionName));
+            logger.info(sprintf('Processing session %s',sessionName)); %#ok<PFBNS>
             if contains(lower(nhpInfo.chamberLoc),'left')
                 ipsi = 'left';
             else
@@ -173,6 +175,9 @@ function [ nhpSessions ] = processSessions(nhpConfig)
                     end
                 end
             end
+            oFile = fullfile(nhpOutputDir,[multiSdf.session '.mat']);
+            logger.info(sprintf('Saving processed session to %s...',oFile));
+            saveProcesssedSession(multiSdf, oFile);
             nhpSessions{sessionIndex}=multiSdf;
         catch me
             % log the error/exception causing failure and continue
@@ -183,39 +188,28 @@ function [ nhpSessions ] = processSessions(nhpConfig)
             errorLogger.error(me);
         end
     end
-     %Since there may be processing errors for one or more sessions
-     nhpSessions = nhpSessions(~cellfun(@isempty,nhpSessions));
-    
-     % since we are using parfor to compute, reconvert from struct array
-    % back to struct with session as fieldname
-    finalVar = struct;
-    for ii = 1:numel(nhpSessions)
-        %fieldname cannot start with a number. Foir example darwin, session
-        %names are 2016-*
-        validSessionName = [nhp '-' nhpSessions{ii}.session];
-        validSessionName = regexprep(regexprep(validSessionName,'[^a-zA-Z0-9-]',''),'-','_');
-        finalVar.(validSessionName)=nhpSessions{ii};
-    end
-    nhpSessions = finalVar;
-    clearvars 'finalVar';
-
-    % save fieldnames (session) as individual vars in file
-    logger.info(sprintf('Saving processed output to %s...',outputFile));
-    save(outputFile, '-struct', 'nhpSessions');
-    %fprintf('done');
 
     %% Plot and save Figures
-    sessionLabels = fieldnames(nhpSessions);
-    for sessionIndex = 1:numel(sessionLabels)
+    plotsDir = [nhpOutputDir filesep 'figs'];
+    if ~exist(plotsDir,'dir')
+        mkdir(plotsDir)
+    end
+    for sessionIndex = 1:numel(nhpSessions)
+        currSession = nhpSessions{sessionIndex};
         try
-            sessionLabel = sessionLabels{sessionIndex};
-            doPlot8(nhpSessions.(sessionLabel),sessionLabel, nhpOutputDir);
+            sessionLabel = currSession.session;
+            doPlot8(currSession,sessionLabel, plotsDir);
         catch me
             % log the error/exception causing failure and continue
             logger.error(me);
             errorLogger.error(me);
         end
     end
+end
+
+%% Save processed session
+function saveProcesssedSession(currSession, oFile)   %#ok<INUSL>
+    save(oFile, '-struct', 'currSession' );
 end
 
 %% For converting cell array to string (only char are converted)
