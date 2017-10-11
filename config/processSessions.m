@@ -97,6 +97,9 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     
     nhpConfig.nhpTable = nhpTable;
     
+    outputFile = fullfile(nhpOutputDir,[nhp 'Spatial.mat']);       
+    save(outputFile, 'nhpConfig');
+
     sessionLocations = getSessions(nhpSourceDir, nhpTable);
     nhpConfig.sessions = sessionLocations;
       
@@ -110,26 +113,22 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     distancesToCompute = {'correlation'};
     nhpSessions = cell(numel(sessionLocations),1);
     %parfor s = 1:numel(sessions)
-    for s = 1:numel(sessionLocations)
+    for sessionIndex = 1:numel(sessionLocations)
         try
-            sessionLocation = sessionLocations{s};
-            nhpInfo = nhpTable(s,:);
-            sessionName =  nhpInfo.session{1};
+            sessionLocation = sessionLocations{sessionIndex};
             if isempty(sessionLocation)
                 errorLogger.error(sprintf('Session %s has no datafiles. Using [ %s ] for spike file locations',...
                     sessionName, char(nhpInfo.matPath)));
                 continue
             end
-            
-            probeIndex = find(strcmp('probeNo',nhpInfo.Properties.VariableNames));
-            if probeIndex
-                outputFile = fullfile(nhpOutputDir,[nhp '-' num2str(nhpInfo.probeNo) '-Spatial.mat']);
+            nhpInfo = nhpTable(sessionIndex,:);
+           % Include probe number in session name
+            if find(strcmp('probeNo',nhpInfo.Properties.VariableNames))
+                sessionName = [nhpInfo.session{1} '_probe' num2str(nhpInfo.probeNo)];
             else
-                outputFile = fullfile(nhpOutputDir,[nhp 'Spatial.mat']);
+                sessionName = nhpInfo.session{1};
             end
-            
-            save(outputFile, 'nhpConfig');
-            
+                        
             multiSdf = struct();
             channelMap = nhpInfo.ephysChannelMap{1};
             logger.info(sprintf('Processing session %s',sessionName));
@@ -174,7 +173,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
                     end
                 end
             end
-            nhpSessions{s}=multiSdf;
+            nhpSessions{sessionIndex}=multiSdf;
         catch me
             % log the error/exception causing failure and continue
             disp(me)
@@ -184,10 +183,10 @@ function [ nhpSessions ] = processSessions(nhpConfig)
             errorLogger.error(me);
         end
     end
-    %Since there may be processing errors for one or more sessions
-    nhpSessions = nhpSessions(~cellfun(@isempty,nhpSessions));
-
-    % since we are using parfor to compute, reconvert from struct array
+     %Since there may be processing errors for one or more sessions
+     nhpSessions = nhpSessions(~cellfun(@isempty,nhpSessions));
+    
+     % since we are using parfor to compute, reconvert from struct array
     % back to struct with session as fieldname
     finalVar = struct;
     for ii = 1:numel(nhpSessions)
@@ -207,9 +206,9 @@ function [ nhpSessions ] = processSessions(nhpConfig)
 
     %% Plot and save Figures
     sessionLabels = fieldnames(nhpSessions);
-    for s = 1:numel(sessionLabels)
+    for sessionIndex = 1:numel(sessionLabels)
         try
-            sessionLabel = sessionLabels{s};
+            sessionLabel = sessionLabels{sessionIndex};
             doPlot8(nhpSessions.(sessionLabel),sessionLabel, nhpOutputDir);
         catch me
             % log the error/exception causing failure and continue
