@@ -114,6 +114,10 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
         saveas(figH,oFile, 'fig');
     end
     
+    if strcmp(figVisible, 'off')
+        delete(figH)
+    end
+    
 end
 %% Add figure title and Info
 function addFigureTitleAndInfo(figureTitle, session, varargin)
