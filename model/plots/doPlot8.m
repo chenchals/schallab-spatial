@@ -159,4 +159,38 @@ function addDateStr()
     text(0.1,0.1,datestr(now))
 end
 
+function [ tableHeader ] = getTableHeader()
+tableHeader = {
+    'nhp'
+    'notebook'
+    'pages'
+    'date'
+    'rig'
+    'scientist'
+    'paradigm'
+    'session'
+ %   'matPath'
+    'probeNo'
+ %   'rawPath'
+ %   'filename_behavior'
+    'probe'
+    'area'
+    'chamberLoc'
+    'ipsi'
+    'contra'
+    'ap'
+    'ml'
+    'ap_mm'
+    'ml_mm'
+    'cotexSurface_um'
+    'settle_um'
+    'depth_um'
+    'channelSpacing'
+    'ephysChannelMap'
+    'channelClosestToSurface'
+    'grid_reference'
+    };
+end
+
+
 

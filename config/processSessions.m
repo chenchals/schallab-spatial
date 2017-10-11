@@ -80,12 +80,14 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     if ~exist(nhpOutputDir,'dir')
         mkdir(nhpOutputDir);
     end
-    outputFile = fullfile(nhpOutputDir,[nhp 'Spatial.mat']);
+    
     logger = Logger.getLogger(fullfile(nhpOutputDir,[nhp 'ProcessSessions.log']));
     errorLogger = Logger.getLogger(fullfile(nhpOutputDir,[nhp 'ProcessSessionsErrors.log']));
     
     % Read excel sheet
     nhpTable = readtable(excelFile, 'Sheet', sheetName);
+
+    
     %remove empty rows
     nhpTable(strcmp(nhpTable.matPath,''),:) = [];
     nhpTable.date = datestr(nhpTable.date,'mm/dd/yyyy');
@@ -97,10 +99,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     
     sessionLocations = getSessions(nhpSourceDir, nhpTable);
     nhpConfig.sessions = sessionLocations;
-    
-    save(outputFile, 'nhpConfig');
-
-  
+      
     % Specify conditions to for creating multiSdf
     %condition{x} = {alignOnEventName, TargetLeftOrRight, sdfWindow}
     conditions{1} = {'targetOnset', 'left', [-100 400]};
@@ -121,6 +120,15 @@ function [ nhpSessions ] = processSessions(nhpConfig)
                     sessionName, char(nhpInfo.matPath)));
                 continue
             end
+            
+            probeIndex = find(strcmp('probeNo',nhpInfo.Properties.VariableNames));
+            if probeIndex
+                outputFile = fullfile(nhpOutputDir,[nhp '-' num2str(nhpInfo.probeNo) '-Spatial.mat']);
+            else
+                outputFile = fullfile(nhpOutputDir,[nhp 'Spatial.mat']);
+            end
+            
+            save(outputFile, 'nhpConfig');
             
             multiSdf = struct();
             channelMap = nhpInfo.ephysChannelMap{1};
