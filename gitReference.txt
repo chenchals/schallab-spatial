@@ -1,0 +1,2 @@
+gitUrl : https://github.com/chenchals/schalllab-spatial.git
+releaseTag : release/processCorrMap_1
