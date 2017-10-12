@@ -1,5 +1,5 @@
 classdef MemoryTypeModel < EphysModel
-    %MEMORYTYPEMODEL Model class for reading data from different recordings
+    %MEMORYTYPEMODEL Model class for reading data from Joule, Broca recordings
     %  Inputs:
     %    source : A char. Must point to the matlab data file or folder
     %    channelMap : The mapping of cell ID and the channel lovcation on the probe.
@@ -15,8 +15,6 @@ classdef MemoryTypeModel < EphysModel
         %MEMORYTYPEMODEL Constructor
         function obj = MemoryTypeModel(source, channelMap )           
             obj.dataSource = source;
-            [~,f,e] = fileparts(source);
-            obj.sourceFile = [f e];
             obj.checkFileExists;
             obj.trialList = containers.Map;
             assert(isnumeric(channelMap) || numel(channelMap) > 1,...
@@ -33,11 +31,17 @@ classdef MemoryTypeModel < EphysModel
                 return
             end
             % Get event data first time
-            if numel(varargin) == 0
-                eventNames = EphysModel.getEventVarNames();
-            else
-                eventNames = varargin{1};
+            if numel(varargin) == 1
+                eventMap = varargin{1};
             end
+            
+            eventNames = eventMap.keys;
+            for i=1:numel(eventNames)
+                key = eventNames{i};
+                eventData.(key) = eventMap(key);
+            end
+            
+            
             if iscellstr(eventNames)
                 eventData = load(obj.dataSource, eventNames{:});
             elseif ischar(eventNames)

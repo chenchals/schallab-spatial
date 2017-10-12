@@ -1,4 +1,4 @@
-function [ outSdfStruct ] = spkfun_sdf(spikeTimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeIds, maxChannels, multiUnitTrueFalse)
+function [ outSdfStruct ] = spkfun_sdf(spikeTimes, selectedTrials, eventData, alignEventName, sdfWindow, spikeIds, channelMap, multiUnitTrueFalse)
 %SDF Summary of this function goes here
 %   Detailed explanation goes here
 %
@@ -56,11 +56,11 @@ function [ outSdfStruct ] = spkfun_sdf(spikeTimes, selectedTrials, eventData, al
     assert(iscellstr(spikeIds),... %if 0
         sprintf('Argument spikeIds must be a cell array of Strings {nCells x 1 cell} of spike unit Ids, but was %s',class(spikeIds)));
     
-    assert(isscalar(maxChannels),... %if 0
-        sprintf('Argument maxChannels must be a scalar, but was %s',class(maxChannels)));
+    assert(isnumeric(channelMap) && numel(channelMap)>1,... %if 0
+        sprintf('Argument maxChannels must be a scalar, but was %s',class(channelMap)));
     
     assert(islogical(multiUnitTrueFalse),... %if 0
-        sprintf('Argument multiUnitFlag must be a logical, but was %s',class(maxChannels)));
+        sprintf('Argument multiUnitFlag must be a logical, but was %s',class(channelMap)));
     
     % Ensure trials are valid
     verifyCategories(alignEventName,fieldnames(eventData));
@@ -103,19 +103,26 @@ function [ outSdfStruct ] = spkfun_sdf(spikeTimes, selectedTrials, eventData, al
         %% Compute for Multi Unit: rasters, sdf, sdf_mean, sdf_std
         % Merge units for each channel
         fprintf('Doing channel ');
-        for chanIndex = 1:maxChannels
-            fprintf('#%02d ',chanIndex);
-            cellIndex = find(~cellfun(@isempty,regexp(spikeIds,num2str(chanIndex,'%02d'))));
+        for chanIndex = 1:numel(channelMap)
+            channelNo = channelMap(chanIndex);
+            fprintf('#%02d ',channelNo);
+            cellIndex = find(~cellfun(@isempty,regexp(spikeIds,num2str(channelNo,'%02d'))));
             if numel(cellIndex)>0
                 temp_spikes = arrayfun(@(x) cell2mat(spikeTimes(x,cellIndex)'),selectedTrials,'UniformOutput',false);
-                [ bins, rasters_full ] = spkfun_getRasters(temp_spikes, alignTimes);
                 currSpikeIds = spikeIds(cellIndex);
-                % If there are bins that include sdfWindow, then we have
-                % spikes in sdfWindow
+
+                % if there are atleast 1 spike
+                if isempty(cell2mat(temp_spikes))
+                    outNew.multiUnit(chanIndex,1) = computeSdfNans(nTrials,sdfWindow,currSpikeIds,cellIndex,channelNo);
+                    continue
+                end
+                [ bins, rasters_full ] = spkfun_getRasters(temp_spikes, alignTimes);
+                
+                % If there are bins that include sdfWindow, then we have spikes in sdfWindow
                 if numel(find(ismember(bins,sdfWindow))) == 2 
-                    outNew.multiUnit(chanIndex,1) = computeSdfs(rasters_full,bins,kernel,sdfWindow,currSpikeIds,cellIndex,chanIndex);
+                    outNew.multiUnit(chanIndex,1) = computeSdfs(rasters_full,bins,kernel,sdfWindow,currSpikeIds,cellIndex,channelNo);
                 else
-                    outNew.multiUnit(chanIndex,1) = computeSdfNans(nTrials,sdfWindow,currSpikeIds,cellIndex,chanIndex);
+                    outNew.multiUnit(chanIndex,1) = computeSdfNans(nTrials,sdfWindow,currSpikeIds,cellIndex,channelNo);
                 end
             else
                 outNew.multiUnit(chanIndex,1) = computeSdfNans(nTrials,sdfWindow,{},[],[]);
