@@ -1,4 +1,5 @@
-function [ nhpSessions ] = processSessions(nhpConfig)
+function [ ] = processSessions(nhpConfig)
+% function [ nhpSessions ] = processSessions(nhpConfig)
 %PROCESSSESSIONS Process each recording session.
 %   Inputs:
 %     nhpConfig: A structured variable with fields that define how to
@@ -28,7 +29,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
 %                    DataModel.WOLF_DATA_MODEL: 'Correct';
 %                    DataModel.PAUL_DATA_MODEL: 'saccToTarget'
 %
-%     Output:
+%     Output: Written to session file and NOT a function output
 %       nhpSessions: A struct.
 %                    Fieldnames = session_name
 %                    Each session field is a struct
@@ -111,7 +112,7 @@ function [ nhpSessions ] = processSessions(nhpConfig)
     conditions{4} = {'responseOnset', 'right', [-300 200]};
 
     distancesToCompute = {'correlation'};
-    nhpSessions = cell(numel(sessionLocations),1);
+    %nhpSessions = cell();
 
     parfor sessionIndex = 1:numel(sessionLocations)
         try
@@ -129,7 +130,6 @@ function [ nhpSessions ] = processSessions(nhpConfig)
                     sessionName, char(nhpInfo.matPath))); %#ok<PFBNS>
                 continue
             end
-
                         
             multiSdf = struct();
             channelMap = nhpInfo.ephysChannelMap{1};
@@ -178,7 +178,9 @@ function [ nhpSessions ] = processSessions(nhpConfig)
             oFile = fullfile(nhpOutputDir,[multiSdf.session '.mat']);
             logger.info(sprintf('Saving processed session to %s...',oFile));
             saveProcesssedSession(multiSdf, oFile);
-            nhpSessions{sessionIndex}=multiSdf;
+            %nhpSessions=multiSdf;
+            plotAndSaveFig(multiSdf, nhpOutputDir);
+            
         catch me
             % log the error/exception causing failure and continue
             disp(me)
@@ -188,24 +190,25 @@ function [ nhpSessions ] = processSessions(nhpConfig)
             errorLogger.error(me);
         end
     end
+end
 
-    %% Plot and save Figures
+%% Plot and save Figures
+function [] = plotAndSaveFig(currSession, nhpOutputDir)
     plotsDir = [nhpOutputDir filesep 'figs'];
     if ~exist(plotsDir,'dir')
         mkdir(plotsDir)
     end
-    for sessionIndex = 1:numel(nhpSessions)
-        currSession = nhpSessions{sessionIndex};
-        try
-            sessionLabel = currSession.session;
-            doPlot8(currSession,sessionLabel, plotsDir);
-        catch me
-            % log the error/exception causing failure and continue
-            logger.error(me);
-            errorLogger.error(me);
-        end
+    try
+        sessionLabel = currSession.session;
+        doPlot8(currSession,sessionLabel, plotsDir);
+    catch me
+        % log the error/exception causing failure and continue
+        logger.error(me);
+        errorLogger.error(me);
     end
 end
+
+
 
 %% Save processed session
 function saveProcesssedSession(currSession, oFile)   %#ok<INUSL>
