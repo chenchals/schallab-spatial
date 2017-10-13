@@ -112,6 +112,7 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
         fprintf('Saving figure to file %s\n',oFile);
         saveas(figH,oFile,'jpg');
         saveas(figH,oFile, 'fig');
+        nixUpdateAttribs([oFile '*.*']);
     end
     
     if strcmp(figVisible, 'off')

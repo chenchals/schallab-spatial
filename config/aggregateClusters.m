@@ -26,8 +26,10 @@ function [ nhpClusters, nhpClusterStats ] = aggregateClusters( fileFilter )
    clusterFun = @clusterIt;
 
    distFiles = dir(fileFilter);
-   nhpOutMatfile = fullfile(distFiles(1).folder,['clusterStats_' thresholdStr '.mat']);   
-   nhpOutExcelfile = fullfile(distFiles(1).folder,['clusterStats_' thresholdStr '.xlsx']);
+   [~,nhpName,~] = fileparts(distFiles(1).folder);
+     
+   nhpOutMatfile = fullfile(distFiles(1).folder,[nhpName 'ClusterStats_' thresholdStr '.mat']);   
+   nhpOutExcelfile = fullfile(distFiles(1).folder,[nhpName 'ClusterStats_' thresholdStr '.xlsx']);
    warning('off', 'MATLAB:table:RowsAddedExistingVars' );
    nhpClusters = table();
    rowNum = 0;
@@ -91,6 +93,8 @@ function [ nhpClusters, nhpClusterStats ] = aggregateClusters( fileFilter )
    warning('off','MATLAB:xlswrite:AddSheet');
    writetable(nhpClusters, nhpOutExcelfile,'Sheet','nhpClusters');
    writetable(nhpClusterStats, nhpOutExcelfile,'Sheet','nhpClusterStats');
+   % Copy excel file to base processed folder
+   copyfile(nhpOutExcelfile, [fileparts(fileparts(nhpOutExcelfile)) '/.']) ;
    
 end
 

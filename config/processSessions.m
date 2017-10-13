@@ -80,6 +80,7 @@ function [ ] = processSessions(nhpConfig)
 
     if ~exist(nhpOutputDir,'dir')
         mkdir(nhpOutputDir);
+        nixUpdateAttribs(nhpOutputDir);
     end
     
     logger = Logger.getLogger(fullfile(nhpOutputDir,[nhp 'ProcessSessions.log']));
@@ -197,6 +198,7 @@ function [] = plotAndSaveFig(currSession, nhpOutputDir)
     plotsDir = [nhpOutputDir filesep 'figs'];
     if ~exist(plotsDir,'dir')
         mkdir(plotsDir)
+        nixUpdateAttribs(plotsDir);        
     end
     try
         sessionLabel = currSession.session;
@@ -208,11 +210,10 @@ function [] = plotAndSaveFig(currSession, nhpOutputDir)
     end
 end
 
-
-
 %% Save processed session
 function saveProcesssedSession(currSession, oFile)   %#ok<INUSL>
     save(oFile, '-struct', 'currSession' );
+    nixUpdateAttribs(oFile);
 end
 
 %% For converting cell array to string (only char are converted)
