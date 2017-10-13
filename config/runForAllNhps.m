@@ -2,12 +2,12 @@
 tic
 processBroca;
 processDarwin;
-processDarwinK;whos
+processDarwinK;
 processGauss;
 processHelmholtz;
 processJoule;
 % run aggregation for all
-baseProcessedDir = '/Volumes/schalllab/Users/Chenchal/clustering/processed/';
+baseProcessedDir = '/Users/subravcr/Projects/lab-schall/schalllab-spatial/processed1/';
 aggregateClusters([baseProcessedDir 'broca/bp*.mat']);
 aggregateClusters([baseProcessedDir 'darwin/20*.mat']);
 aggregateClusters([baseProcessedDir 'darwink/Init*.mat']);
