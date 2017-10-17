@@ -69,12 +69,7 @@ function [ figH ] = doPlot8R(session, sessionLabel, varargin)
                 currAxes = gca;
                 switch co
                     case 1 %Firing Rate heatmap
-                        cp = currPlots{1};
-                        % replace NaN with Max ...Jacob
-                        cp(isnan(cp)) = frMinMax(2);
-                        imagesc(cp,frMinMax);
-                        h = colorbar;
-                        set(h,'YLim', frMinMax);
+                        imagescWithNan(currPlots{1},frMinMax,[],1);
                         timeWin = session.(cond).sdfWindow;
                         step = range(timeWin)/5;
                         currAxes.XTick = 0:step:range(timeWin);
@@ -96,12 +91,7 @@ function [ figH ] = doPlot8R(session, sessionLabel, varargin)
                         xlabel('time (ms)','FontWeight','bold', 'FontSize',12);
                         
                     case 2
-                        cp = currPlots{2};
-                        % replace NaN with Max ...Jacob
-                        cp(isnan(cp)) = distMinMax(2);                        
-                        imagesc(cp,distMinMax);
-                        h = colorbar;
-                        set(h,'YLim', distMinMax);
+                        imagescWithNan(currPlots{2},distMinMax,0.5,1);
                         currAxes.XTick = channelTicks;
                         currAxes.XTickLabelRotation = 90;
                         currAxes.XTickLabel = channelTickLabels;
@@ -140,6 +130,7 @@ function [ figH ] = doPlot8R(session, sessionLabel, varargin)
     end
     
 end
+
 %% Add figure title and Info
 function addFigureTitleAndInfo(figureTitle, session, varargin)
     if numel(varargin)==0 || isempty(varargin{1})
