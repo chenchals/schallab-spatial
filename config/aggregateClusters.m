@@ -85,7 +85,7 @@ function [ nhpClusters, nhpClusterStats ] = aggregateClusters( fileFilter )
          end
        end
    end
-   nhpClusterStats = getClusterStats(nhpClusters,conditions);
+   nhpClusterStats = getClusterStats(nhpClusters);
    
    % Save analysis work
    save(nhpOutMatfile, 'nhpClusters', 'nhpClusterStats');
@@ -98,11 +98,12 @@ function [ nhpClusters, nhpClusterStats ] = aggregateClusters( fileFilter )
    
 end
 
-function [ outStats ] = getClusterStats(inTable, conditions)
+function [ outStats ] = getClusterStats(inTable)
    %[a,b] = arrayfun(@(x) deal(x{1}, nanmean(cell2mat(out.clusterSize_um(strmatch(x,out.condition))))), conditions, 'UniformOutput',false)
    %rows for matching condition
    %ros = strmatch(condition,inTable.condition); %#ok<MATCH2>
    % Matcing rows for condition
+   conditions = unique(inTable.condition);
    conditions{end+1} = 'ipsi|contra';
    if numel(conditions)~= size(conditions,1)
        conditions = transpose(conditions);
