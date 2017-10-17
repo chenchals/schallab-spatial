@@ -9,6 +9,7 @@ function [ axesHandles ] = plot8axes()
     cmd = ['grep -A 1 "Tag.*axes" ' templateName ' | grep "Position" | cut -d , -f 2'];
     [~,axesPositions] = system(cmd);
     axesPositions = cell2mat(textscan(axesPositions,'[%f %f %f %f]'));
+    axesPositions = axesPositions([1 3 2 4 5 7 6 8],:);
     % scoot right all plots
     axesPositions(:,1) = axesPositions(:,1) + 0.02;
     %scoot down all plots

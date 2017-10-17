@@ -64,6 +64,7 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
             currAxes = gca;
             switch ro
                 case 1 %Firing Rate heatmap
+                    ro1Plot(isnan(ro1Plot))= frMinMax(1, 2);
                     imagesc(ro1Plot,frMinMax);
                     h = colorbar;
                     set(h,'YLim', frMinMax);
@@ -89,6 +90,7 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
                     end
 
                 case 2 % distance matrix for sdf_mean
+                    ro2Plot(isnan(ro2Plot))= distMinMax(1, 2);
                     imagesc(ro2Plot,distMinMax);
                     h = colorbar;
                     set(h,'YLim', distMinMax);
@@ -112,7 +114,6 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
         fprintf('Saving figure to file %s\n',oFile);
         saveas(figH,oFile,'jpg');
         saveas(figH,oFile, 'fig');
-        nixUpdateAttribs([oFile '*.*']);
     end
     
     if strcmp(figVisible, 'off')
