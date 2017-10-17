@@ -202,7 +202,7 @@ function [] = plotAndSaveFig(currSession, nhpOutputDir)
     end
     try
         sessionLabel = currSession.session;
-        doPlot8(currSession,sessionLabel, plotsDir);
+        doPlot8R(currSession,sessionLabel, plotsDir);
     catch me
         % log the error/exception causing failure and continue
         logger.error(me);

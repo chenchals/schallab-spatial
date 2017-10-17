@@ -65,10 +65,7 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
             currAxes = gca;
             switch ro
                 case 1 %Firing Rate heatmap
-                    ro1Plot(isnan(ro1Plot)) = frMinMax(2);
-                    imagesc(ro1Plot,frMinMax);
-                    h = colorbar;
-                    set(h,'YLim', frMinMax);
+                    imagescWithNan(ro1Plot,frMinMax,[],1);
                     timeWin = session.(colCond).sdfWindow;
                     step = range(timeWin)/5;
                     currAxes.XTick = 0:step:range(timeWin);
@@ -91,10 +88,7 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
                     end
 
                 case 2 % distance matrix for sdf_mean
-                    ro2Plot(isnan(ro2Plot)) = distMinMax(2);
-                    imagesc(ro2Plot,distMinMax);
-                    h = colorbar;
-                    set(h,'YLim', distMinMax);
+                    imagescWithNan(ro2Plot,distMinMax,[],1);
                     currAxes.XTick = channelTicks;
                     currAxes.XTickLabelRotation = 90;
                     currAxes.XTickLabel = channelTickLabels;
