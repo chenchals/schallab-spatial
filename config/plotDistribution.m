@@ -26,6 +26,7 @@ end
 
 for jj = 1:numel(nhps)
     nhp = nhps{jj};
+    %% 
     clustSizes=cell2mat(nhpClusters.(nhp).nhpClusters.clusterSize_um);
     clustSpacings=cell2mat(nhpClusters.(nhp).nhpClusters.distToNextCluster_um);
     step = 100;

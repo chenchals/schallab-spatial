@@ -4,7 +4,7 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
 
 %% Do a 8 part figure plot
     fprintf('Plotting session %s\n',sessionLabel);
-    figVisible = 'off';
+    figVisible = 'on';
 
     if numel(varargin)==1
         outputFolder = varargin{1};
@@ -26,8 +26,9 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
     % get SDFs / zscores to plot there will be 4 of these
     % create in column order
     plotNo = 0;
-    for align = 1:numel(alignOnOrder)
-        for ic = 1:numel(ipsiContraOrder)
+
+   for align = 1:numel(alignOnOrder)
+       for ic = 1:numel(ipsiContraOrder)
             charIc = ipsiContraOrder{ic};
             CharAlignOn = alignOnOrder{align};
             plotNo = plotNo+1;
@@ -64,6 +65,7 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
             currAxes = gca;
             switch ro
                 case 1 %Firing Rate heatmap
+                    ro1Plot(isnan(ro1Plot)) = frMinMax(2);
                     imagesc(ro1Plot,frMinMax);
                     h = colorbar;
                     set(h,'YLim', frMinMax);
@@ -89,6 +91,7 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
                     end
 
                 case 2 % distance matrix for sdf_mean
+                    ro2Plot(isnan(ro2Plot)) = distMinMax(2);
                     imagesc(ro2Plot,distMinMax);
                     h = colorbar;
                     set(h,'YLim', distMinMax);
