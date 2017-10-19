@@ -6,7 +6,7 @@ function [] = imagescWithNan(inMat, cLimits, threshold, nanColorGray)
     alpha(isnan(inMat)) = 0;
     if ~isempty(threshold)
         inMat(inMat<threshold) = 0;
-        inMat(inMat>=threshold) = 1;
+%        inMat(inMat>=threshold) = 1;
         cLimits = [0 1];
     end    
     im = imagesc(inMat,cLimits);

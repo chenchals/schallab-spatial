@@ -115,7 +115,7 @@ function [ ] = processSessions(nhpConfig)
     distancesToCompute = {'correlation'};
     %nhpSessions = cell();
 
-    parfor sessionIndex = 1:numel(sessionLocations)
+    for sessionIndex = 1:numel(sessionLocations)
         try
             sessionLocation = sessionLocations{sessionIndex};
             nhpInfo = nhpTable(sessionIndex,:);
@@ -200,13 +200,17 @@ function [] = plotAndSaveFig(currSession, nhpOutputDir)
         mkdir(plotsDir)
         nixUpdateAttribs(plotsDir);        
     end
+    figH = [];
     try
         sessionLabel = currSession.session;
-        doPlot8R(currSession,sessionLabel, plotsDir);
+        figH = doPlot8R(currSession,sessionLabel, plotsDir);
     catch me
         % log the error/exception causing failure and continue
         logger.error(me);
         errorLogger.error(me);
+    end
+    if ~isempty(figH)
+        delete(figH)
     end
 end
 

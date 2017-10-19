@@ -9,13 +9,12 @@ function [ axesHandles ] = plot8axes()
     cmd = ['grep -A 1 "Tag.*axes" ' templateName ' | grep "Position" | cut -d , -f 2'];
     [~,axesPositions] = system(cmd);
     axesPositions = cell2mat(textscan(axesPositions,'[%f %f %f %f]'));
-    axesPositions = axesPositions([1 3 2 4 5 7 6 8],:);
     % scoot right all plots
     axesPositions(:,1) = axesPositions(:,1) + 0.02;
     %scoot down all plots
     axesPositions(:,2) = axesPositions(:,2) - 0.02;
     %scoot down Row 2 plots further
-   % axesPositions([2:2:8],2) = axesPositions([2:2:8],2) - 0.02;
+    axesPositions([2:2:8],2) = axesPositions([2:2:8],2) - 0.02;
     
     % per jacob to use with doPlot8 not doPlot8R
     %axesPositions = axesPositions([1 3 2 4 5 7 6 8],:);
