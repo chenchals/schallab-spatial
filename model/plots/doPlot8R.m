@@ -13,7 +13,7 @@ function [ figH ] = doPlot8R(session, sessionLabel, varargin)
         saveFig = false;
     end
     
-    firingRateHeatmap = 'sdfPopulationZscoredMean';
+    firingRateHeatmap = 'sdfChanZscoredMean';
     distMeasure = 'rsquared';
 
     row1Conditions = {'contra_targetOnset', 'contra_responseOnset'};

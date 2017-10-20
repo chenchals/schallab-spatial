@@ -163,6 +163,9 @@ function [ ] = processSessions(nhpConfig)
                 % Get MultiUnitSdf -> has sdf_mean matrix and sdf matrix
                 [~, multiSdf.(condStr)] = model.getMultiUnitSdf(model.getTrialList(outcome,targetCondition), alignOn, sdfWindow);
                 sdfPopulationZscoredMean = multiSdf.(condStr).sdfPopulationZscoredMean;
+                sdfMean = multiSdf.(condStr).sdfMean;
+                sdfChanZscoredMean = zscore(sdfMean,0,2);
+                [multiSdf.(condStr).sdfChanZscoredMean] = sdfChanZscoredMean
                 for d = 1: numel(distancesToCompute)
                     distMeasureOption = distancesToCompute{d};
                     dMeasure = pdist2(sdfPopulationZscoredMean, sdfPopulationZscoredMean,distMeasureOption);
