@@ -32,35 +32,56 @@ end
 
 function [] = plotIt(x,y,z,fx,fy,fz)
   figure
-  subplot(3,3,1)
+  subplot(4,3,1)
   imagesc(x)
   title('Mean')
-  subplot(3,3,2)
+  subplot(4,3,2)
   imagesc(y)
   title('MeanZtr')
-  subplot(3,3,3)
+  subplot(4,3,3)
   imagesc(z)
   title('MeanZtrBl')
   % Fr Plots
-  subplot(3,3,4)
+  subplot(4,3,4)
   plot(1:501,fx)
+  xlim([0 500])
   title('MeanFr')
-  subplot(3,3,5)
+  subplot(4,3,5)
   plot(1:501,fy)  
+  xlim([0 500])
   title('MeanZtrFr')
-  subplot(3,3,6)
+  subplot(4,3,6)
   plot(1:501,fz)
+  xlim([0 500])
   title('MeanZtrBlFr')
 
   % Fr imagesc
-  subplot(3,3,7)
+  subplot(4,3,7)
   imagesc(fx)
   title('Mean')
-  subplot(3,3,8)
+  subplot(4,3,8)
   imagesc(fy)
   title('MeanZtr')
-  subplot(3,3,9)
+  subplot(4,3,9)
   imagesc(fz)
+  title('MeanZtrBl')
+  
+  % Fr stacked plots
+  offsetFr = @(x) x-(max(max(x))/2:max(max(x))/2:size(x,1)*max(max(x))/2)';
+  subplot(4,3,10)
+  plot(1:501,offsetFr(fx));
+  xlim([0 500])
+%  set(gca,'YTickLabel',{});
+  title('Mean')
+  subplot(4,3,11)
+  plot(1:501,offsetFr(fy));
+  xlim([0 500])
+ % set(gca,'YTickLabel',{});
+  title('MeanZtr')
+  subplot(4,3,12)
+  plot(1:501,offsetFr(fz));
+  xlim([0 500])
+%  set(gca,'YTickLabel',{});
   title('MeanZtrBl')
   
   
