@@ -91,7 +91,7 @@ function [ figH ] = doPlot8R(session, sessionLabel, varargin)
                         xlabel('time (ms)','FontWeight','bold', 'FontSize',12);
                         
                     case 2
-                        imagescWithNan(currPlots{2},distMinMax,0.5,1);
+                        imagescWithCluster(currPlots{2},distMinMax,0.5,1);
                         currAxes.XTick = channelTicks;
                         currAxes.XTickLabelRotation = 90;
                         currAxes.XTickLabel = channelTickLabels;

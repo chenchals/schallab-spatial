@@ -7,7 +7,7 @@ processGauss;
 processHelmholtz;
 processJoule;
 % run aggregation for all
-baseProcessedDir = '/mnt/teba/Users/Chenchal/clustering/processed/';
+baseProcessedDir = '/mnt/teba/Users/Chenchal/Jacob/clustering/processed/';
 aggregateClusters([baseProcessedDir 'broca/bp*.mat']);
 aggregateClusters([baseProcessedDir 'darwin/20*.mat']);
 aggregateClusters([baseProcessedDir 'darwink/Init*.mat']);
