@@ -146,7 +146,7 @@ classdef DataModelKaleb < DataModel
                         % parse out chanN[a-z] into DSPNN[a-z] from the
                         % datafile filename
                         [~,unitId,~] = fileparts(datafile);
-                        temp = regexp(unitId,'chan(\d*)([a-z])$','tokens');
+                        temp = regexp(unitId,'chan(\d*)([a-zA-Z]*)$','tokens');
                         tempSpk.(key){fileIndex,1}=['DSP' num2str(str2num(temp{1}{1}),'%02d') temp{1}{2}];
                     else % key if spikeTimes
                         tempVars = load(datafile,var);

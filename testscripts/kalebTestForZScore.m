@@ -10,7 +10,8 @@ respTimes{2} = s1.contra_responseOnset_right.sdfWindow;
 respTimes{3} = s1.ipsi_targetOnset_left.sdfWindow;
 respTimes{4} = s1.ipsi_responseOnset_left.sdfWindow;
 % bl [-100:0] assumes that the respAlign{1} is always targetAligned
-normResp = klNormRespv2(respAlign,respTimes,'ztrbl','-r',respTimes,'bl',[-100:0]);
+%normResp = klNormRespv2(respAlign,respTimes,'ztrbl','-r',respTimes,'bl',[-100:0]);
+normResp = klNormRespv2(respAlign,respTimes,'ztr','-r',respTimes);
 
 figure(); 
 subplot(1,2,1); 
@@ -19,3 +20,19 @@ title('Raw');
 subplot(1,2,2);
 plot(respTimes{1},normResp{1});
 title('ZTR');
+
+
+condsOrd = {
+'contra_targetOnset'
+'contra_responseOnset'
+'ipsi_targetOnset'
+'ipsi_responseOnset'};
+
+conds = fieldnames(s1);
+conds = conds(~cellfun(@isempty,regexp(conds,'targetOnset|responseOnset','match')))
+
+respAlign2 = cellfun(@(x) s1.(char(x)).sdfMean,conds,'UniformOutput',false);
+respTimes2 = cellfun(@(x) s1.(char(x)).sdfWindow,conds,'UniformOutput',false);
+
+normRespZtr =  klNormRespv2(respAlign2,respTimes2,'ztr','-r',respTimes);
+
