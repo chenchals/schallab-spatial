@@ -1,0 +1,45 @@
+function [] = imagescWithCluster(inMat, cLimits, threshold, nanColorGray)
+%IMAGESCWITHCLUSTER Summary of this function goes here
+%   Detailed explanation goes here
+    currAxes = gca;
+    minImg = min(inMat(:));
+    % get data for lower triangle
+    if ~isempty(threshold)
+        lowerTri = tril(inMat,-1);
+        lowerTri(lowerTri==0) = NaN;
+        lowerTri(lowerTri < threshold) = minImg;
+        cLimits = [0 1];
+    end
+    im = imagesc(lowerTri, cLimits);
+    % transparency / alpha
+    alpha = ones(size(lowerTri));
+    alpha(isnan(lowerTri)) = 0;
+    im.AlphaData = alpha;
+    grayness = 1;
+    if ~isempty(nanColorGray)
+        grayness = nanColorGray;
+    end
+    set(currAxes,'Color',grayness*[1 1 1]);
+    colormap('cool');
+    set(currAxes,'Box','off');
+    grid('on')
+    set(currAxes,'XMinorGrid','on','YMinorGrid','on');
+
+    %draw diag line for diag -1
+    line([0 32],[1 33],'LineWidth',4);
+    % get cluster extents
+    [boc,eoc,~] = clusterIt(diag(inMat,-1),threshold);
+    bocOffset = 0;
+    eocOffset = 1;
+    boc = boc + bocOffset;
+    eoc = eoc + eocOffset;
+    for cl = 1:numel(boc)
+        line([boc(cl) eoc(cl)],[boc(cl) eoc(cl)], 'Color',[0 0 0], 'LineWidth',2);
+    end
+
+    % colorbar
+    h = colorbar;
+    set(h,'YLim',cLimits);
+
+end
+

@@ -40,15 +40,26 @@ function  [ trialList ] = memTrialSelector(trialOutcome, selectedOutcomes, targe
     % Convert all angle to be positive
     targetAngle = targetLocation;
     targetAngle(targetAngle < 0) = targetAngle(targetAngle < 0) + 360;
+    % position and angle assignment
+    %      ____________________
+    %     |  135 |  90  |   45 |
+    %     |  (7) |  (0) |  (1) |
+    %     |______|______|______|
+    %     |  180 |      |   0  |
+    %     |  (6) |  *   |  (2) |
+    %     |______|______|______|
+    %     |  225 |  270 |  315 |
+    %     |  (5) |  (4) |  (3) |
+    %     |______|______|______|   
     % Logical index of trials with specified hemisphere preference for target
     switch targetHemifield
         case 'left'
             targetHemifieldTrials = ...
-                (targetAngle >= 90 & targetAngle <= 270);
+                (targetAngle >= 135 & targetAngle <= 225);
         case 'right'
             targetHemifieldTrials = ...
-                (targetAngle > 270 & targetAngle <= 360)|...
-                (targetAngle >= 0 & targetAngle < 90);
+                (targetAngle >= 315 & targetAngle <= 360)|...
+                (targetAngle >= 0 & targetAngle <= 45);
         case 'all'
             targetHemifieldTrials = ones(size(eventData,1),1);
         otherwise

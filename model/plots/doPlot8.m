@@ -4,7 +4,7 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
 
 %% Do a 8 part figure plot
     fprintf('Plotting session %s\n',sessionLabel);
-    figVisible = 'off';
+    figVisible = 'on';
 
     if numel(varargin)==1
         outputFolder = varargin{1};
@@ -26,8 +26,9 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
     % get SDFs / zscores to plot there will be 4 of these
     % create in column order
     plotNo = 0;
-    for align = 1:numel(alignOnOrder)
-        for ic = 1:numel(ipsiContraOrder)
+
+   for align = 1:numel(alignOnOrder)
+       for ic = 1:numel(ipsiContraOrder)
             charIc = ipsiContraOrder{ic};
             CharAlignOn = alignOnOrder{align};
             plotNo = plotNo+1;
@@ -64,9 +65,7 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
             currAxes = gca;
             switch ro
                 case 1 %Firing Rate heatmap
-                    imagesc(ro1Plot,frMinMax);
-                    h = colorbar;
-                    set(h,'YLim', frMinMax);
+                    imagescWithNan(ro1Plot,frMinMax,[],1);
                     timeWin = session.(colCond).sdfWindow;
                     step = range(timeWin)/5;
                     currAxes.XTick = 0:step:range(timeWin);
@@ -89,9 +88,7 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
                     end
 
                 case 2 % distance matrix for sdf_mean
-                    imagesc(ro2Plot,distMinMax);
-                    h = colorbar;
-                    set(h,'YLim', distMinMax);
+                    imagescWithNan(ro2Plot,distMinMax,[],1);
                     currAxes.XTick = channelTicks;
                     currAxes.XTickLabelRotation = 90;
                     currAxes.XTickLabel = channelTickLabels;
@@ -112,6 +109,7 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
         fprintf('Saving figure to file %s\n',oFile);
         saveas(figH,oFile,'jpg');
         saveas(figH,oFile, 'fig');
+        nixUpdateAttribs([oFile '*.*']);
     end
     
     if strcmp(figVisible, 'off')

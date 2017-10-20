@@ -13,7 +13,12 @@ function [ axesHandles ] = plot8axes()
     axesPositions(:,1) = axesPositions(:,1) + 0.02;
     %scoot down all plots
     axesPositions(:,2) = axesPositions(:,2) - 0.02;
- 
+    %scoot down Row 2 plots further
+    axesPositions([2:2:8],2) = axesPositions([2:2:8],2) - 0.02;
+    
+    % per jacob to use with doPlot8 not doPlot8R
+    %axesPositions = axesPositions([1 3 2 4 5 7 6 8],:);
+
     axesHandles = nan(size(axesPositions,1),1);
     figure('Units','normalized','Position',[0.02 0.02 0.97 0.97]);
     for ii = 1:size(axesPositions,1)
