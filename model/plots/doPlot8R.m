@@ -1,4 +1,4 @@
-function [ figH ] = doPlot8R(session, sessionLabel, varargin)
+function [ figH ] = doPlot8R(session, sessionLabel, colorbarNames, varargin)
 %DOPLOT8 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -69,7 +69,7 @@ function [ figH ] = doPlot8R(session, sessionLabel, varargin)
                 currAxes = gca;
                 switch co
                     case 1 %Firing Rate heatmap
-                        imagescWithNan(currPlots{1},frMinMax,[],1);
+                        imagescWithNan(currPlots{1},frMinMax,[],1,colorbarNames{1});
                         timeWin = session.(cond).sdfWindow;
                         step = range(timeWin)/5;
                         currAxes.XTick = 0:step:range(timeWin);
@@ -91,7 +91,7 @@ function [ figH ] = doPlot8R(session, sessionLabel, varargin)
                         xlabel('time (ms)','FontWeight','bold', 'FontSize',12);
                         
                     case 2
-                        imagescWithCluster(currPlots{2},distMinMax,0.5,1);
+                        imagescWithCluster(currPlots{2},distMinMax,0.5,1,colorbarNames{2});
                         currAxes.XTick = channelTicks;
                         currAxes.XTickLabelRotation = 90;
                         currAxes.XTickLabel = channelTickLabels;

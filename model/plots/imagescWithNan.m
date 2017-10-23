@@ -1,4 +1,4 @@
-function [] = imagescWithNan(inMat, cLimits, threshold, nanColorGray)
+function [] = imagescWithNan(inMat, cLimits, threshold, nanColorGray, colorbarName)
 %IMAGESCWITHNAN Summary of this function goes here
 %% Image scale with balnk/gray for Nans
     axesH = gca;
@@ -9,6 +9,7 @@ function [] = imagescWithNan(inMat, cLimits, threshold, nanColorGray)
         cLimits = [0 1];
     end    
     im = imagesc(inMat,cLimits);
+    colormap(axesH, colorbarName);
     im.AlphaData = alpha;
     grayness = 1;
     if ~isempty(nanColorGray)
