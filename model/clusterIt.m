@@ -2,7 +2,7 @@ function [ boc, eoc, dtnc ] = clusterIt( similarityVector, threshold )
 %CLUSTERIT Summary of this function goes here
 %   Detailed explanation goes here
     doSkip = false;
-    minPointsForCluster = 2;    
+    minPointsForCluster = 2;
     skipLength = 1; %always do not change
     boc = [];%#ok<*AGROW>
     eoc = [];%#ok<*AGROW>

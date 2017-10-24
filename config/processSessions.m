@@ -115,7 +115,6 @@ function [ ] = processSessions(nhpConfig)
     distancesToCompute = {'correlation'};
     %nhpSessions = cell();
     
-<<<<<<< HEAD
     for sessionIndex = 1:numel(sessionLocations)
         try
             sessionLocation = sessionLocations{sessionIndex};
@@ -231,7 +230,6 @@ function [] = plotAndSaveFig(currSession, nhpOutputDir)
         logger.error(me);
         errorLogger.error(me);
     end
-<<<<<<< HEAD
     if ~isempty(figH)
         delete(figH)
     end
