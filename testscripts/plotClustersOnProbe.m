@@ -21,13 +21,14 @@ for f = 1:numel(fileNames)
     probeLoc = probeLoc + 1; % 1st session
     fieldNames = fieldnames(session);
     sessionName = session.session;
+    sessionNames{probeLoc} = sessionName;
     info = session.info;
     % for each condition do one figure
     for c = 1:numel(conditions)
         boc =[];
         eoc = [];
         currCond = conditions{c};
-        currAxis = subplot(2,2,c);
+        currAxis(c) = subplot(2,2,c);
         ind = find(contains(fieldNames, currCond));
         if ~ind
             continue
@@ -35,12 +36,19 @@ for f = 1:numel(fileNames)
         rsquared = session.(char(fieldNames(ind))).rsquared;
         [boc,eoc] = clusterIt(diag(rsquared,1),0.5);
         plotIt(sessionName, info, probeLoc, [boc(:) eoc(:)]);
-        
-        xlim([0 probeLoc + 2]);
-        ylim([-6 36]); % always 32+4
         drawnow
     end % end each condition
 end %end each file
+        xlim = [0 probeLoc+2];
+        ylim = [-8 40].*100;
+
+set(currAxis, 'XLim', xlim, 'YLim', ylim)
+set(currAxis,'Box','off',...
+     'XTick',[0:probeLoc+2],'XTickLabel',[{' '} sessionNames {' ' ' '}],...
+     'YTick',[],'YTickLabel',{});
+ set(currAxis,'XTickLabelRotation', 45);
+ arrayfun(@(x) set(get(currAxis(x),'Title'),'String', conditions{x},'Interpreter','none'),[1:4],'UniformOutput',false)
+
 
 
 %end
@@ -54,12 +62,12 @@ faceColors= {'r','b','g','c','m','y'};
 %x = x1,x2,x1,x2
 xstep = 0.1;
 xData = [probeLoc-xstep probeLoc+xstep probeLoc+xstep probeLoc-xstep]; %centered at 1
-channelSpacing = 1;%sessionInfo.channelSpacing;
-y1 = beginEndCluster(:,1);
-y2 = beginEndCluster(:,2);
+channelSpacing = sessionInfo.channelSpacing;
+y1 = beginEndCluster(:,1).*channelSpacing;
+y2 = (beginEndCluster(:,2)+1).*channelSpacing;
 
 for clust = 1:numel(y1)
-    yData = [y1(clust) y1(clust) y2(clust)+1 y2(clust)+1].*channelSpacing;
+    yData = [y1(clust) y1(clust) y2(clust) y2(clust)];
     patch('XData', xData, 'YData', yData, 'FaceColor', faceColors{clust});
     hold on
 end
@@ -68,10 +76,7 @@ maxChannels = numel(cell2mat(sessionInfo.ephysChannelMap));
 xData = [probeLoc-xstep probeLoc-xstep probeLoc probeLoc+xstep probeLoc+xstep];
 yData = [36 -2 -5 -2 36].*channelSpacing;
 
-patch('XData',xData,'YData',yData,'FaceColor',[0.7 0.7 0.7], 'FaceAlpha', 0.5)
+patch('XData',xData,'YData',yData,'FaceColor',[0.9 0.9 0.9], 'FaceAlpha', 0.8)
 plot(zeros(maxChannels,1)+probeLoc,(1:maxChannels).*channelSpacing,'ok') %
-
-set(currAxis,'Box','off','XTick',[],'XTickLabel',{},'YTick',[],'YTickLabel',{});
-
 
 end
