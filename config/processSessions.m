@@ -224,7 +224,7 @@ function [] = plotAndSaveFig(currSession, nhpOutputDir)
     figH = [];
     try
         sessionLabel = currSession.session;
-        figH = doPlot8R(currSession,sessionLabel, plotsDir);
+        figH = doPlot8R(currSession,sessionLabel, {'jet' 'cool'}, plotsDir);
     catch me
         % log the error/exception causing failure and continue
         logger.error(me);
