@@ -37,7 +37,7 @@ for f = 1:numel(fileNames)
         plotIt(sessionName, info, probeLoc, [boc(:) eoc(:)]);
         
         xlim([0 probeLoc + 2]);
-        ylim([-6 36].*100); % always 32+4
+        ylim([-6 36]); % always 32+4
         drawnow
     end % end each condition
 end %end each file
@@ -54,7 +54,7 @@ faceColors= {'r','b','g','c','m','y'};
 %x = x1,x2,x1,x2
 xstep = 0.1;
 xData = [probeLoc-xstep probeLoc+xstep probeLoc+xstep probeLoc-xstep]; %centered at 1
-channelSpacing = sessionInfo.channelSpacing;
+channelSpacing = 1;%sessionInfo.channelSpacing;
 y1 = beginEndCluster(:,1);
 y2 = beginEndCluster(:,2);
 
