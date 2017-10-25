@@ -9,6 +9,7 @@ function [ figH ] = doPlot8R(session, sessionLabel, colorbarNames, varargin)
     % right depth order
     % for Da, Ga, He this will be correspond to  ch#01, or ch#33 and is in
     % correct depth order
+    channelsInDepthOrder = true;
 
     if numel(varargin)==1
         outputFolder = varargin{1};
