@@ -8,7 +8,6 @@ function [] = processDarwin()
     nhpConfig.nhp = 'darwin';
     nhpConfig.excelFile = 'SFN_NHP_Coordinates_All.xlsx';
     nhpConfig.sheetName = 'Da_WJ';
-    nhpConfig.channelsInDepthOrder = true;
     % Write to one dir above the config dir
     %[thisDir,~,~] = fileparts(mfilename('fullpath'));    
     nhpConfig.nhpOutputDir = fullfile(processedDir, nhpConfig.nhp);

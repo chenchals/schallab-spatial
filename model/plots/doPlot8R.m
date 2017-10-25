@@ -9,7 +9,6 @@ function [ figH ] = doPlot8R(session, sessionLabel, colorbarNames, varargin)
     % right depth order
     % for Da, Ga, He this will be correspond to  ch#01, or ch#33 and is in
     % correct depth order
-    channelsInDepthOrder = true;
 
     if numel(varargin)==1
         outputFolder = varargin{1};
@@ -54,9 +53,6 @@ function [ figH ] = doPlot8R(session, sessionLabel, colorbarNames, varargin)
 
     channelTicks = 2:2:numel(session.channelMap);
     channelTickLabels = arrayfun(@(x) ['#' num2str(session.channelMap(x))],channelTicks,'UniformOutput',false);
-    if ~channelsInDepthOrder
-        channelTickLabels = fliplr(channelTickLabels);
-    end
     plotIndicesByRows = {
         {[1 3] [5 7]}
         {[2 4] [6 8]}
@@ -78,9 +74,6 @@ function [ figH ] = doPlot8R(session, sessionLabel, colorbarNames, varargin)
                 switch co
                     case 1 %Firing Rate heatmap
                         im = currPlots{1};
-                        if ~channelsInDepthOrder
-                            im = flipud(im);
-                        end
                         imagescWithNan(im,frMinMax,[],1,colorbarNames{1});
                         timeWin = session.(cond).sdfWindow;
                         step = range(timeWin)/5;
@@ -104,9 +97,6 @@ function [ figH ] = doPlot8R(session, sessionLabel, colorbarNames, varargin)
                         clear im
                     case 2
                         im = currPlots{2};
-                        if ~channelsInDepthOrder
-                            im = fliplr(flipud(im));
-                        end
                         imagescWithCluster(im,distMinMax,0.5,1,colorbarNames{2});
                         currAxes.XTick = channelTicks;
                         currAxes.XTickLabelRotation = 90;

@@ -8,7 +8,6 @@ function [] = processBroca()
     nhpConfig.nhp = 'broca';
     nhpConfig.excelFile = 'SFN_NHP_Coordinates_All.xlsx';
     nhpConfig.sheetName = 'Br';
-    nhpConfig.channelsInDepthOrder = false;
     % Write to one dir above the config dir
     %[thisDir,~,~] = fileparts(mfilename('fullpath'));    
     nhpConfig.nhpOutputDir = fullfile(processedDir, nhpConfig.nhp);
