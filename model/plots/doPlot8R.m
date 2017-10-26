@@ -1,10 +1,14 @@
-function [ figH ] = doPlot8R(session, sessionLabel, varargin)
+function [ figH ] = doPlot8R(session, sessionLabel, colorbarNames, varargin)
 %DOPLOT8 Summary of this function goes here
 %   Detailed explanation goes here
 
 %% Do a 8 part figure plot
     fprintf('Plotting session %s\n',sessionLabel);
     figVisible = 'on';
+    % for Jo, Br this will correspond to ch#08, channels are not in the
+    % right depth order
+    % for Da, Ga, He this will be correspond to  ch#01, or ch#33 and is in
+    % correct depth order
 
     if numel(varargin)==1
         outputFolder = varargin{1};
@@ -13,7 +17,7 @@ function [ figH ] = doPlot8R(session, sessionLabel, varargin)
         saveFig = false;
     end
     
-    firingRateHeatmap = 'sdfPopulationZscoredMean';
+    firingRateHeatmap = 'sdfMeanZtr';
     distMeasure = 'rsquared';
 
     row1Conditions = {'contra_targetOnset', 'contra_responseOnset'};
@@ -69,7 +73,8 @@ function [ figH ] = doPlot8R(session, sessionLabel, varargin)
                 currAxes = gca;
                 switch co
                     case 1 %Firing Rate heatmap
-                        imagescWithNan(currPlots{1},frMinMax,[],1);
+                        im = currPlots{1};
+                        imagescWithNan(im,frMinMax,[],1,colorbarNames{1});
                         timeWin = session.(cond).sdfWindow;
                         step = range(timeWin)/5;
                         currAxes.XTick = 0:step:range(timeWin);
@@ -89,9 +94,10 @@ function [ figH ] = doPlot8R(session, sessionLabel, varargin)
                         
                         ylabel('Channel#','FontWeight','bold', 'FontSize',12);
                         xlabel('time (ms)','FontWeight','bold', 'FontSize',12);
-                        
+                        clear im
                     case 2
-                        imagescWithCluster(currPlots{2},distMinMax,0.5,1);
+                        im = currPlots{2};
+                        imagescWithCluster(im,distMinMax,0.5,1,colorbarNames{2});
                         currAxes.XTick = channelTicks;
                         currAxes.XTickLabelRotation = 90;
                         currAxes.XTickLabel = channelTickLabels;
@@ -107,6 +113,7 @@ function [ figH ] = doPlot8R(session, sessionLabel, varargin)
                         ylabel('Channel#','FontWeight','bold', 'FontSize',12);
                         xlabel('Channel#','FontWeight','bold', 'FontSize',12);
                         
+                        clear im
                 end
             end %co
             

@@ -55,7 +55,7 @@ function [ ] = processSessions(nhpConfig)
 %                            struct with fields:
 %                                           channelMap: [32×1 double]
 %                                              sdfMean: [32×501 double]
-%                             sdfPopulationZscoredMean: [32×501 double]
+%                                           sdfMeanZtr: [32×501 double]
 %                                       populationMean: 24.127
 %                                        populationStd: 35.02
 %                                             spikeIds: {32×1 cell}
@@ -77,7 +77,8 @@ function [ ] = processSessions(nhpConfig)
     dataModelName = nhpConfig.dataModelName;
     outcome = nhpConfig.outcome; %'saccToTarget';
     minTrialsPerCondition = 7;
-
+    outputDir = fileparts(nhpOutputDir);
+    
     if ~exist(nhpOutputDir,'dir')
         mkdir(nhpOutputDir);
         nixUpdateAttribs(nhpOutputDir);
@@ -89,7 +90,6 @@ function [ ] = processSessions(nhpConfig)
     % Read excel sheet
     nhpTable = readtable(excelFile, 'Sheet', sheetName);
 
-    
     %remove empty rows
     nhpTable(strcmp(nhpTable.matPath,''),:) = [];
     nhpTable.date = datestr(nhpTable.date,'mm/dd/yyyy');
@@ -111,7 +111,7 @@ function [ ] = processSessions(nhpConfig)
     conditions{2} = {'responseOnset', 'left', [-300 200]};
     conditions{3} = {'targetOnset', 'right', [-100 400]};
     conditions{4} = {'responseOnset', 'right', [-300 200]};
-
+    % only one tyep of measue for now
     distancesToCompute = {'correlation'};
     %nhpSessions = cell();
 
@@ -119,6 +119,11 @@ function [ ] = processSessions(nhpConfig)
         try
             sessionLocation = sessionLocations{sessionIndex};
             nhpInfo = nhpTable(sessionIndex,:);
+            qualityOfSession = nhpInfo.qualityOfSession;
+            if isempty(qualityOfSession)
+                qualityOfSession = 10; % lowest quality
+            end
+            qualityDir = fullfile(outputDir,['quality_' num2str(qualityOfSession)]);
             % Include probe number in session name
             if find(strcmp('probeNo',nhpInfo.Properties.VariableNames))
                 sessionName = [nhpInfo.session{1} '_probe' num2str(nhpInfo.probeNo)];
@@ -162,25 +167,37 @@ function [ ] = processSessions(nhpConfig)
                     targetCondition, alignOn, num2str(sdfWindow)));
                 % Get MultiUnitSdf -> has sdf_mean matrix and sdf matrix
                 [~, multiSdf.(condStr)] = model.getMultiUnitSdf(model.getTrialList(outcome,targetCondition), alignOn, sdfWindow);
-                sdfPopulationZscoredMean = multiSdf.(condStr).sdfPopulationZscoredMean;
+            end
+            % To use Kalebs klNormRespv2: 
+            conds = fieldnames(multiSdf);
+            % to use bl option conditions have to be ordered with targetAligned being the first
+            conds = conds(~cellfun(@isempty,regexp(conds,'targetOnset|responseOnset','match')));
+            % order is ipsi_targetOnset,ipsi_responseOnset,...
+            % contra_targetOnset, contra_responseOnset
+            conds = flipud(sortrows(conds));
+            % Aggregate all condition sdfs into cellArray of cells
+            respAlign = cellfun(@(x) multiSdf.(char(x)).sdfMean,conds,'UniformOutput',false);
+            % Aggregate all condition sdfWindow into cellArray of cells
+            respTimes = cellfun(@(x) multiSdf.(char(x)).sdfWindow,conds,'UniformOutput',false);
+            % Normalize with ztr option 
+            normRespZtr =  klNormRespv2(respAlign,respTimes,'ztr','-r',respTimes);
+            for ii = 1:numel(conds)
+                condStr = conds{ii};
+                sdfMeanZtr = normRespZtr{ii};
+                multiSdf.(condStr).sdfMeanZtr = sdfMeanZtr;
+                % Only 1 for now
                 for d = 1: numel(distancesToCompute)
                     distMeasureOption = distancesToCompute{d};
-                    dMeasure = pdist2(sdfPopulationZscoredMean, sdfPopulationZscoredMean,distMeasureOption);
-                    switch distMeasureOption
-                        case 'correlation'
-                            temp = (1-dMeasure).^2;
-                            multiSdf.(condStr).rsquared = temp;
-                        case {'euclidean', 'cosine'}
-                            multiSdf.(condStr).rsquared = dMeasure;
-                        otherwise
-                    end
-                end
+                    dMeasure = pdist2(sdfMeanZtr, sdfMeanZtr,distMeasureOption);
+                    multiSdf.(condStr).rsquared = (1-dMeasure).^2;
+                end                     
             end
-            oFile = fullfile(nhpOutputDir,[multiSdf.session '.mat']);
+            clearvars conds respAlign respTimes normRespZtr
+            oFile = fullfile(qualityDir,[multiSdf.session '.mat']);
             logger.info(sprintf('Saving processed session to %s...',oFile));
             saveProcesssedSession(multiSdf, oFile);
             %nhpSessions=multiSdf;
-            plotAndSaveFig(multiSdf, nhpOutputDir);
+            plotAndSaveFig(multiSdf, qualityDir);
             
         catch me
             % log the error/exception causing failure and continue
@@ -203,7 +220,7 @@ function [] = plotAndSaveFig(currSession, nhpOutputDir)
     figH = [];
     try
         sessionLabel = currSession.session;
-        figH = doPlot8R(currSession,sessionLabel, plotsDir);
+        figH = doPlot8R(currSession,sessionLabel, {'jet' 'cool'}, plotsDir);
     catch me
         % log the error/exception causing failure and continue
         logger.error(me);
@@ -216,6 +233,11 @@ end
 
 %% Save processed session
 function saveProcesssedSession(currSession, oFile)   %#ok<INUSL>
+    [d,~,~] = fileparts(oFile);
+    if ~exist(d,'dir')
+        mkdir(d);
+        nixUpdateAttribs(d);
+    end
     save(oFile, '-struct', 'currSession' );
     nixUpdateAttribs(oFile);
 end
