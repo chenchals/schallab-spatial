@@ -1,5 +1,5 @@
-%function [] = plotClustersOnProbe(baseProcessdedDir)
-baseProcessdedDir = '/mnt/teba/Users/Chenchal/clustering/processed/quality_1';
+function [] = plotClustersOnProbe(baseProcessdedDir)
+%plotClustersOnProbe('/mnt/teba/Users/Chenchal/clustering/processed/quality_1');
 
 reverseYdir = true;
 
@@ -13,10 +13,12 @@ conditions = {
     'contra_responseOnset'
     'ipsi_targetOnset'
     'ipsi_responseOnset'};
-figH = figure;
+%new figure
+figure
 % for each file
 for f = 1:numel(fileNames)
     fileName = fileNames{f};
+    fprintf('doing file %s\n',fileName);
     if isempty(who('-file',fileName,'info'))
         continue
     end
@@ -28,8 +30,6 @@ for f = 1:numel(fileNames)
     info = session.info;
     % for each condition do one figure
     for c = 1:numel(conditions)
-        boc =[];
-        eoc = [];
         currCond = conditions{c};
         currAxis(c) = subplot(1,4,c);
         ind = find(contains(fieldNames, currCond));
@@ -38,7 +38,8 @@ for f = 1:numel(fileNames)
         end
         rsquared = session.(char(fieldNames(ind))).rsquared;
         [boc,eoc] = clusterIt(diag(rsquared,1),0.5);
-        plotIt(info, probeLoc, [boc(:) eoc(:)],reverseYdir);
+        plotIt(info, probeLoc, [boc(:) eoc(:)],reverseYdir, 'r');
+        clear boc eoc
         drawnow
     end % end each condition
 end %end each file
@@ -54,23 +55,24 @@ ytick = 0:200:5000;
 set(currAxis, 'XLim', xlim, 'YLim', ylim)
 set(currAxis,'Box','on','FontWeight', 'bold',...
     'XTick',xtick,'XTickLabel',[{' '} sessionNames {' '}],'XTickLabelRotation', 45,...
-    'YTick',ytick);
+    'YTick',ytick, 'TickLabelInterpreter', 'none');
 
 arrayfun(@(x) set(get(currAxis(x),'Title'),'String', upper(conditions{x}),'Interpreter','none','FontSize', 12),...
-    [1:4],'UniformOutput',false)
-
-
+    1:4,'UniformOutput',false)
 
 figureTitle = baseProcessdedDir;
 h = axes('Units','normalized','Position',[.01 .95 .98 .01],'Visible','off');
 set(get(h,'Title'),'Visible','on');
 title(figureTitle,'fontSize',20,'fontWeight','bold','Interpreter','none');
 
-%end
+end
 
-function [] = plotIt(sessionInfo, probeLoc, beginEndCluster, reverseYdir)
+function [] = plotIt(sessionInfo, probeLoc, beginEndCluster, reverseYdir, varargin)
 
 faceColors= {'r','b','g','c','m','y'};
+if numel(varargin)==1
+   faceColors= {'r','r','r','r','r','r'};
+end
 channelSpacing = sessionInfo.channelSpacing;
 if isnan(channelSpacing)
     channelSpacing = 200;
