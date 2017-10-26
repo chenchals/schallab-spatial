@@ -47,8 +47,8 @@ function [ ] = plotProbe(probeLoc, channelSpacing, channelMap, beginEndCluster, 
     bgColor = get(get(currAxes,'Parent'),'Color');
     set(currAxes,'Color',bgColor);
     set(currAxes,'XColor', bgColor);
-    set(gca,'YGrid','on','YTick',yMajorGrid,...
-        'Layer','top', 'GridAlpha', 1, 'GridColor', 'k')
+%     set(gca,'YGrid','on','YTick',yMajorGrid,...
+%         'Layer','top', 'GridAlpha', 1, 'GridColor', 'k')
     
 
 end
