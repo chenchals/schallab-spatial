@@ -1,10 +1,11 @@
-function [ output_args ] = plotFiringRateHeatmap( input_args )
+function [ ] = plotFiringRateHeatmap( im, channelMap, timeWin, frMinMax, colorMap,  titleCell, titleColor )
 %PLOTFIRINGRATEHEATMAP Summary of this function goes here
 %   Detailed explanation goes here
+    currAxes = gca;
+    channelTicks = 2:2:numel(channelMap);
+    channelTickLabels = arrayfun(@(x) ['#' num2str(channelMap(x))],channelTicks,'UniformOutput',false);
 
-    im = currPlots{1};
-    imagescWithNan(im,frMinMax,[],1,colorbarNames{1});
-    timeWin = session.(cond).sdfWindow;
+    imagescWithNan(im,frMinMax,[],1,colorMap);
     step = range(timeWin)/5;
     currAxes.XTick = 0:step:range(timeWin);
     currAxes.XTickLabel = arrayfun(@(x) num2str(x),min(timeWin):step:max(timeWin),'UniformOutput',false);
@@ -16,8 +17,9 @@ function [ output_args ] = plotFiringRateHeatmap( input_args )
     currAxes.YTickLabel = channelTickLabels;
 
     pos = get(title(''),'Position');
-    text(pos(1),pos(2),{upper(cond), upper([firingRateHeatmap ' heatmap'])},...
-        'FontWeight','bold','FontAngle','italic','FontSize',14,'Color',titleColors{ros},...
+    %text(pos(1),pos(2),{upper(title), upper([firingRateHeatmap ' heatmap'])},...
+    text(pos(1),pos(2),titleCell,...
+        'FontWeight','bold','FontAngle','italic','FontSize',14,'Color',titleColor,...
         'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom',...
         'Interpreter','none');
 
