@@ -3,8 +3,9 @@ function [] = plotClustersOnProbe(baseProcessdedDir)
 
 reverseYdir = true;
 
-d = dir(fullfile(baseProcessdedDir,'*.mat'));
+%d = dir(fullfile(baseProcessdedDir,'*.mat'));
 
+d = dir(baseProcessdedDir);
 % get mat file list
 fileNames = strcat({d.folder}',filesep,{d.name}');
 probeLoc = 0;

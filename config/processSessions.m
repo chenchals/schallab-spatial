@@ -55,7 +55,7 @@ function [ ] = processSessions(nhpConfig)
 %                            struct with fields:
 %                                           channelMap: [32×1 double]
 %                                              sdfMean: [32×501 double]
-%                                           sdfMeanZtr: [32×501 double]
+%                             sdfPopulationZscoredMean: [32×501 double]
 %                                       populationMean: 24.127
 %                                        populationStd: 35.02
 %                                             spikeIds: {32×1 cell}
