@@ -39,9 +39,9 @@ function [ figH ] = doPlot8R(session, sessionLabel, colorbarNames, varargin)
         conditions{contains(conditions,row2Conditions)}
         };
 
-    temp = cell2mat(cellfun(@(x) x{1},[row1Plots;row2Plots],'UniformOutput',false));
+    temp = cell2mat(cellfun(@(x) x{1},[row1Plots;row2Plots],'UniformOutput',false)');
     frMinMax = minmax(temp(:)');
-    temp = cell2mat(cellfun(@(x) x{2},[row1Plots;row2Plots],'UniformOutput',false));
+    temp = cell2mat(cellfun(@(x) x{2},[row1Plots;row2Plots],'UniformOutput',false)');
     distMinMax = minmax(temp(:)');
 
     %plot by columns
