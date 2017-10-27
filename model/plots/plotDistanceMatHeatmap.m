@@ -11,6 +11,8 @@ function [ ] = plotDistanceMatHeatmap( im, channelMap, distMinMax, colorMap,  ti
     currAxes.XTickLabel = channelTickLabels;
     currAxes.YTick = channelTicks;
     currAxes.YTickLabel = channelTickLabels;
+    
+    currAxes.TickDir = 'out';
 
     pos = get(title(''),'Position');
     text(pos(1),pos(2),titleCell,...
