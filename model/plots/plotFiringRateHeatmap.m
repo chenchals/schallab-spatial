@@ -6,10 +6,14 @@ function [ ] = plotFiringRateHeatmap( im, channelMap, timeWin, frMinMax, colorMa
     channelTickLabels = arrayfun(@(x) ['#' num2str(channelMap(x))],channelTicks,'UniformOutput',false);
 
     imagescWithNan(im,frMinMax,[],1,colorMap);
-    step = range(timeWin)/5;
-    currAxes.XTick = 0:step:range(timeWin);
-    currAxes.XTickLabel = arrayfun(@(x) num2str(x),min(timeWin):step:max(timeWin),'UniformOutput',false);
-
+%     step = range(timeWin)/5;
+%     currAxes.XTick = 0:step:range(timeWin);
+%     currAxes.XTickLabel = arrayfun(@(x) num2str(x),min(timeWin):step:max(timeWin),'UniformOutput',false);
+    xTick = min(timeWin):50:max(timeWin);
+    currAxes.XTick = xTick;
+    currAxes.XTickLabel = arrayfun(@(x) num2str(x),xTick,'UniformOutput',false);
+    
+    
     align0 = find(min(timeWin):max(timeWin)==0);
     line([align0 align0], ylim, 'Color','r');
 

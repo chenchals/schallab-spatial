@@ -18,7 +18,7 @@ function [ ] = plotProbe(probeLoc, channelSpacing, channelMap, beginEndCluster, 
     %x = x1,x2,x1,x2
     xstep = 0.2;
     % probe outline
-    maxChannels = numel(cell2mat(channelMap));
+    maxChannels = numel(channelMap);
     xData = [probeLoc-xstep probeLoc-xstep probeLoc probeLoc+xstep probeLoc+xstep];
     xLim = minmax(xData);
     yData = [4900 -200 -800 -200 4900];
