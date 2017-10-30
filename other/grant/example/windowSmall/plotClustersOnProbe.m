@@ -1,7 +1,7 @@
 function [] = plotClustersOnProbe(baseProcessdedDir)
 %plotClustersOnProbe('/mnt/teba/Users/Chenchal/clustering/processed/quality_1');
 
-reverseYdir = true;
+reverseYdir = true;  
 
 d = dir(baseProcessdedDir);
 
