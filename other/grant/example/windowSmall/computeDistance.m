@@ -25,7 +25,7 @@ function [ distIms, mvFrames ] = computeDistance( sdfMat, distWindow )
  for ii = 1:size(distIms,3)
      mvFrames(ii) = im2frame(distIms(:,:,ii),colorData);
  end
-
+  
   
 end
 
