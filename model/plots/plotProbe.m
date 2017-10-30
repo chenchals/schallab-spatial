@@ -1,7 +1,10 @@
 function [ ] = plotProbe(probeLoc, channelSpacing, channelMap, beginEndCluster, reverseYdir, varargin)
 %PLOTPROBE Summary of this function goes here
 %   Detailed explanation goes here
+
     currAxes = gca;
+    figH = get(currAxes,'Parent');
+ 
     if reverseYdir
         set(currAxes,'YDir','reverse');
     end
@@ -13,43 +16,48 @@ function [ ] = plotProbe(probeLoc, channelSpacing, channelMap, beginEndCluster, 
     if isnan(channelSpacing)
         channelSpacing = 200;
     end
-    % vertices = [lowerLeft, lowerRight, upperRight, upperLeft]
-    % vertices = [x1y1, x2y1, x2y2, x1y2]
-    %x = x1,x2,x1,x2
-    xstep = 0.2;
-    % probe outline
+
+    % Plot probe outline
+    %probeAxes = plotProbeOutline(currAxes);
+
+    % change currAxes
+    set(figH,'currentAxes', currAxes);
+    
+    % Plot channels
     maxChannels = numel(channelMap);
-    xData = [probeLoc-xstep probeLoc-xstep probeLoc probeLoc+xstep probeLoc+xstep];
-    xLim = minmax(xData);
-    yData = [4900 -200 -800 -200 4900];
-    if reverseYdir % the point should face dowm, which is higher Y
-        %yData =[-800 5000 5500 5000 -800];
-        yData =[-800 5000 5500 5000 -800];
-    end
-    yLim = minmax(yData);
-
-    patch('XData',xData,'YData',yData,'FaceColor',[0.9 0.9 0.9],'LineWidth', 0.1)
-    hold on
-    plot(zeros(maxChannels,1)+probeLoc,(1:maxChannels).*channelSpacing,'ok') %
-
+    xData = zeros(maxChannels,1)+probeLoc;
+    yData = (0:maxChannels-1)+0.5;
+    [plAxis,hLine1,hLine2] = plotyy(xData,yData,xData,yData); %
+    
+    set([hLine1,hLine2],'LineStyle','none','Marker','o','MarkerEdgeColor','k')
+    
+    channelTicks = 1.5:2:maxChannels;% offset by 0.5
+    channelTickLabels = arrayfun(@(x) ['#' num2str(channelMap(x))],channelTicks+0.5,'UniformOutput',false);
+    depthTickLabels = arrayfun(@(x) [num2str(x) ' \mum'],(channelTicks+0.5).*channelSpacing,'UniformOutput',false);
+     xstep = 0.1; 
+    set(plAxis(1),'YTick',channelTicks,'YTickLabel',channelTickLabels,'YColor','k');    
+    set(plAxis(2),'YTick',channelTicks,'YTickLabel',depthTickLabels,'YColor','k');
+    set(plAxis,'YDir','reverse','XTick',[],'TickDir','both','box','on');
+    set(plAxis,'YLim',[0 maxChannels],'XLim',[probeLoc-xstep probeLoc+xstep]);
+    %hold on
+    set(figH,'currentAxes', plAxis(1));
     %plot clusters
     xData = [probeLoc-xstep probeLoc+xstep probeLoc+xstep probeLoc-xstep]; %centered at 1
-    y1 = beginEndCluster(:,1).*channelSpacing;
-    y2 = (beginEndCluster(:,2)+1).*channelSpacing;
+    y1 = beginEndCluster(:,1);
+    y2 = (beginEndCluster(:,2)+1);
     
     for clust = 1:numel(y1)
         yData = [y1(clust) y1(clust) y2(clust) y2(clust)];
-        patch('XData', xData, 'YData', yData, 'FaceColor', faceColors{clust}, 'FaceAlpha', 0.5);
+        patch('XData', xData, 'YData', yData, 'FaceColor', faceColors{clust},'FaceAlpha',0.9);
         hold on
     end
-    
-    set(currAxes, 'XLim',xLim, 'YLim', yLim);
-    bgColor = get(get(currAxes,'Parent'),'Color');
-    set(currAxes,'Color',bgColor);
-    set(currAxes,'XColor', bgColor);
-%     set(gca,'YGrid','on','YTick',yMajorGrid,...
-%         'Layer','top', 'GridAlpha', 1, 'GridColor', 'k')
-    
+    % draw probe outline
+    xData = [probeLoc-xstep probeLoc+xstep probeLoc+xstep probeLoc probeLoc-xstep];
+    %yData = [maxChannels+3 maxChannels+3 -1 -3 -1];
 
+    yData = [-3 -3 maxChannels+1 maxChannels+3 maxChannels+1];
+    patch('XData',xData,'YData',yData','FaceColor',[0.8,0.8,0.8],'FaceAlpha',0.4);
+    currAxes.Clipping ='off';   
+    
 end
 

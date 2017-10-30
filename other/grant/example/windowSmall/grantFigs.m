@@ -1,16 +1,19 @@
+outDir = '/Users/subravcr/Projects/lab-schall/schalllab-spatial/other/grant/example/windowSmall';
 %% Helmholtz
-he={'2014-12-15a.mat'
-    '2015-01-20a.mat'};
+he={'/mnt/teba/Users/Chenchal/clustering_window1/processed/quality_2/2014-12-15a.mat'
+    '/mnt/teba/Users/Chenchal/clustering_window1/processed/quality_2/2015-01-20a.mat'};
 %% Darwin_k
-dak={'Init_SetUp-160711-151215_probe1.mat'
-     'Init_SetUp-160713-144841_probe1.mat'};
+dak={'/mnt/teba/Users/Chenchal/clustering_window1/processed/quality_4/Init_SetUp-160711-151215_probe1.mat'
+     '/mnt/teba/Users/Chenchal/clustering_window1/processed/quality_4/Init_SetUp-160713-144841_probe1.mat'};
 %% Plot all
 cond = 'contra_targetOnset';
 heDak = [he; dak];
+
+heDak = {'/mnt/teba/Users/Chenchal/clustering_window1/processed/quality_2/2014-12-15a.mat'};
 pos =[
     0.05 0.10 0.40 0.50
     0.49 0.10 0.40 0.50
-    0.93 0.05 0.02 0.55
+    0.93 0.10 0.01 0.50
     0.04 0.70 0.90 0.25
     ];    
 
@@ -28,7 +31,7 @@ for s = 1:numel(heDak)
     frMinMax = minmax(fr(:)');
     set(figH, 'currentaxes',axesHandles(1))
     plotFiringRateHeatmap(fr,channelMap,timeWin,frMinMax,'jet',{'contra_responseOnset', 'sdfMeanZtr Heatmap'},'r');
-   
+    colorbar('off');
     %% distMat
     distMat = session.(currCond).rsquared;
     distMinMax = minmax(distMat(:)');
@@ -47,10 +50,16 @@ for s = 1:numel(heDak)
     set(gca,'box','on','XTick',[],'YTick',[]);
     addInfo(infos);
     h = title(session.session, 'FontWeight','bold', 'FontSize',15,'Interpreter','none');
-   %% Figure title
-%     set(figH, 'currentaxes',axesHandles(5))
-%     set(gca,'box', 'off', 'Color',get(get(gca,'Parent'),'Color'),'Visible','off');
-%     text(0.5, 0.5, session.session, 'FontWeight','bold', 'FontSize',15)
+    
+    drawnow
+    %% Save figs
+    [~,fn,~] = fileparts(heDak{s});
+    
+    oFile = fullfile(outDir,[fn '_' cond]);
+    fprintf('Saving figure to file %s\n',oFile);
+    %saveas(figH,oFile,'jpg');
+    %saveas(figH,oFile, 'fig');
+    
 end
 
 function [axesHandles] = createFig(axesPositions)
