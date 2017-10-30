@@ -95,7 +95,16 @@ classdef DataModelPaul < DataModel
                     clear t temp
                 else
                     temp = load(obj.dataSource,var);
-                    spikeData.(key) = temp.(var);
+                    if isempty(fieldnames(temp)) % spikeData not in var 'spikeData'
+                        % try to load from each singleUnit
+                        temp = struct2cell(load(obj.dataSource,'spikeUnit*'));
+                        spikeData.(key) = {};
+                        for jj = 1:numel(temp)
+                           spikeData.(key) = [spikeData.(key) temp{jj}];
+                        end
+                    else
+                        spikeData.(key) = temp.(var);
+                    end
                     clear temp
                 end
             end

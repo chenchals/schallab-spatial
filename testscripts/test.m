@@ -1,13 +1,6 @@
 
-%% Read excel and find repeat penetrations : ap, ml and chamberLoc are same ...
-    excelFile = 'config/SFN_NHP_Coordinates_All.xlsx';
-    sheetName = 'Da_K';
-    nhpTable = readtable(excelFile, 'Sheet', sheetName);
 
-
-
-
-%% Visualize the function  over the range [-2,2] for x, y, and z.
+% Visualize the function  over the range [-2,2] for x, y, and z.
 
 [x,y,z] = meshgrid(-2:.2:2,-2:.25:2,-2:.16:2);
 v = x.*exp(-x.^2-y.^2-z.^2);
@@ -18,7 +11,7 @@ slice(x,y,z,v,xslice,yslice,zslice)
 colormap hsv
 
 
-%% Draw cube..
+%Draw cube..
 % Center point is at coordinate [ax ay az].
 ax = 20;  ay = 3;  az = 10;
 
@@ -50,6 +43,9 @@ scatter3( ax, ay, az, 'or', 'filled', 'SizeData', 150 )
 
 hold off
 
+
+
+
 % Clears variables, command window, and closes all figures
 clc; clear; close all
 
@@ -66,7 +62,7 @@ comet(x, y, .6)
 
 
 
-%%draw clusters
+%%
 clear all
 s1=load('/mnt/teba/Users/Chenchal/clustering/processed/quality_1/jp060n01.mat');
 diag1=diag(s1.contra_responseOnset_right.rsquared,1);
@@ -89,7 +85,7 @@ for clust = 1:numel(y1)
     patch('XData', xData, 'YData', yData, 'FaceColor', faceColors{clust});
     hold on
 end
-%% draw probe
+% draw probe
 x = 1;
 xVals = [x-step x+step];
 
