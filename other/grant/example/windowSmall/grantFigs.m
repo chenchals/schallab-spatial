@@ -9,7 +9,7 @@ dak={'/mnt/teba/Users/Chenchal/clustering_window1/processed/quality_4/Init_SetUp
 cond = 'contra_targetOnset';
 heDak = [he; dak]; 
 
-heDak = {'/mnt/teba/Users/Chenchal/clustering_window1/processed/quality_2/2014-12-15a.mat'};
+heDak = {'/Volumes/SchallLab/Users/Chenchal/clustering_window1/processed/quality_2/2014-12-15a.mat'};
 pos =[
     0.05 0.10 0.40 0.50
     0.49 0.10 0.40 0.50

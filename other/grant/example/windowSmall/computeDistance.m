@@ -30,9 +30,9 @@ function [ distIms, mvFrames ] = computeDistance( sdfMat, distWindow )
  for ii=1:nFrames
      im = tril(distIms(:,:,ii),-1);
      im(im<threshold) = 0;
-     %imagesc(im);
+     imagesc(im);
      %mesh(im)
-     surf(im)
+     %surf(im)
      titleTxt = sprintf('Time window : %d to %d',ii, ii+distWindow);
      title(titleTxt)
      drawnow
