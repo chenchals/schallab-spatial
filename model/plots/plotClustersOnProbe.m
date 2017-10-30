@@ -1,5 +1,5 @@
 %function [] = plotClustersOnProbe(baseProcessdedDir)
-baseProcessdedDir = '/mnt/teba/Users/Chenchal/clustering/processed/quality_1';
+baseProcessdedDir = '/Users/elseyjg/temp/schalllab-spatial/processed/processed/quality_1';
 d = dir(fullfile(baseProcessdedDir,'*.mat'));
 
 % get mat file list
