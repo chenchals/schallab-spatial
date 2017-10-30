@@ -7,7 +7,7 @@ dak={'/mnt/teba/Users/Chenchal/clustering_window1/processed/quality_4/Init_SetUp
      '/mnt/teba/Users/Chenchal/clustering_window1/processed/quality_4/Init_SetUp-160713-144841_probe1.mat'};
 %% Plot all
 cond = 'contra_targetOnset';
-heDak = [he; dak];
+heDak = [he; dak]; 
 
 heDak = {'/mnt/teba/Users/Chenchal/clustering_window1/processed/quality_2/2014-12-15a.mat'};
 pos =[
