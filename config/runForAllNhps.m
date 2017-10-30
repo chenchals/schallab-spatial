@@ -2,10 +2,10 @@
 tic
 processBroca;
 processDarwin;
-processDarwinK;
+%processDarwinK;
 processGauss;
-processHelmholtz;
-%processJoule;
+%processHelmholtz;
+processJoule;
 % run aggregation for all
 % baseProcessedDir = '/mnt/teba/Users/Chenchal/Jacob/clustering/processed/';
 % aggregateClusters([baseProcessedDir 'broca/bp*.mat']);

@@ -3,7 +3,7 @@ function [] = processGauss()
 %     nhpConfig is a structured variable with fields that define how to
 %     process matalb datafile for this NHP.
 % see also PROCESSSESSIONS for how to define nhpConfig 
-    processedDir = '/mnt/teba/Users/Chenchal/clustering/processed';
+    processedDir = '/mnt/teba/Users/Chenchal/clustering_window1/processed';
     nhpConfig.nhpSourceDir = '/mnt/teba';
     nhpConfig.nhp = 'gauss';
     nhpConfig.excelFile = 'SFN_NHP_Coordinates_All.xlsx';

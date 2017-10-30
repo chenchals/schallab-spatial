@@ -39,9 +39,9 @@ function [ figH ] = doPlot8R(session, sessionLabel, colorbarNames, varargin)
         conditions{contains(conditions,row2Conditions)}
         };
 
-    temp = cell2mat(cellfun(@(x) x{1},[row1Plots;row2Plots],'UniformOutput',false));
+    temp = cell2mat(cellfun(@(x) x{1},[row1Plots;row2Plots],'UniformOutput',false)');
     frMinMax = minmax(temp(:)');
-    temp = cell2mat(cellfun(@(x) x{2},[row1Plots;row2Plots],'UniformOutput',false));
+    temp = cell2mat(cellfun(@(x) x{2},[row1Plots;row2Plots],'UniformOutput',false)');
     distMinMax = minmax(temp(:)');
 
     %plot by columns
@@ -70,49 +70,18 @@ function [ figH ] = doPlot8R(session, sessionLabel, colorbarNames, varargin)
             for co = 1:2
                 currplotHandle = plotHandles(plotIndices(co));
                 set(figH, 'currentaxes', currplotHandle);
-                currAxes = gca;
                 switch co
                     case 1 %Firing Rate heatmap
                         im = currPlots{1};
-                        imagescWithNan(im,frMinMax,[],1,colorbarNames{1});
-                        timeWin = session.(cond).sdfWindow;
-                        step = range(timeWin)/5;
-                        currAxes.XTick = 0:step:range(timeWin);
-                        currAxes.XTickLabel = arrayfun(@(x) num2str(x),min(timeWin):step:max(timeWin),'UniformOutput',false);
-                        
-                        align0 = find(min(timeWin):max(timeWin)==0);
-                        line([align0 align0], ylim, 'Color','r');
-                        
-                        currAxes.YTick = channelTicks;
-                        currAxes.YTickLabel = channelTickLabels;
-                        
-                        pos = get(title(''),'Position');
-                        text(pos(1),pos(2),{upper(cond), upper([firingRateHeatmap ' heatmap'])},...
-                            'FontWeight','bold','FontAngle','italic','FontSize',14,'Color',titleColors{ros},...
-                            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom',...
-                            'Interpreter','none');
-                        
-                        ylabel('Channel#','FontWeight','bold', 'FontSize',12);
-                        xlabel('time (ms)','FontWeight','bold', 'FontSize',12);
+                        plotFiringRateHeatmap( im, session.channelMap, session.(cond).sdfWindow,...
+                            frMinMax, colorbarNames{1},...
+                            {upper(cond), upper([firingRateHeatmap ' heatmap'])}, titleColors{ros} );
                         clear im
                     case 2
                         im = currPlots{2};
-                        imagescWithCluster(im,distMinMax,0.5,1,colorbarNames{2});
-                        currAxes.XTick = channelTicks;
-                        currAxes.XTickLabelRotation = 90;
-                        currAxes.XTickLabel = channelTickLabels;
-                        currAxes.YTick = channelTicks;
-                        currAxes.YTickLabel = channelTickLabels;
-                        
-                        pos = get(title(''),'Position');
-                        text(pos(1),pos(2),{upper(cond), upper([distMeasure ' (r^2)'])},...
-                            'FontWeight','bold','FontAngle','italic','FontSize',14,'Color',titleColors{ros},...
-                            'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom',...
-                            'Interpreter','none');
-                        
-                        ylabel('Channel#','FontWeight','bold', 'FontSize',12);
-                        xlabel('Channel#','FontWeight','bold', 'FontSize',12);
-                        
+                        plotDistanceMatHeatmap( im, session.channelMap,...
+                            distMinMax, colorbarNames{2},...
+                            {upper(cond), upper([distMeasure ' (r^2)'])}, titleColors{ros} );
                         clear im
                 end
             end %co

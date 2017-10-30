@@ -55,7 +55,7 @@ function [ ] = processSessions(nhpConfig)
 %                            struct with fields:
 %                                           channelMap: [32×1 double]
 %                                              sdfMean: [32×501 double]
-%                                           sdfMeanZtr: [32×501 double]
+%                             sdfPopulationZscoredMean: [32×501 double]
 %                                       populationMean: 24.127
 %                                        populationStd: 35.02
 %                                             spikeIds: {32×1 cell}
@@ -107,10 +107,10 @@ function [ ] = processSessions(nhpConfig)
       
     % Specify conditions to for creating multiSdf
     %condition{x} = {alignOnEventName, TargetLeftOrRight, sdfWindow}
-    conditions{1} = {'targetOnset', 'left', [-100 400]};
-    conditions{2} = {'responseOnset', 'left', [-300 200]};
-    conditions{3} = {'targetOnset', 'right', [-100 400]};
-    conditions{4} = {'responseOnset', 'right', [-300 200]};
+    conditions{1} = {'targetOnset', 'left', [-50 300]};
+    conditions{2} = {'responseOnset', 'left', [-150 100]};
+    conditions{3} = {'targetOnset', 'right', [-50 300]};
+    conditions{4} = {'responseOnset', 'right', [-150 100]};
     % only one tyep of measue for now
     distancesToCompute = {'correlation'};
     %nhpSessions = cell();
@@ -197,7 +197,7 @@ function [ ] = processSessions(nhpConfig)
             logger.info(sprintf('Saving processed session to %s...',oFile));
             saveProcesssedSession(multiSdf, oFile);
             %nhpSessions=multiSdf;
-            plotAndSaveFig(multiSdf, qualityDir);
+            plotAndSaveFig(multiSdf, qualityDir, logger, errorLogger);
             
         catch me
             % log the error/exception causing failure and continue
@@ -211,7 +211,7 @@ function [ ] = processSessions(nhpConfig)
 end
 
 %% Plot and save Figures
-function [] = plotAndSaveFig(currSession, nhpOutputDir)
+function [] = plotAndSaveFig(currSession, nhpOutputDir, logger, errorLogger)
     plotsDir = [nhpOutputDir filesep 'figs'];
     if ~exist(plotsDir,'dir')
         mkdir(plotsDir)
