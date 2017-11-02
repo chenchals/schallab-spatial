@@ -225,7 +225,7 @@ for sessionIndex = 1:numel(sessionLocations)
         % Save and output stuff
         
         clearvars conds respAlign respTimes normRespZtr
-        oFile = fullfile(qualityDir,[multiSdf.session '.mat']);
+        oFile = fullfile(nhpOutputDir,[multiSdf.session '.mat']);
         logger.info(sprintf('Saving processed session to %s...',oFile));
         saveProcesssedSession(multiSdf, oFile);
         %nhpSessions=multiSdf;
