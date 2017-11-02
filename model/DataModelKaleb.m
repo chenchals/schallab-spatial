@@ -68,6 +68,7 @@ classdef DataModelKaleb < DataModel
             'alignTimes:AlignTimes' % used for aligning the vector of spikeTimes
             'trStarts:trStarts'
             'trEnds:trEnds'
+            'taskType:TaskType'
             };
        % Singel units are at ChannelN/UnitN/Spikes.mat
        % The spikeIds are not labelled as DSPNN
@@ -139,6 +140,9 @@ classdef DataModelKaleb < DataModel
                 datafile = obj.dataSource{fileIndex}; 
                 [~,unit,~] = fileparts(datafile);
                 fprintf('#%s ',unit);
+                if ~mod(fileIndex,8)
+                   fprintf('\n'); 
+                end
                 for i = 1:numel(keys)
                     key = keys{i};
                     var = vars{i};
@@ -173,27 +177,30 @@ classdef DataModelKaleb < DataModel
         end
         
         % GETTRILALIST
-        function [ selectedTrials ] = getTrialList(obj, selectedOutcomes, targetHemifield)
+        function [ selectedTrials ] = getTrialList(obj, selectedOutcomes, selectedLocations, varargin)
+            % varargin used to suppport multiple taskTypes are in the same
+            % data file. Example mem, cap in same file 
+            taskTypes = unique(obj.getEventData().taskType);
+            if length(varargin)==1
+                selectedTaskType = varargin{1};
+            end
             %Convert inputs to cellstr
             outcomes = selectedOutcomes;
             if ischar(outcomes)
-                outcomes = {outcomes};
+               outcomes = {outcomes};
             end
-            locations = targetHemifield;
-            if ischar(locations)
-                locations = {locations};
-            end
-            key = char(join({'outcomes',char(join(outcomes,',')),...
-                'locations',char(join(locations,','))},'-'));
-            
-            if obj.trialList.isKey(key)
-                selectedTrials = obj.trialList(key);
+            % use if already cached
+            if obj.trialList.isKey(selectedTaskType)
+                selectedTrials = obj.trialList(selectedTaskType);
                 return
             end
-            % Get trial list first time
-            obj.trialList(key) = memTrialSelector(obj.getEventData().trialOutcome, outcomes,...
-                obj.getEventData().targetLocation, targetHemifield);
-            selectedTrials = obj.trialList(key);
+            % Get trial list for different taskTypes (here a single file
+            % has both mem and cap paradigms)
+            for taskType = taskTypes
+                obj.trialList(taskType{1}) = memTrialSelector(obj.getEventData().trialOutcome, outcomes,...
+                    obj.getEventData().targetLocation, selectedLocations, obj.getEventData().taskType, selectedTaskType);
+            end
+            selectedTrials = obj.trialList(selectedTaskType);
         end
     end
     %% Helper Functions

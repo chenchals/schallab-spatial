@@ -16,8 +16,15 @@ function [] = processBroca()
     % DataModel to use
     nhpConfig.dataModelName = DataModel.PAUL_DATA_MODEL;
     nhpConfig.outcome = 'saccToTarget';
+    % Specify conditions to for creating multiSdf
+    %condition{x} = {alignOnEventName, TargetLeftOrRight, sdfWindow}
+    nhpConfig.conditions{1} = {'targetOnset', {[0 360] 45 90 135 180 225 270 315}, [-50 300]};
+    nhpConfig.conditions{2} = {'responseOnset', {[0 360] 45 90 135 180 225 270 315}, [-300 50]};
+    % only one tyep of measue for now
+    nhpConfig.distancesToCompute = {'correlation'};
+    nhpConfig.minTrialsPerCondition = 7;
 
-    processSessions(nhpConfig);
+    processSessionsByLocation(nhpConfig);
 
 end
 

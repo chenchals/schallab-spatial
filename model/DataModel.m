@@ -72,19 +72,6 @@ classdef (Abstract=true) DataModel < handle
             %maxChannels = max(getChannelMap(obj));
             chMap = getChannelMap(obj);
             sdf = spkfun_sdf(spikeTimes, selectedTrials, events, alignEventName, sdfWindow, spikeIds, chMap, singleOrMultiFlag);
-            
-            % Find population mean and Std of firing rate
-            allSdf = cell2mat({sdf.sdf}');
-            allSdf = allSdf(:);
-            popMean = nanmean(allSdf);
-            popStd = nanstd(allSdf);
-            % compute z-scores for each cell/channel
-            for ii = 1:size(sdf,1)
-                sdf(ii).populationMean = popMean;
-                sdf(ii).populationStd = popStd;
-                sdf(ii).sdfPopulationZscored = (sdf(ii).sdf-popMean)/popStd;
-                sdf(ii).sdfPopulationZscoredMean = mean(sdf(ii).sdfPopulationZscored);
-            end
         end
     end
     

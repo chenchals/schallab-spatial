@@ -3,7 +3,7 @@ function [] = processTest()
 %     nhpConfig is a structured variable with fields that define how to
 %     process matalb datafile for this NHP.
 % see also PROCESSSESSIONS for how to define nhpConfig, PROCESSSESSIONSBYLOCATION
-    processedDir = '/mnt/teba/Users/Chenchal/clusterByLocation/processed';
+    processedDir = 'temp';
     nhpConfig.nhpSourceDir = '/mnt/teba';
     nhpConfig.nhp = 'darwink';
     nhpConfig.excelFile = 'SFN_NHP_Coordinates_All.xlsx';
@@ -20,16 +20,12 @@ function [] = processTest()
     %condition{x} = {alignOnEventName, TargetLeftOrRight, sdfWindow}
     nhpConfig.conditions{1} = {'targetOnset', {[0 360] 45 90 135 180 225 270 315}, [-50 300]};
     nhpConfig.conditions{2} = {'responseOnset', {[0 360] 45 90 135 180 225 270 315}, [-300 50]};
+    nhpConfig.selectedTaskType = 'MG';
     % only one tyep of measue for now
     nhpConfig.distancesToCompute = {'correlation'};
     nhpConfig.minTrialsPerCondition = 7;
-     
-    taskTypes = {'cap' 'mem'};
-    
-    for taskType = taskTypes
-        nhpConfig.selectedTaskType = char(taskType);
-        processSessionsByLocation(nhpConfig);
-    end
+
+    processSessionsByLocation(nhpConfig);
 
 end
 

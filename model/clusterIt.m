@@ -1,6 +1,8 @@
 function [ boc, eoc, dtnc ] = clusterIt( similarityVector, threshold )
 %CLUSTERIT Summary of this function goes here
 %   Detailed explanation goes here
+    %threshold = 0.5;
+    
     doSkip = false;
     minPointsForCluster = 2;    
     skipLength = 1; %always do not change
@@ -23,6 +25,8 @@ function [ boc, eoc, dtnc ] = clusterIt( similarityVector, threshold )
         else % vec(ii)== 0 or NaN or Inf
             if doSkip
                 % look ahead 1 when in cluster or flag = true
+                % Skip Not currently used as results going forwrd or
+                % backward are inconsistient
                 if ii < length(similarityVector)
                     ii = ii + skipLength; %#ok<FXSET>
                     if inCluster && similarityVector(ii) >= threshold
@@ -45,7 +49,8 @@ function [ boc, eoc, dtnc ] = clusterIt( similarityVector, threshold )
     clustIds = find(eoc - boc + 1 >= minPointsForCluster);
     boc = boc(clustIds);
     eoc = eoc(clustIds);
+    dtnc = [];
     dtnc = (boc(2:end) - eoc(1:end-1)) - 1;
-    dtnc(end+1) = NaN;
+    dtnc = [NaN dtnc];% 1st
 end
 
