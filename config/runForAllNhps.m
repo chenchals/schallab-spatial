@@ -1,10 +1,11 @@
 % run process for all nhps
+addpath(genpath('/Users/subravcr/Projects/lab-schall/schalllab-spatial'));
 tic
 processBroca;
 processDarwin;
-%processDarwinK;
+processDarwinK;
 processGauss;
-%processHelmholtz;
+processHelmholtz;
 processJoule;
 % run aggregation for all
 % baseProcessedDir = '/mnt/teba/Users/Chenchal/Jacob/clustering/processed/';

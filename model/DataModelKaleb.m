@@ -180,9 +180,9 @@ classdef DataModelKaleb < DataModel
         function [ selectedTrials ] = getTrialList(obj, selectedOutcomes, selectedLocations, varargin)
             % varargin used to suppport multiple taskTypes are in the same
             % data file. Example mem, cap in same file 
-            taskTypes = unique(obj.getEventData().taskType);
+            taskTypes = upper(unique(obj.getEventData().taskType));
             if length(varargin)==1
-                selectedTaskType = varargin{1};
+                selectedTaskType = upper(varargin{1});
             end
             %Convert inputs to cellstr
             outcomes = selectedOutcomes;
@@ -194,13 +194,20 @@ classdef DataModelKaleb < DataModel
                 selectedTrials = obj.trialList(selectedTaskType);
                 return
             end
-            % Get trial list for different taskTypes (here a single file
+            % Get trial list for different taskTypes ONCE (here a single file
             % has both mem and cap paradigms)
             for taskType = taskTypes
                 obj.trialList(taskType{1}) = memTrialSelector(obj.getEventData().trialOutcome, outcomes,...
-                    obj.getEventData().targetLocation, selectedLocations, obj.getEventData().taskType, selectedTaskType);
+                    obj.getEventData().targetLocation, selectedLocations, obj.getEventData().taskType, taskType{1});
             end
-            selectedTrials = obj.trialList(selectedTaskType);
+            % Check if the obj.trialList Map has the selectedTaskType key
+            if obj.trialList.isKey(selectedTaskType)
+              selectedTrials = obj.trialList(selectedTaskType);
+            else
+            throw(MException('DataModelKaleb:getTrialList',...
+                sprintf('There are no trials for selected TaskType [%s]. Available TaskTypes are [%s]',...
+                selectedTaskType, join(taskTypes,', '))));
+            end
         end
     end
     %% Helper Functions

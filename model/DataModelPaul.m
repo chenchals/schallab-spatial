@@ -133,6 +133,8 @@ classdef DataModelPaul < DataModel
             if ischar(outcomes)
                 outcomes = {outcomes};
             end
+            % Key is constant since data for different TaskTypes are in different
+            % files
             key = 'selectedTrials';            
             if obj.trialList.isKey(key)
                 selectedTrials = obj.trialList(key);

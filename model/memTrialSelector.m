@@ -54,8 +54,8 @@ function  [ trialList ] = memTrialSelector(trialOutcome, selectedOutcomes, targe
     targetAngle(targetAngle < 0) = targetAngle(targetAngle < 0) + 360;
     
     if length(varargin)==2
-        taskType = varargin{1};
-        selectedTaskType = varargin{2};        
+        taskType = upper(varargin{1});
+        selectedTaskType = upper(varargin{2});        
         % logical & of selected criteria
         trialList = cellfun(@(x) find(outcomeTrials ...
             & ismember(targetAngle,x) ...

@@ -7,7 +7,7 @@ function [] = processTest()
     nhpConfig.nhpSourceDir = '/mnt/teba';
     nhpConfig.nhp = 'darwink';
     nhpConfig.excelFile = 'SFN_NHP_Coordinates_All.xlsx';
-    nhpConfig.sheetName = 'Test';
+    nhpConfig.sheetName = 'Da_K';
     % Write to one dir above the config dir
     %[thisDir,~,~] = fileparts(mfilename('fullpath'));    
     nhpConfig.nhpOutputDir = fullfile(processedDir, nhpConfig.nhp);
@@ -24,12 +24,9 @@ function [] = processTest()
     nhpConfig.distancesToCompute = {'correlation'};
     nhpConfig.minTrialsPerCondition = 7;
      
-    taskTypes = {'cap' 'mem'};
+    nhpConfig.selectedTaskTypes = {'CAP' 'MG'};
     
-    for taskType = taskTypes
-        nhpConfig.selectedTaskType = char(taskType);
-        processSessionsByLocation(nhpConfig);
-    end
+    processSessionsByLocation(nhpConfig);
 
 end
 

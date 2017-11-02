@@ -54,10 +54,9 @@ function [ ] = processSessionsByLocation(nhpConfig)
     distancesToCompute = nhpConfig.distancesToCompute;
     minTrialsPerCondition = nhpConfig.minTrialsPerCondition;
     % optional
-    selectedTaskType = '';
-    if isfield(nhpConfig, 'selectedTaskType')
-       selectedTaskType = upper(nhpConfig.selectedTaskType);
-       selectedTaskTypeToSave = selectedTaskType;
+    selectedTaskTypes = {''};
+    if isfield(nhpConfig, 'selectedTaskTypes')
+       selectedTaskTypes = upper(nhpConfig.selectedTaskTypes);
     end
         
     outputDir = nhpOutputDir;
@@ -90,118 +89,121 @@ function [ ] = processSessionsByLocation(nhpConfig)
       
     %nhpSessions = cell();
 
-   for sessionIndex = 1:numel(sessionLocations)
-       try
-           sessionLocation = sessionLocations{sessionIndex};
-           nhpInfo = nhpTable(sessionIndex,:);
-           qualityOfSession = nhpInfo.qualityOfSession;
-           if isempty(qualityOfSession)
-               qualityOfSession = NaN; % lowest quality
-           end
-           %qualityDir = fullfile(outputDir,['quality_' num2str(qualityOfSession)]);
-           qualityStr= ['Q' num2str(qualityOfSession)];
-           
-           % Seleted Task Type string
-           if isempty(selectedTaskType)
-               if numel(split(nhpInfo.paradigm,',')) > 1
-                   error('The Excel info for session [%s] has paradigms [%s], since there is more than 1 paradigm, nhpConfig.selectedTaskType must be set to one of the paradigms',...
-                       nhpInfo.session{1}, nhpInfo.paradigm{1});                  
-               else                   
-                   selectedTaskTypeToSave = upper(nhpInfo.paradigm{1});
-               end
-           end
-           % Include probe number, selected taskType, quality in session name
-           if find(strcmp('probeNo',nhpInfo.Properties.VariableNames))
-               sessionName = [nhpInfo.session{1} '_probe' num2str(nhpInfo.probeNo) '_' selectedTaskTypeToSave '_' qualityStr];
-           else
-               sessionName = [nhpInfo.session{1} '_' selectedTaskTypeToSave '_' qualityStr];
-           end
-           
-           % Save to taskType Dir for nhp
-           oDir = fullfile(outputDir, selectedTaskTypeToSave);
-            
+    for sessionIndex = 1:numel(sessionLocations)
+        sessionLocation = sessionLocations{sessionIndex};
+        nhpInfo = nhpTable(sessionIndex,:);
+        % Check if Session specified in excel has data files
+        if isempty(sessionLocation)
+            errorLogger.error(sprintf('Session %s has no datafiles. Using [ %s ] for spike file locations',...
+                nhpInfo.session{1}, nhpInfo.matPath{1}));
+            continue
+        end
+        logger.info(sprintf('Processing session [%s], using fileFilter [%s]',nhpInfo.session{1}, nhpInfo.matPath{1}));
+        channelMap = nhpInfo.ephysChannelMap{1};
+        % Create instance of MemoryTypeModel to reuse for task type
+        model = DataModel.newInstance(dataModelName, sessionLocation, channelMap);
+        % Create reuse vars
+        qualityOfSession = nhpInfo.qualityOfSession;
+        if isempty(qualityOfSession)
+            qualityOfSession = NaN; % lowest quality
+        end
+        qualityStr= ['Q' num2str(qualityOfSession)];
 
-            if isempty(sessionLocation)
-                errorLogger.error(sprintf('Session %s has no datafiles. Using [ %s ] for spike file locations',...
-                    sessionName, char(nhpInfo.matPath))); 
-                continue
-            end
-                        
-            multiSdf = struct();
-            channelMap = nhpInfo.ephysChannelMap{1};
-            logger.info(sprintf('Processing session %s',sessionName)); 
-            if contains(lower(nhpInfo.chamberLoc),'left')
-                ipsi = 'left';
-            else
-                ipsi = 'right';
-            end
-            % Create instance of MemoryTypeModel
-            model = DataModel.newInstance(dataModelName, sessionLocation, channelMap);
-                        
-            multiSdf.analysisDate = datestr(now);
-            multiSdf.session = sessionName;
-            multiSdf.info = nhpInfo;
-            multiSdf.channelMap = model.getChannelMap;
-            
-            for c = 1:numel(conditions)
-                currCondition = conditions{c};
-                alignOn = currCondition{1};
-                targetLocations = currCondition{2};
-                sdfWindow = currCondition{3};
-                %check minTrialsPerCondition is satisfied
-                selectedTrialsByLocation = checkMinTrialsPerCondition(model, outcome, targetLocations, minTrialsPerCondition,selectedTaskType);
-                for tLoc = 1:numel(targetLocations)
-                    currTargetLocation = targetLocations{tLoc};
-                    trialList = selectedTrialsByLocation{tLoc};
-                    if numel(trialList) > minTrialsPerCondition
-                    condStr = [alignOn sprintf('_%d',currTargetLocation)] ;                    
-                    logger.info(sprintf('Doing condition: outcome %s, alignOn %s, targetLocations %s sdfWindow [%s]',...
-                        outcome, alignOn, num2str(currTargetLocation), num2str(sdfWindow)));
-                    % Get MultiUnitSdf -> has sdf_mean matrix and sdf matrix
-                    [~, multiSdf.(condStr)] = model.getMultiUnitSdf(trialList, alignOn, sdfWindow);
+%         if contains(lower(nhpInfo.chamberLoc),'left')
+%             ipsi = 'left';
+%         else
+%             ipsi = 'right';
+%         end
+%                 
+        for t =1:numel(selectedTaskTypes)
+            try
+                selectedTaskType = selectedTaskTypes{t};
+                selectedTaskTypeToSave = selectedTaskType;
+                % Seleted Task Type string
+                if isempty(selectedTaskType)
+                    if numel(split(nhpInfo.paradigm,',')) > 1
+                        error('The Excel info for session [%s] has paradigms [%s], since there is more than 1 paradigm, nhpConfig.selectedTaskType must be set to one of the paradigms',...
+                            nhpInfo.session{1}, nhpInfo.paradigm{1});
                     else
-                    logger.warn(sprintf('Number of trials [%d] for outcome %s, targetLocations %s is below minTrialsPerCondition [%d]',...
-                        numel(trialList), outcome, num2str(currTargetLocation), num2str(minTrialsPerCondition)));
+                        selectedTaskTypeToSave = upper(nhpInfo.paradigm{1});
                     end
                 end
+                % Output folder: Save to taskType Dir for nhp
+                oDir = fullfile(outputDir, selectedTaskTypeToSave);
+                % Output file name: Include probe number, selected taskType, quality in session name
+                if find(strcmp('probeNo',nhpInfo.Properties.VariableNames))
+                    sessionName = [nhpInfo.session{1} '_probe' num2str(nhpInfo.probeNo) '_' selectedTaskTypeToSave '_' qualityStr];
+                else
+                    sessionName = [nhpInfo.session{1} '_' selectedTaskTypeToSave '_' qualityStr];
+                end
+                % Struct variable to save to file
+                multiSdf = struct();                
+                multiSdf.analysisDate = datestr(now);
+                multiSdf.session = sessionName;
+                multiSdf.info = nhpInfo;
+                multiSdf.channelMap = model.getChannelMap;               
+                % condition = {
+                % {alignOnEvent, {[loc1 loc2] loc3 loc4}, [-50 300]}...
+                % {......}}
+                for c = 1:numel(conditions)
+                    currCondition = conditions{c};
+                    alignOn = currCondition{1};
+                    targetLocations = currCondition{2};
+                    sdfWindow = currCondition{3};
+                    %Get  trials by position for condition is satisfied
+                    selectedTrialsByLocation = checkMinTrialsPerCondition(model, outcome, targetLocations, selectedTaskType);
+                    for tLoc = 1:numel(targetLocations)
+                        currTargetLocation = targetLocations{tLoc};
+                        trialList = selectedTrialsByLocation{tLoc};
+                        if numel(trialList) > minTrialsPerCondition
+                            condStr = [alignOn sprintf('_%d',currTargetLocation)] ;
+                            logger.info(sprintf('Doing condition: TaskType [%s] outcome [%s], alignOn [%s], targetLocations [%s] sdfWindow [%s]',...
+                                selectedTaskType, outcome, alignOn, num2str(currTargetLocation), num2str(sdfWindow)));
+                            % Get MultiUnitSdf -> has sdf_mean matrix and sdf matrix
+                            [~, multiSdf.(condStr)] = model.getMultiUnitSdf(trialList, alignOn, sdfWindow);
+                        else
+                            logger.warn(sprintf('Number of trials [%d] for TaskType [%s] outcome [%s], targetLocations [%s] is below minTrialsPerCondition [%d]',...
+                                numel(trialList), selectedTaskType, outcome, num2str(currTargetLocation), num2str(minTrialsPerCondition)));
+                        end
+                    end
+                end
+                % To use Kalebs klNormRespv2:
+                conds = fieldnames(multiSdf);
+                % to use bl option conditions have to be ordered with targetAligned being the first
+                conds = conds(~cellfun(@isempty,regexp(conds,'targetOnset|responseOnset','match')));
+                % order is ipsi_targetOnset,ipsi_responseOnset,...
+                % contra_targetOnset, contra_responseOnset
+                conds = flipud(sortrows(conds));
+                % Aggregate all condition sdfs into cellArray of cells
+                respAlign = cellfun(@(x) multiSdf.(char(x)).sdfMean,conds,'UniformOutput',false);
+                % Aggregate all condition sdfWindow into cellArray of cells
+                respTimes = cellfun(@(x) multiSdf.(char(x)).sdfWindow,conds,'UniformOutput',false);
+                % Normalize with ztr option
+                normRespZtr =  klNormRespv2(respAlign,respTimes,'ztr','-r',respTimes);
+                for ii = 1:numel(conds)
+                    condStr = conds{ii};
+                    sdfMeanZtr = normRespZtr{ii};
+                    multiSdf.(condStr).sdfMeanZtr = sdfMeanZtr;
+                end
+                % Distance computation
+                % do tandem of 2 alignOn conditions for each location condition
+                
+                clearvars conds respAlign respTimes normRespZtr
+                oFile = fullfile(oDir,[multiSdf.session '.mat']);
+                logger.info(sprintf('Saving processed session to %s...',oFile));
+                saveProcesssedSession(multiSdf, oFile);
+                %nhpSessions=multiSdf;
+                %plotAndSaveFig(multiSdf, oDir, logger, errorLogger);
+                
+            catch me
+                % log the error/ and continue with next TaskType
+                logger.error(me);
+                errorLogger.error(sprintf('Error processing session %s. Using [ %s ] for spike file locations',...
+                    nhpInfo.session{1}, char(nhpInfo.matPath)));
+                errorLogger.error(me);
             end
-             % To use Kalebs klNormRespv2: 
-            conds = fieldnames(multiSdf);
-            % to use bl option conditions have to be ordered with targetAligned being the first
-            conds = conds(~cellfun(@isempty,regexp(conds,'targetOnset|responseOnset','match')));
-            % order is ipsi_targetOnset,ipsi_responseOnset,...
-            % contra_targetOnset, contra_responseOnset
-            conds = flipud(sortrows(conds));
-            % Aggregate all condition sdfs into cellArray of cells
-            respAlign = cellfun(@(x) multiSdf.(char(x)).sdfMean,conds,'UniformOutput',false);
-            % Aggregate all condition sdfWindow into cellArray of cells
-            respTimes = cellfun(@(x) multiSdf.(char(x)).sdfWindow,conds,'UniformOutput',false);
-            % Normalize with ztr option 
-            normRespZtr =  klNormRespv2(respAlign,respTimes,'ztr','-r',respTimes);
-            for ii = 1:numel(conds)
-                condStr = conds{ii};
-                sdfMeanZtr = normRespZtr{ii};
-                multiSdf.(condStr).sdfMeanZtr = sdfMeanZtr;                  
-            end
-            % Distance computation
-            % do tandem of 2 alignOn conditions for each location condition
-                       
-            clearvars conds respAlign respTimes normRespZtr
-            oFile = fullfile(oDir,[multiSdf.session '.mat']);
-            logger.info(sprintf('Saving processed session to %s...',oFile));
-            saveProcesssedSession(multiSdf, oFile);
-            %nhpSessions=multiSdf;
-            %plotAndSaveFig(multiSdf, oDir, logger, errorLogger);
-            
-        catch me
-            % log the error/exception causing failure and continue
-            disp(me)
-            logger.error(me);
-            errorLogger.error(sprintf('Error processing session %s. Using [ %s ] for spike file locations',...
-                nhpInfo.session{1}, char(nhpInfo.matPath)));
-            errorLogger.error(me);
-        end
-    end
+        end % end taskTypes
+    end % end for each session
 end
 
 %% Plot and save Figures
@@ -247,13 +249,7 @@ function [ condStr ] = convertToChar(condCellArray, ipsiSide)
     end
 end
 
-function [selectedTrialsByLocation] = checkMinTrialsPerCondition(model, outcome, locationCondition, minTrials, selectedTaskType)
-        selectedTrialsByLocation = model.getTrialList(outcome,locationCondition,selectedTaskType);
-        
-        if sum(~cell2mat(arrayfun(@(x) numel(x{1})>minTrials,...
-                selectedTrialsByLocation(arrayfun(@(x) numel(x{1})>0,selectedTrialsByLocation)),...
-                'UniformOutput',false)))
-            throw(MException('processSessions:checkMinTrialsPerCondition', 'MinTrialsPerCondition %d, failed!',minTrials));
-
-        end
+function [selectedTrialsByLocation] = checkMinTrialsPerCondition(model, outcome, locationCondition, selectedTaskType)
+    selectedTrialsByLocation = model.getTrialList(outcome,locationCondition,selectedTaskType);
+    % Not checking minTrials here, because we wan to process if there are min trials for a singel location
 end
