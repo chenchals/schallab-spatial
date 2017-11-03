@@ -156,19 +156,16 @@ classdef DataModelWolf < DataModel
         end
         
         % GETTRILALIST
-        function [ selectedTrials ] = getTrialList(obj, selectedOutcomes, targetHemifield)
+        function [ selectedTrials ] = getTrialList(obj, selectedOutcomes, targetHemifield, varargin)
+            % varargin not used, but needed to suppport cases where
+            % multiple taskTypes are in the same data file 
+            % Example mem, cap in same file
             %Convert inputs to cellstr
             outcomes = selectedOutcomes;
             if ischar(outcomes)
                 outcomes = {outcomes};
             end
-            locations = targetHemifield;
-            if ischar(locations)
-                locations = {locations};
-            end
-            key = char(join({'outcomes',char(join(outcomes,',')),...
-                'locations',char(join(locations,','))},'-'));
-            
+            key = 'selectedTrials';            
             if obj.trialList.isKey(key)
                 selectedTrials = obj.trialList(key);
                 return
