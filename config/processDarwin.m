@@ -16,9 +16,8 @@ function [] = processDarwin()
     % DataModel to use
     nhpConfig.dataModelName = DataModel.WOLF_DATA_MODEL;
     nhpConfig.outcome = 'Correct';
-
+    
     processSessions(nhpConfig);
-
 end
 
 function [ sessions ] = getSessions(srcFolder, nhpTable)
