@@ -1,5 +1,5 @@
 
-nhps = ZZ.nhps;
+nhps = fieldnames(ZZ);
 
 % for each NHP get distribution of 
 % cluster sizes from boots for all sessions per condition

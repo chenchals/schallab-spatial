@@ -4,7 +4,7 @@ processBroca;
 processDarwin;
 %processDarwinK;
 processGauss;
-%processHelmholtz;
+processHelmholtz;
 processJoule;
 % run aggregation for all
 % baseProcessedDir = '/mnt/teba/Users/Chenchal/Jacob/clustering/processed/';
