@@ -3,6 +3,7 @@ function [] = processJoule()
 %     nhpConfig is a structured variable with fields that define how to
 %     process matalb datafile for this NHP.
 % see also PROCESSSESSIONS for how to define nhpConfig 
+
     processedDir = '/Users/elseyjg/temp/schalllab-spatial/processed';
     nhpConfig.nhpSourceDir = '/Volumes/schalllab/';
     nhpConfig.nhp = 'joule';
