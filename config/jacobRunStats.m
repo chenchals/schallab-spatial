@@ -6,9 +6,9 @@ nhps = fieldnames(ZZ);
 for ii = 1:numel(nhps)
     nhp = nhps{ii};
     sessions = fieldnames(ZZ.(nhp));   
-    cSizes = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_responseOnset.boots.cSize], sessions,'UniformOutput',false);
-    cDists = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_responseOnset.boots.dtnc], sessions,'UniformOutput',false);
-    cNums = cellfun(@(x) cellfun(@length,{ZZ.(nhp).(x).contra_responseOnset.boots.cSize}),sessions,'UniformOutput',false);    
+    cSizes = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_targetOnset.boots.cSize], sessions,'UniformOutput',false);
+    cDists = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_targetOnset.boots.dtnc], sessions,'UniformOutput',false);
+    cNums = cellfun(@(x) cellfun(@length,{ZZ.(nhp).(x).contra_targetOnset.boots.cSize}),sessions,'UniformOutput',false);    
     
     nhpCSizes{ii} = [cSizes{:}];
     nhpCDists{ii} = [cDists{:}];
@@ -16,10 +16,28 @@ for ii = 1:numel(nhps)
 
 end
 
+for ii = 1:numel(nhps)
+    nhp = nhps{ii};
+    sessions = fieldnames(ZZ.(nhp));   
+    cSizesObserved = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_targetOnset.observed.cSize], sessions,'UniformOutput',false);
+    cDistsObserved = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_targetOnset.observed.dtnc], sessions,'UniformOutput',false);
+    cNumsObserved = cellfun(@(x) cellfun(@length,{ZZ.(nhp).(x).contra_targetOnset.observed.cSize}),sessions,'UniformOutput',false);    
+    
+    nhpCSizesObserved{ii} = [cSizesObserved{:}];
+    nhpCDistsObserved{ii} = [cDistsObserved{:}];
+    nhpCNumsObserved{ii} = [cNumsObserved{:}];
+
+end
+
+
 % all monks
 nhpSizes = [nhpCSizes{:}];
 nhpDists = [nhpCDists{:}];
 nhpNums = [nhpCNums{:}];
+
+nhpSizesObserved = [nhpCSizesObserved{:}];
+nhpDistsObserved = [nhpCDistsObserved{:}];
+nhpNumsObserved = [nhpCNumsObserved{:}];
 
 % individual monks
 histBins = 0:100:(ceil(max(nhpSizes)/100)*100+100);
@@ -28,33 +46,77 @@ nhpDistHist = cellfun(@(x) histc(x,histBins),nhpCDists,'UniformOutput',0);
 numHistBins = 1:32;
 nhpNumHist = cellfun(@(x) histc(x,numHistBins),nhpCNums,'UniformOutput',0);
 
+histBins = 0:100:(ceil(max(nhpSizes)/100)*100+100);
+nhpSizeHistObserved = cellfun(@(x) histc(x,histBins),nhpCSizesObserved,'UniformOutput',0);
+nhpDistHistObserved = cellfun(@(x) histc(x,histBins),nhpCDistsObserved,'UniformOutput',0);
+numHistBins = 1:32;
+nhpNumHistObserved = cellfun(@(x) histc(x,numHistBins),nhpCNumsObserved,'UniformOutput',0);
+
 % all monks
 allNhpSizeHist = histc(nhpSizes,histBins);
 allNhpDistHist = histc(nhpDists,histBins);
 allNhpNumHist  = histc(nhpNums,numHistBins);
 
-figure('Name', 'ResponseOnset_AllNHPs_ClusterSizes_Bootstrap', 'NumberTitle', 'off'); hold on, cellfun(@(x) plot(histBins,x),nhpSizeHist,'UniformOutput',0),...
-    plot(histBins, allNhpSizeHist,'-m','LineWidth',2);
-    title('Size of Clusters: 1000 Bootstrap Iterations');
-    xlabel('Size of Clusters')
-    ylabel('Number of Bootstrap Iterations')
-    legend('joule', 'broca', 'darwin', 'helmholtz', 'gauss', 'all');
-    set(gca,'FontSize',15)
+allNhpSizeHistObserved = histc(nhpSizesObserved,histBins);
+allNhpDistHistObserved = histc(nhpDistsObserved,histBins);
+allNhpNumHistObserved  = histc(nhpNumsObserved,numHistBins);
+
+
+
+    for ii = 1:numel(nhps)
+        nhp = nhps{ii};
+        a(ii) = figure(ii);
+        set(a(ii),'Name', ['TargetOnset_',nhp,'_ClusterSizes']); 
+        hold on; 
+        plot(histBins,nhpSizeHist{ii}./sum(nhpSizeHist{ii}));
+        xlabel('Size of Clusters (um)')
+        ylabel('Proportion Observed')
+        set(gca,'FontSize',15);
+        plot(histBins,nhpSizeHistObserved{ii}./sum(nhpSizeHistObserved{ii}));
+        title(['Size of Clusters__',nhp]);
+        xlabel('Size of Clusters (um)')
+        ylabel('Proportion Observed')
+        legend('Boot','Observed');
+        set(gca,'FontSize',15);
+        saveas(a(ii),['./clustSizes_',nhp,'.fig']);
+    end
     
-figure('Name', 'ResponseOnset_AllNHPs_InterClusterDistances_Bootstrap', 'NumberTitle', 'off'); hold on, cellfun(@(x) plot(histBins,x),nhpDistHist,'UniformOutput',0),...
-    plot(histBins, allNhpDistHist,'-m','LineWidth',2);
-    title('Size of Inter-Cluster Spacings: 1000 Bootstrap Iterations');
-    xlabel('Size of Inter-Cluster Spacings')
-    ylabel('Number of Bootstrap Iterations')
-    legend('joule', 'broca', 'darwin', 'helmholtz', 'gauss', 'all');    
-    set(gca,'FontSize',15)
+    for ii = 1:numel(nhps)
+        nhp = nhps{ii};
+        b(ii) = figure(ii+10);
+        set(b(ii),'Name', ['TargetOnset_',nhp,'_Distance_to_next_Cluster']); 
+        hold on; 
+        plot(histBins,nhpDistHist{ii}./sum(nhpDistHist{ii}));
+        xlabel('Distance to Next Cluster (um)')
+        ylabel('Number of Bootstrap Iterations')
+        set(gca,'FontSize',15);
+        plot(histBins,nhpDistHistObserved{ii}./sum(nhpDistHistObserved{ii}));
+        title(['Distance to Next Cluster__', nhp]);
+        xlabel('Distance to Next Cluster (um)')
+        ylabel('Proportion Observed')
+        legend('Boot','Observed');
+        set(gca,'FontSize',15);
+        saveas(a(ii),['./clustDists_',nhp,'.fig']);
+    end
     
-figure('Name', 'ResponseOnset_AllNHPs_NumClusters_Bootstrap', 'NumberTitle', 'off'); hold on, cellfun(@(x) plot(numHistBins,x),nhpNumHist,'UniformOutput',0),...
-    plot(numHistBins, allNhpNumHist,'-m','LineWidth',2);
-    xlim([0 10]);
-    title('Number of Clusters: 1000 Bootstrap Iterations');
-    xlabel('Number of Clusters')
-    ylabel('Number of Bootstrap Iterations')
-    legend('joule', 'broca', 'darwin', 'helmholtz', 'gauss', 'all');
-    set(gca,'FontSize',15)
+    for ii = 1:numel(nhps)
+        nhp = nhps{ii};
+        c(ii) = figure(ii+20);
+        set(c(ii),'Name', ['TargetOnset_',nhp,'_NumClusters_Observed']); 
+        hold on; 
+        plot(numHistBins,nhpNumHist{ii}./sum(nhpNumHist{ii}));
+        xlim([0 10]);
+        xlabel('Number of Clusters')
+        ylabel('Number of Bootstrap Iterations')
+        set(gca,'FontSize',15);
+        plot(numHistBins,nhpNumHistObserved{ii}./sum(nhpNumHistObserved{ii}));
+        xlim([0 10]);
+        title(['Number of Clusters__', nhp]);
+        xlabel('Number of Clusters')
+        ylabel('Proportion Observed')
+        legend('Boot','Observed');
+        set(gca,'FontSize',15);
+        saveas(a(ii),['./clustDists_',nhp,'.fig']);
+
+    end
     

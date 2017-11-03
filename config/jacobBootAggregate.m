@@ -34,10 +34,10 @@ for ii = 1:numel(nhps)
       currSession = load(sessFile);
       sessionName = char([currSession.info.nhp{1} '_' regexprep(currSession.session,'-','_')]);
       fprintf('Processing session %s\n',sessionName);
-      condStr = 'contra_responseOnset';
-      cond = 'contra_responseOnset_right';
+      condStr = 'contra_targetOnset';
+      cond = 'contra_targetOnset_right';
       if ~isfield(currSession,cond)
-          cond = 'contra_responseOnset_left';
+          cond = 'contra_targetOnset_left';
       end
       d1 = diag(currSession.(cond).rsquared,1);
       spacing = currSession.info.channelSpacing;      
