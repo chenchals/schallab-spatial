@@ -6,9 +6,9 @@ nhps = ZZ.nhps;
 for ii = 1:numel(nhps)
     nhp = nhps{ii};
     sessions = fieldnames(ZZ.(nhp));   
-    cSizes = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_targetOnset.boots.cSize], sessions,'UniformOutput',false);
-    cDists = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_targetOnset.boots.dtnc], sessions,'UniformOutput',false);
-    cNums = cellfun(@(x) cellfun(@length,{ZZ.(nhp).(x).contra_targetOnset.boots.cSize}),sessions,'UniformOutput',false);    
+    cSizes = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_responseOnset.boots.cSize], sessions,'UniformOutput',false);
+    cDists = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_responseOnset.boots.dtnc], sessions,'UniformOutput',false);
+    cNums = cellfun(@(x) cellfun(@length,{ZZ.(nhp).(x).contra_responseOnset.boots.cSize}),sessions,'UniformOutput',false);    
     
     nhpCSizes{ii} = [cSizes{:}];
     nhpCDists{ii} = [cDists{:}];

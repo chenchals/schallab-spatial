@@ -1,7 +1,7 @@
 function [ temp ] = jacobBootAggregate()
 % setup base analysed dior
 baseDir = '/Users/elseyjg/temp/schalllab-spatial/processed';
-outFile = '/Users/elseyjg/temp/schalllab-spatial/processed/clustersForAllNhps.mat';
+outFile = '/Users/elseyjg/temp/schalllab-spatial/processed/clustersForAllNhpsResponse.mat';
 % setup all nhps for which we need to do boots
 nhps ={
     'joule'
@@ -34,10 +34,10 @@ for ii = 1:numel(nhps)
       currSession = load(sessFile);
       sessionName = char([currSession.info.nhp{1} '_' regexprep(currSession.session,'-','_')]);
       fprintf('Processing session %s\n',sessionName);
-      condStr = 'contra_targetOnset';
-      cond = 'contra_targetOnset_right';
+      condStr = 'contra_responseOnset';
+      cond = 'contra_responseOnset_right';
       if ~isfield(currSession,cond)
-          cond = 'contra_targetOnset_left';
+          cond = 'contra_responseOnset_left';
       end
       d1 = diag(currSession.(cond).rsquared,1);
       spacing = currSession.info.channelSpacing;      

@@ -6,9 +6,9 @@ nhps = fieldnames(ZZ);
 for ii = 1:numel(nhps)
     nhp = nhps{ii};
     sessions = fieldnames(ZZ.(nhp));   
-    cSizes = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_targetOnset.boots.cSize], sessions,'UniformOutput',false);
-    cDists = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_targetOnset.boots.dtnc], sessions,'UniformOutput',false);
-    cNums = cellfun(@(x) cellfun(@length,{ZZ.(nhp).(x).contra_targetOnset.boots.cSize}),sessions,'UniformOutput',false);    
+    cSizes = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_responseOnset.boots.cSize], sessions,'UniformOutput',false);
+    cDists = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_responseOnset.boots.dtnc], sessions,'UniformOutput',false);
+    cNums = cellfun(@(x) cellfun(@length,{ZZ.(nhp).(x).contra_responseOnset.boots.cSize}),sessions,'UniformOutput',false);    
     
     nhpCSizes{ii} = [cSizes{:}];
     nhpCDists{ii} = [cDists{:}];
@@ -19,9 +19,9 @@ end
 for ii = 1:numel(nhps)
     nhp = nhps{ii};
     sessions = fieldnames(ZZ.(nhp));   
-    cSizesObserved = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_targetOnset.observed.cSize], sessions,'UniformOutput',false);
-    cDistsObserved = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_targetOnset.observed.dtnc], sessions,'UniformOutput',false);
-    cNumsObserved = cellfun(@(x) cellfun(@length,{ZZ.(nhp).(x).contra_targetOnset.observed.cSize}),sessions,'UniformOutput',false);    
+    cSizesObserved = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_responseOnset.observed.cSize], sessions,'UniformOutput',false);
+    cDistsObserved = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_responseOnset.observed.dtnc], sessions,'UniformOutput',false);
+    cNumsObserved = cellfun(@(x) cellfun(@length,{ZZ.(nhp).(x).contra_responseOnset.observed.cSize}),sessions,'UniformOutput',false);    
     
     nhpCSizesObserved{ii} = [cSizesObserved{:}];
     nhpCDistsObserved{ii} = [cDistsObserved{:}];
@@ -66,7 +66,7 @@ allNhpNumHistObserved  = histc(nhpNumsObserved,numHistBins);
     for ii = 1:numel(nhps)
         nhp = nhps{ii};
         a(ii) = figure(ii);
-        set(a(ii),'Name', ['TargetOnset_',nhp,'_ClusterSizes']); 
+        set(a(ii),'Name', ['responseOnset_',nhp,'_ClusterSizes']); 
         hold on; 
         plot(histBins,nhpSizeHist{ii}./sum(nhpSizeHist{ii}));
         xlabel('Size of Clusters (um)')
@@ -84,7 +84,7 @@ allNhpNumHistObserved  = histc(nhpNumsObserved,numHistBins);
     for ii = 1:numel(nhps)
         nhp = nhps{ii};
         b(ii) = figure(ii+10);
-        set(b(ii),'Name', ['TargetOnset_',nhp,'_Distance_to_next_Cluster']); 
+        set(b(ii),'Name', ['responseOnset_',nhp,'_Distance_to_next_Cluster']); 
         hold on; 
         plot(histBins,nhpDistHist{ii}./sum(nhpDistHist{ii}));
         xlabel('Distance to Next Cluster (um)')
@@ -102,7 +102,7 @@ allNhpNumHistObserved  = histc(nhpNumsObserved,numHistBins);
     for ii = 1:numel(nhps)
         nhp = nhps{ii};
         c(ii) = figure(ii+20);
-        set(c(ii),'Name', ['TargetOnset_',nhp,'_NumClusters_Observed']); 
+        set(c(ii),'Name', ['responseOnset_',nhp,'_NumClusters_Observed']); 
         hold on; 
         plot(numHistBins,nhpNumHist{ii}./sum(nhpNumHist{ii}));
         xlim([0 10]);
