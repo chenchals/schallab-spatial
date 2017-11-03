@@ -1,7 +1,7 @@
 function [ temp ] = jacobBootAggregate()
 % setup base analysed dior
 baseDir = '/Users/elseyjg/temp/schalllab-spatial/processed';
-outFile = '/Users/elseyjg/temp/schalllab-spatial/processed/clustersForAllNhps.mat';
+outFile = '/Users/elseyjg/temp/schalllab-spatial/processed/clustersForAllNhpsResponse.mat';
 % setup all nhps for which we need to do boots
 nhps ={
     'joule'
