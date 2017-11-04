@@ -6,9 +6,9 @@ nhps = fieldnames(ZZ);
 for ii = 1:numel(nhps)
     nhp = nhps{ii};
     sessions = fieldnames(ZZ.(nhp));   
-    cSizes = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_targetOnset.boots.cSize], sessions,'UniformOutput',false);
-    cDists = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_targetOnset.boots.dtnc], sessions,'UniformOutput',false);
-    cNums = cellfun(@(x) cellfun(@length,{ZZ.(nhp).(x).contra_targetOnset.boots.cSize}),sessions,'UniformOutput',false);    
+    cSizes = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_responseOnset.boots.cSize], sessions,'UniformOutput',false);
+    cDists = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_responseOnset.boots.dtnc], sessions,'UniformOutput',false);
+    cNums = cellfun(@(x) cellfun(@length,{ZZ.(nhp).(x).contra_responseOnset.boots.cSize}),sessions,'UniformOutput',false);    
     
     nhpCSizes{ii} = [cSizes{:}];
     nhpCDists{ii} = [cDists{:}];
@@ -19,9 +19,9 @@ end
 for ii = 1:numel(nhps)
     nhp = nhps{ii};
     sessions = fieldnames(ZZ.(nhp));   
-    cSizesObserved = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_targetOnset.observed.cSize], sessions,'UniformOutput',false);
-    cDistsObserved = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_targetOnset.observed.dtnc], sessions,'UniformOutput',false);
-    cNumsObserved = cellfun(@(x) cellfun(@length,{ZZ.(nhp).(x).contra_targetOnset.observed.cSize}),sessions,'UniformOutput',false);    
+    cSizesObserved = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_responseOnset.observed.cSize], sessions,'UniformOutput',false);
+    cDistsObserved = cellfun(@(x) [ZZ.(nhp).(char(x)).contra_responseOnset.observed.dtnc], sessions,'UniformOutput',false);
+    cNumsObserved = cellfun(@(x) cellfun(@length,{ZZ.(nhp).(x).contra_responseOnset.observed.cSize}),sessions,'UniformOutput',false);    
     
     nhpCSizesObserved{ii} = [cSizesObserved{:}];
     nhpCDistsObserved{ii} = [cDistsObserved{:}];
@@ -66,14 +66,14 @@ allNhpNumHistObserved  = histc(nhpNumsObserved,numHistBins);
     for ii = 1:numel(nhps)
         nhp = nhps{ii};
         a(ii) = figure(ii);
-        set(a(ii),'Name', ['TargetOnset_',nhp,'_ClusterSizes']); 
+        set(a(ii),'Name', ['responseOnset_',nhp,'_ClusterSizes']); 
         hold on; 
         plot(histBins,nhpSizeHist{ii}./sum(nhpSizeHist{ii}));
         xlabel('Size of Clusters (um)')
         ylabel('Proportion Observed')
         set(gca,'FontSize',15);
         plot(histBins,nhpSizeHistObserved{ii}./sum(nhpSizeHistObserved{ii}));
-        title(['Size of Clusters__',nhp]);
+        title(['Size of Clusters (um)__',nhp]);
         xlabel('Size of Clusters (um)')
         ylabel('Proportion Observed')
         legend('Boot','Observed');
@@ -84,14 +84,14 @@ allNhpNumHistObserved  = histc(nhpNumsObserved,numHistBins);
     for ii = 1:numel(nhps)
         nhp = nhps{ii};
         b(ii) = figure(ii+10);
-        set(b(ii),'Name', ['TargetOnset_',nhp,'_Distance_to_next_Cluster']); 
+        set(b(ii),'Name', ['responseOnset_',nhp,'_Distance_to_next_Cluster']); 
         hold on; 
         plot(histBins,nhpDistHist{ii}./sum(nhpDistHist{ii}));
         xlabel('Distance to Next Cluster (um)')
         ylabel('Number of Bootstrap Iterations')
         set(gca,'FontSize',15);
         plot(histBins,nhpDistHistObserved{ii}./sum(nhpDistHistObserved{ii}));
-        title(['Distance to Next Cluster__', nhp]);
+        title(['Distance to Next Cluster (um)', nhp]);
         xlabel('Distance to Next Cluster (um)')
         ylabel('Proportion Observed')
         legend('Boot','Observed');
@@ -102,7 +102,7 @@ allNhpNumHistObserved  = histc(nhpNumsObserved,numHistBins);
     for ii = 1:numel(nhps)
         nhp = nhps{ii};
         c(ii) = figure(ii+20);
-        set(c(ii),'Name', ['TargetOnset_',nhp,'_NumClusters_Observed']); 
+        set(c(ii),'Name', ['responseOnset_',nhp,'_Number_of_Clusters']); 
         hold on; 
         plot(numHistBins,nhpNumHist{ii}./sum(nhpNumHist{ii}));
         xlim([0 10]);
@@ -116,7 +116,52 @@ allNhpNumHistObserved  = histc(nhpNumsObserved,numHistBins);
         ylabel('Proportion Observed')
         legend('Boot','Observed');
         set(gca,'FontSize',15);
-        saveas(a(ii),['./clustDists_',nhp,'.fig']);
+        saveas(a(ii),['./clustNums_',nhp,'.fig']);
 
     end
+        d(1) = figure(1+30)
+        set(d(1),'Name', ['responseOnset_AllNhps_ClusterSizes_Observed']); 
+        hold on; 
+        plot(histBins,allNhpSizeHist./sum(allNhpSizeHist));
+        xlabel('Size of Clusters (um)')
+        ylabel('Number of Bootstrap Iterations')
+        set(gca,'FontSize',15);
+        plot(histBins,allNhpSizeHistObserved./sum(allNhpSizeHistObserved));
+        title(['Size of Clusters__AllNhps (um)']);
+        xlabel('Size of Clusters')
+        ylabel('Proportion Observed')
+        legend('Boot','Observed');
+        set(gca,'FontSize',15);
+        saveas(d(1),['./clustSizes_AllNhps.fig']);
     
+        e(1) = figure(1+40)
+        set(e(1),'Name', ['responseOnset_AllNhps__Distance_to_next_Cluster']); 
+        hold on; 
+        plot(histBins,allNhpDistHist./sum(allNhpDistHist));
+        xlabel('Distance to next Cluster (um)')
+        ylabel('Number of Bootstrap Iterations')
+        set(gca,'FontSize',15);
+        plot(histBins,allNhpDistHistObserved./sum(allNhpDistHistObserved));
+        title(['Distance to next Cluster__AllNhps (um)']);
+        xlabel('Distance to next Cluster')
+        ylabel('Proportion Observed')
+        legend('Boot','Observed');
+        set(gca,'FontSize',15);
+        saveas(e(1),['./clustDists_AllNhps.fig']);
+    
+        f(1) = figure(1+50)
+        set(f(1),'Name', ['responseOnset_AllNhps_Number_of_Clusters_Observed']); 
+        hold on; 
+        plot(numHistBins,allNhpNumHist./sum(allNhpNumHist));
+        xlim([0 10]);
+        xlabel('Number of Clusters')
+        ylabel('Number of Bootstrap Iterations')
+        set(gca,'FontSize',15);
+        plot(numHistBins,allNhpNumHistObserved./sum(allNhpNumHistObserved));
+        xlim([0 10]);
+        title(['Number of Clusters__AllNhps']);
+        xlabel('Number of Clusters')
+        ylabel('Proportion Observed')
+        legend('Boot','Observed');
+        set(gca,'FontSize',15);
+        saveas(f(1),['./clustNums_AllNhps.fig']);
