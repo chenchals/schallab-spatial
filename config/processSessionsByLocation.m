@@ -155,16 +155,17 @@ function [ ] = processSessionsByLocation(nhpConfig)
                     for tLoc = 1:numel(targetLocations)
                         currTargetLocation = targetLocations{tLoc};
                         trialList = selectedTrialsByLocation{tLoc};
-                        if numel(trialList) > minTrialsPerCondition
-                            condStr = [alignOn sprintf('_%d',currTargetLocation)] ;
-                            logger.info(sprintf('Doing condition: TaskType [%s] outcome [%s], alignOn [%s], targetLocations [%s] sdfWindow [%s]',...
-                                selectedTaskType, outcome, alignOn, num2str(currTargetLocation), num2str(sdfWindow)));
-                            % Get MultiUnitSdf -> has sdf_mean matrix and sdf matrix
-                            [~, multiSdf.(condStr)] = model.getMultiUnitSdf(trialList, alignOn, sdfWindow);
-                        else
+                        if numel(trialList) < minTrialsPerCondition
                             logger.warn(sprintf('Number of trials [%d] for TaskType [%s] outcome [%s], targetLocations [%s] is below minTrialsPerCondition [%d]',...
-                                numel(trialList), selectedTaskType, outcome, num2str(currTargetLocation), num2str(minTrialsPerCondition)));
+                                numel(trialList), selectedTaskType, outcome, num2str(currTargetLocation), minTrialsPerCondition));
+                            continue
                         end
+                        
+                        condStr = [alignOn sprintf('_%d',currTargetLocation)] ;
+                        logger.info(sprintf('Doing condition: TaskType [%s] outcome [%s], alignOn [%s], targetLocations [%s] sdfWindow [%s]',...
+                            selectedTaskType, outcome, alignOn, num2str(currTargetLocation), num2str(sdfWindow)));
+                        % Get MultiUnitSdf -> has sdf_mean matrix and sdf matrix
+                        [~, multiSdf.(condStr)] = model.getMultiUnitSdf(trialList, alignOn, sdfWindow);
                     end
                 end
                 % To use Kalebs klNormRespv2:

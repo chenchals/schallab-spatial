@@ -1,9 +1,9 @@
 % run process for all nhps
 addpath(genpath('/Users/subravcr/Projects/lab-schall/schalllab-spatial'));
 tic
+%processDarwinK;
 processBroca;
 processDarwin;
-processDarwinK;
 processGauss;
 processHelmholtz;
 processJoule;

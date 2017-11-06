@@ -196,9 +196,10 @@ classdef DataModelKaleb < DataModel
             end
             % Get trial list for different taskTypes ONCE (here a single file
             % has both mem and cap paradigms)
-            for taskType = taskTypes
-                obj.trialList(taskType{1}) = memTrialSelector(obj.getEventData().trialOutcome, outcomes,...
-                    obj.getEventData().targetLocation, selectedLocations, obj.getEventData().taskType, taskType{1});
+            for t = 1:numel(taskTypes)
+                taskType = taskTypes{t};
+                obj.trialList(taskType) = memTrialSelector(obj.getEventData().trialOutcome, outcomes,...
+                    obj.getEventData().targetLocation, selectedLocations, obj.getEventData().taskType, taskType);
             end
             % Check if the obj.trialList Map has the selectedTaskType key
             if obj.trialList.isKey(selectedTaskType)
