@@ -8,7 +8,7 @@ function [ ] = plotProbe(probeLoc, channelSpacing, channelMap, beginEndCluster, 
     if reverseYdir
         set(currAxes,'YDir','reverse');
     end
-    faceColors= {'r','b','g','c','m','y'};
+    faceColors= {'m','m','m','m','m','m'};
     if numel(varargin)==1
        faceColors= {'r','r','r','r','r','r'};
     end
@@ -35,7 +35,7 @@ function [ ] = plotProbe(probeLoc, channelSpacing, channelMap, beginEndCluster, 
     channelTickLabels = arrayfun(@(x) ['#' num2str(channelMap(x))],channelTicks+0.5,'UniformOutput',false);
     depthTickLabels = arrayfun(@(x) [num2str(x) ' \mum'],(channelTicks+0.5).*channelSpacing,'UniformOutput',false);
      xstep = 0.1; 
-    set(plAxis(1),'YTick',channelTicks,'YTickLabel',channelTickLabels,'YColor','k');    
+    set(plAxis(1),'YTick',channelTicks,'YTickLabel',2:2:numel(channelMap),'YColor','k');    
     set(plAxis(2),'YTick',channelTicks,'YTickLabel',depthTickLabels,'YColor','k');
     set(plAxis,'YDir','reverse','XTick',[],'TickDir','both','box','on');
     set(plAxis,'YLim',[0 maxChannels],'XLim',[probeLoc-xstep probeLoc+xstep]);
@@ -58,6 +58,7 @@ function [ ] = plotProbe(probeLoc, channelSpacing, channelMap, beginEndCluster, 
     yData = [-3 -3 maxChannels+1 maxChannels+3 maxChannels+1];
     patch('XData',xData,'YData',yData','FaceColor',[0.8,0.8,0.8],'FaceAlpha',0.4);
     currAxes.Clipping ='off';   
-    
+    ylabel('Channels With Functional Clustering','FontWeight','bold', 'FontSize',12);
+
 end
 

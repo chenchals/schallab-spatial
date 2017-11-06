@@ -7,21 +7,23 @@ function [ ] = plotDistanceMatHeatmap( im, channelMap, distMinMax, colorMap,  ti
 
     imagescWithCluster(im,distMinMax,0.5,1,colorMap);
     currAxes.XTick = channelTicks;
-    currAxes.XTickLabelRotation = 90;
-    currAxes.XTickLabel = channelTickLabels;
+    currAxes.XTickLabelRotation = 0;
+    currAxes.XTickLabel = 2:2:numel(channelMap);
     currAxes.YTick = channelTicks;
-    currAxes.YTickLabel = channelTickLabels;
+    currAxes.YTickLabel = 2:2:numel(channelMap);
     
     currAxes.TickDir = 'out';
 
-    pos = get(title(''),'Position');
-    text(pos(1),pos(2)-1,titleCell,...
-        'FontWeight','bold','FontAngle','italic','FontSize',14,'Color',titleColor,...
-        'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom',...
-        'Interpreter','none');
+  %  pos = get(title(''),'Position');
+  %  text(pos(1),pos(2)-1,titleCell,...
+  %      'FontWeight','bold','FontAngle','italic','FontSize',14,'Color',titleColor,...
+  %      'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom',...
+  %      'Interpreter','none');
 
-    ylabel('Channel#','FontWeight','bold', 'FontSize',12);
-    xlabel('Channel#','FontWeight','bold', 'FontSize',12);
+    ylabel('Channel Number', 'FontWeight','bold', 'FontSize',12);
+    xlabel('Channel Number','FontWeight','bold', 'FontSize',12);
+    %title('Correlated Spiking Activity','FontWeight','bold', 'FontSize',24);
+
 
 
 end

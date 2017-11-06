@@ -14,20 +14,21 @@ function [ ] = plotFiringRateHeatmap( im, channelMap, timeWin, frMinMax, colorMa
      currAxes.TickDir = 'out';
     
     align0 = find(min(timeWin):max(timeWin)==0);
-    line([align0 align0], ylim, 'Color','r','LineWidth',1);
+    line([align0 align0], ylim, 'Color','r','LineWidth',3);
 
     currAxes.YTick = channelTicks;
-    currAxes.YTickLabel = channelTickLabels;
+    currAxes.YTickLabel = 2:2:numel(channelMap);
 
-    pos = get(title(''),'Position');
+    %pos = get(title(''),'Position');
     %text(pos(1),pos(2),{upper(title), upper([firingRateHeatmap ' heatmap'])},...
-    text(pos(1),pos(2),titleCell,...
-        'FontWeight','bold','FontAngle','italic','FontSize',14,'Color',titleColor,...
-        'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom',...
-        'Interpreter','none');
+    %text(pos(1),pos(2),titleCell,...
+    %    'FontWeight','bold','FontAngle','italic','FontSize',14,'Color',titleColor,...
+    %    'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom',...
+    %    'Interpreter','none');
 
-    ylabel('Channel#','FontWeight','bold', 'FontSize',12);
-    xlabel('time (ms)','FontWeight','bold', 'FontSize',12);
+    ylabel('Channel Number','FontWeight','bold', 'FontSize',12);
+    xlabel('Time From Target Onset (ms)','FontWeight','bold', 'FontSize',12);
+    title('Normalized Firing Rate','FontWeight','bold', 'FontSize',24);
 
 end
 

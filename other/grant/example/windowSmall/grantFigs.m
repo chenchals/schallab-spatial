@@ -1,15 +1,31 @@
-outDir = '/Users/subravcr/Projects/lab-schall/schalllab-spatial/other/grant/example/windowSmall';
+outDir = '/Users/elseyjg/temp/schalllab-spatial/';
 %% Helmholtz
-he={'/mnt/teba/Users/Chenchal/clustering_window1/processed/quality_2/2014-12-15a.mat'
-    '/mnt/teba/Users/Chenchal/clustering_window1/processed/quality_2/2015-01-20a.mat'};
+he={'/Users/elseyjg/temp/schalllab-spatial/processed/helmholtz/2014-12-17a.mat'
+'/Users/elseyjg/temp/schalllab-spatial/processed/helmholtz/2014-12-01b.mat'};
 %% Darwin_k
-dak={'/mnt/teba/Users/Chenchal/clustering_window1/processed/quality_4/Init_SetUp-160711-151215_probe1.mat'
-     '/mnt/teba/Users/Chenchal/clustering_window1/processed/quality_4/Init_SetUp-160713-144841_probe1.mat'};
+dak={'/Users/elseyjg/temp/schalllab-spatialprocessed/quality_4/Init_SetUp-160711-151215_probe1.mat'
+     '/Users/elseyjg/temp/schalllab-spatial/processed/quality_4/Init_SetUp-160713-144841_probe1.mat'};
+ 
+%% Broca
+br={'/Users/elseyjg/temp/schalllab-spatial/processed/broca/bp235n01.mat'
+     '/Users/elseyjg/temp/schalllab-spatial/processed/broca/bp238n01.mat'}; 
+ 
+%% Joule
+jo={'/Users/elseyjg/temp/schalllab-spatial/processed/joule/jp119n01.mat'
+     '/Users/elseyjg/temp/schalllab-spatial/processed/joule/jp121n01.mat'};  
+ 
+%% Gauss
+ga={'/Users/elseyjg/temp/schalllab-spatial/processed/gauss/2015-02-18a.mat'
+     '/Users/elseyjg/temp/schalllab-spatial/processed/gauss/2015-01-05.mat'};   
+ 
+%% Darwin_WJ
+da={'/Users/elseyjg/temp/schalllab-spatial/processed/darwin/2016-02-22a.mat'
+     '/Users/elseyjg/temp/schalllab-spatial/processed/darwin/2016-02-26b.mat'};   
 %% Plot all
 cond = 'contra_targetOnset';
-heDak = [he; dak]; 
+%heDak = [he; dak]; 
 
-heDak = {'/Volumes/SchallLab/Users/Chenchal/clustering_window1/processed/quality_2/2014-12-15a.mat'};
+heDak = {'/Users/elseyjg/temp/schalllab-spatial/processed/helmholtz/2015-01-06a.mat'};
 pos =[
     0.05 0.10 0.40 0.50
     0.49 0.10 0.40 0.50
@@ -30,13 +46,14 @@ for s = 1:numel(heDak)
     fr = session.(currCond).sdfMeanZtr;
     frMinMax = minmax(fr(:)');
     set(figH, 'currentaxes',axesHandles(1))
-    plotFiringRateHeatmap(fr,channelMap,timeWin,frMinMax,'jet',{'contra_responseOnset', 'sdfMeanZtr Heatmap'},'r');
+    plotFiringRateHeatmap(fr,channelMap,timeWin,frMinMax,'jet',{'contra_targetOnset', 'sdfMeanZtr Heatmap'},'r');
+    box off;
     colorbar('off');
     %% distMat
     distMat = session.(currCond).rsquared;
     distMinMax = minmax(distMat(:)');
     set(figH, 'currentaxes',axesHandles(2))
-    plotDistanceMatHeatmap(distMat,channelMap,distMinMax,'cool',{'contra_responseOnset', 'rsquared heatmap'},'r');
+    plotDistanceMatHeatmap(distMat,channelMap,distMinMax,'cool',{'contra_targetOnset', 'rsquared heatmap'},'r');
     
     %% Probe
     [boc, eoc] = clusterIt(diag(distMat,1),0.5);
@@ -61,7 +78,7 @@ for s = 1:numel(heDak)
     %saveas(figH,oFile, 'fig');
     
 end
-
+%%
 function [axesHandles] = createFig(axesPositions)
     figure('Units','normalized','Position',[0.05 0.05 0.80 0.80]);
     for ii = 1:size(axesPositions,1)

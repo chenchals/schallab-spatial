@@ -6,8 +6,8 @@ function [] = imagescWithCluster(inMat, cLimits, threshold, nanColorGray, colorb
     minImg = min(inMat(:));
     % get data for lower triangle
     if ~isempty(threshold)
-        %lowerTri = tril(inMat,-1);
-        lowerTri = triu(inMat,1);
+        lowerTri = tril(inMat,-1);
+        %lowerTri = triu(inMat,1);
         lowerTri(lowerTri==0) = NaN;
         lowerTri(lowerTri < threshold) = minImg;
         cLimits = [0 1];
@@ -27,12 +27,12 @@ function [] = imagescWithCluster(inMat, cLimits, threshold, nanColorGray, colorb
     set(axesH,'Box','off');
     grid('on')
     set(axesH,'XMinorGrid','on','YMinorGrid','on');
-    set(axesH, 'XAxisLocation','top','YAxisLocation','right');
+    set(axesH, 'XAxisLocation','bottom','YAxisLocation','right');
     % set(axesH, 'View', [45 90])
 
     %draw diag line for diag -1
-    %line([0 maxChannels],[1 maxChannels+1],'LineWidth',4);
-    line([1 maxChannels+1],[0 maxChannels],'LineWidth',4);
+    line([0 maxChannels],[1 maxChannels+1],'LineWidth',4);
+    %line([1 maxChannels+1],[0 maxChannels],'LineWidth',4);
     % get cluster extents
     [boc,eoc,~] = clusterIt(diag(inMat,-1),threshold);
     bocOffset = 0;
@@ -40,11 +40,18 @@ function [] = imagescWithCluster(inMat, cLimits, threshold, nanColorGray, colorb
     boc = boc + bocOffset;
     eoc = eoc + eocOffset;
     for cl = 1:numel(boc)
-        line([boc(cl) eoc(cl)],[boc(cl) eoc(cl)], 'Color',[0 0 0], 'LineWidth',2);
+        line([boc(cl) eoc(cl)],[boc(cl) eoc(cl)], 'Color',[0 0 0], 'LineWidth',3);
     end
 
     % colorbar
     h = colorbar;
+    h.Title.String = ('R^2 Values');
+    h.Title.FontSize = 12;
+    h.Title.FontWeight = 'Bold';
+    h.Label.String = ('Threshold');
+    h.Label.FontSize = 12;
+    h.Label.FontWeight = 'Bold';
+    h.Label.Color = 'r';
     set(h,'YLim',cLimits);
 
 end
