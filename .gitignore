@@ -3,3 +3,4 @@ processed/*
 # Excepte
 !processed/readme.txt
 
+temp*
