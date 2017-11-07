@@ -4,7 +4,7 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
 
 %% Do a 8 part figure plot
     fprintf('Plotting session %s\n',sessionLabel);
-    figVisible = 'on';
+    figVisible = 'off';
 
     if numel(varargin)==1
         outputFolder = varargin{1};
@@ -109,7 +109,6 @@ function [ figH ] = doPlot8(session, sessionLabel, varargin)
         fprintf('Saving figure to file %s\n',oFile);
         saveas(figH,oFile,'jpg');
         saveas(figH,oFile, 'fig');
-        nixUpdateAttribs([oFile '*.*']);
     end
     
     if strcmp(figVisible, 'off')
