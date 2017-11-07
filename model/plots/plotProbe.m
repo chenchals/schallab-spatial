@@ -1,4 +1,4 @@
-function [ ] = plotProbe(probeLoc, channelSpacing, channelMap, beginEndCluster, reverseYdir, varargin)
+function [ plAxes] = plotProbe(probeLoc, channelSpacing, channelMap, beginEndCluster, reverseYdir, varargin)
 %PLOTPROBE Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -27,7 +27,7 @@ function [ ] = plotProbe(probeLoc, channelSpacing, channelMap, beginEndCluster, 
     maxChannels = numel(channelMap);
     xData = zeros(maxChannels,1)+probeLoc;
     yData = (0:maxChannels-1)+0.5;
-    [plAxis,hLine1,hLine2] = plotyy(xData,yData,xData,yData); %
+    [plAxes,hLine1,hLine2] = plotyy(xData,yData,xData,yData); %
     
     set([hLine1,hLine2],'LineStyle','none','Marker','o','MarkerEdgeColor','k')
     
@@ -35,12 +35,12 @@ function [ ] = plotProbe(probeLoc, channelSpacing, channelMap, beginEndCluster, 
     channelTickLabels = arrayfun(@(x) ['#' num2str(channelMap(x))],channelTicks+0.5,'UniformOutput',false);
     depthTickLabels = arrayfun(@(x) [num2str(x) ' \mum'],(channelTicks+0.5).*channelSpacing,'UniformOutput',false);
      xstep = 0.1; 
-    set(plAxis(1),'YTick',channelTicks,'YTickLabel',channelTickLabels,'YColor','k');    
-    set(plAxis(2),'YTick',channelTicks,'YTickLabel',depthTickLabels,'YColor','k');
-    set(plAxis,'YDir','reverse','XTick',[],'TickDir','both','box','on');
-    set(plAxis,'YLim',[0 maxChannels],'XLim',[probeLoc-xstep probeLoc+xstep]);
+    set(plAxes(1),'YTick',channelTicks,'YTickLabel',channelTickLabels,'YColor','k');    
+    set(plAxes(2),'YTick',channelTicks,'YTickLabel',depthTickLabels,'YColor','k');
+    set(plAxes,'YDir','reverse','XTick',[],'TickDir','both','box','on');
+    set(plAxes,'YLim',[0 maxChannels],'XLim',[probeLoc-xstep probeLoc+xstep]);
     %hold on
-    set(figH,'currentAxes', plAxis(1));
+    set(figH,'currentAxes', plAxes(1));
     %plot clusters
     xData = [probeLoc-xstep probeLoc+xstep probeLoc+xstep probeLoc-xstep]; %centered at 1
     y1 = beginEndCluster(:,1);

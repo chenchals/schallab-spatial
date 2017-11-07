@@ -39,8 +39,11 @@ function [] = imagescWithCluster(inMat, cLimits, threshold, nanColorGray, colorb
     eocOffset = 1;
     boc = boc + bocOffset;
     eoc = eoc + eocOffset;
+    
+    faceColors= {'r','b','g','c','m','y'};
+    
     for cl = 1:numel(boc)
-        line([boc(cl) eoc(cl)],[boc(cl) eoc(cl)], 'Color',[0 0 0], 'LineWidth',2);
+        line([boc(cl) eoc(cl)],[boc(cl) eoc(cl)], 'Color',faceColors{cl}, 'LineWidth',4);
     end
 
     % colorbar

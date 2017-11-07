@@ -1,4 +1,4 @@
-outDir = '/Users/elseyjg/temp/schalllab-spatial/processed';
+outDir = 'poster/';
 %% Helmholtz
 he={'/mnt/teba/Users/Chenchal/clustering_window1/processed/quality_2/2014-12-15a.mat'
     '/mnt/teba/Users/Chenchal/clustering_window1/processed/quality_2/2015-01-20a.mat'};
@@ -10,10 +10,17 @@ cond = 'contra_targetOnset';
 heDak = [he; dak]; 
 
 heDak = {'/Volumes/SchallLab/Users/Chenchal/clustering_window1/processed/quality_4/Init_SetUp-160713-144841_probe1.mat'};
-pos =[
+pos_old =[
     0.05 0.10 0.40 0.50
     0.49 0.10 0.40 0.50
     0.93 0.10 0.01 0.50
+    0.04 0.70 0.90 0.25
+    ];  
+
+pos =[
+    0.05 0.10 0.40 0.50
+    0.56 0.10 0.40 0.50
+    0.50 0.10 0.01 0.50
     0.04 0.70 0.90 0.25
     ];    
 
@@ -32,17 +39,21 @@ for s = 1:numel(heDak)
     set(figH, 'currentaxes',axesHandles(1))
     plotFiringRateHeatmap(fr,channelMap,timeWin,frMinMax,'jet',{'contra_responseOnset', 'sdfMeanZtr Heatmap'},'r');
     colorbar('off');
+    set(get(axesHandles(1),'YAxis'),'FontSize',16);
+    set(get(axesHandles(1),'XAxis'),'FontSize',16);
     %% distMat
     distMat = session.(currCond).rsquared;
     distMinMax = minmax(distMat(:)');
     set(figH, 'currentaxes',axesHandles(2))
     plotDistanceMatHeatmap(distMat,channelMap,distMinMax,'cool',{'contra_responseOnset', 'rsquared heatmap'},'r');
-    
+    set(get(axesHandles(2),'XAxis'),'FontSize',16,'TickLabelRotation',45)
+    set(get(axesHandles(2),'YAxis'),'FontSize',16,'TickLabelRotation',45)
     %% Probe
     [boc, eoc] = clusterIt(diag(distMat,1),0.5);
     bocEoc = [boc(:), eoc(:)];
     set(figH, 'currentaxes',axesHandles(3))
-    plotProbe(1,session.info.channelSpacing,channelMap,bocEoc,true);
+    [ plAxes ] = plotProbe(1,session.info.channelSpacing,channelMap,bocEoc,true);
+    set(plAxes,'FontSize',16)
     
     %% Infos
     infos = session.info;
