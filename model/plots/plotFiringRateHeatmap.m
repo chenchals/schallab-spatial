@@ -25,7 +25,8 @@ function [ ] = plotFiringRateHeatmap( im, channelMap, timeWin, frMinMax, colorMa
         'FontWeight','bold','FontAngle','italic','FontSize',14,'Color',titleColor,...
         'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom',...
         'Interpreter','none');
-
+   
+    
     ylabel('Channel#','FontWeight','bold', 'FontSize',12);
     xlabel('time (ms)','FontWeight','bold', 'FontSize',12);
 
