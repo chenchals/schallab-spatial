@@ -7,10 +7,14 @@ function [ ] = plotDistanceMatHeatmap( im, channelMap, distMinMax, colorMap,  ti
 
     imagescWithCluster(im,distMinMax,0.5,1,colorMap);
     currAxes.XTick = channelTicks;
-    currAxes.XTickLabelRotation = 0;
+    currAxes.XTickLabelRotation = 45;
     currAxes.XTickLabel = 2:2:numel(channelMap);
     currAxes.YTick = channelTicks;
     currAxes.YTickLabel = 2:2:numel(channelMap);
+    currAxes.YTickLabelRotation = 45;
+    currAxes.FontSize = 18;
+
+
     
     currAxes.TickDir = 'out';
 
@@ -20,10 +24,11 @@ function [ ] = plotDistanceMatHeatmap( im, channelMap, distMinMax, colorMap,  ti
   %      'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom',...
   %      'Interpreter','none');
 
-    ylabel('Channel Number', 'FontWeight','bold', 'FontSize',12);
-    xlabel('Channel Number','FontWeight','bold', 'FontSize',12);
-    %title('Correlated Spiking Activity','FontWeight','bold', 'FontSize',24);
+%    ylabel('Channel Number', 'FontWeight','bold', 'FontSize',24, 'Rotation', 45);
+%    xlabel('Channel Number','FontWeight','bold', 'FontSize',24, 'Rotation', 45);
+%    title('Correlated Spiking Activity','FontWeight','bold', 'FontSize',24);
 
+    set(gca, 'XAxisLocation', 'top')
 
 
 end

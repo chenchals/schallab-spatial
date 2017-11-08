@@ -1,35 +1,32 @@
-outDir = '/Users/elseyjg/temp/schalllab-spatial/';
+outDir = '/Users/elseyjg/temp/schalllab-spatial/kalebUngroup';
 %% Helmholtz
 he={'/Users/elseyjg/temp/schalllab-spatial/processed/helmholtz/2014-12-17a.mat'
-'/Users/elseyjg/temp/schalllab-spatial/processed/helmholtz/2014-12-01b.mat'};
-%% Darwin_k
-dak={'/Users/elseyjg/temp/schalllab-spatialprocessed/quality_4/Init_SetUp-160711-151215_probe1.mat'
-     '/Users/elseyjg/temp/schalllab-spatial/processed/quality_4/Init_SetUp-160713-144841_probe1.mat'};
+'/Users/elseyjg/temp/schalllab-spatial/processed/helmholtz/2014-12-17a.mat'};
  
 %% Broca
 br={'/Users/elseyjg/temp/schalllab-spatial/processed/broca/bp235n01.mat'
-     '/Users/elseyjg/temp/schalllab-spatial/processed/broca/bp238n01.mat'}; 
+     '/Users/elseyjg/temp/schalllab-spatial/processed/broca/bp235n01.mat'}; 
  
 %% Joule
-jo={'/Users/elseyjg/temp/schalllab-spatial/processed/joule/jp119n01.mat'
-     '/Users/elseyjg/temp/schalllab-spatial/processed/joule/jp121n01.mat'};  
+jo={'/Users/elseyjg/temp/schalllab-spatial/processed/joule/jp125n01.mat'
+     '/Users/elseyjg/temp/schalllab-spatial/processed/joule/jp090n01.mat'};  
  
 %% Gauss
-ga={'/Users/elseyjg/temp/schalllab-spatial/processed/gauss/2015-02-18a.mat'
-     '/Users/elseyjg/temp/schalllab-spatial/processed/gauss/2015-01-05.mat'};   
+ga={'/Users/elseyjg/temp/schalllab-spatial/processed/gauss/2015-01-05a.mat'
+     '/Users/elseyjg/temp/schalllab-spatial/processed/gauss/2014-12-09a.mat'};   
  
 %% Darwin_WJ
 da={'/Users/elseyjg/temp/schalllab-spatial/processed/darwin/2016-02-22a.mat'
-     '/Users/elseyjg/temp/schalllab-spatial/processed/darwin/2016-02-26b.mat'};   
+     '/Users/elseyjg/temp/schalllab-spatial/processed/darwin/2016-02-26a.mat'};   
 %% Plot all
-cond = 'contra_targetOnset';
+cond = 'contra_responseOnset';
 %heDak = [he; dak]; 
 
-heDak = {'/Users/elseyjg/temp/schalllab-spatial/processed/helmholtz/2015-01-06a.mat'};
+heDak = {'/Users/elseyjg/temp/schalllab-spatial/processed/gauss/2014-12-09a.mat'};
 pos =[
     0.05 0.10 0.40 0.50
-    0.49 0.10 0.40 0.50
-    0.93 0.10 0.01 0.50
+    0.56 0.10 0.30 0.50
+    0.49 0.10 0.01 0.50
     0.04 0.70 0.90 0.25
     ];    
 
@@ -46,14 +43,14 @@ for s = 1:numel(heDak)
     fr = session.(currCond).sdfMeanZtr;
     frMinMax = minmax(fr(:)');
     set(figH, 'currentaxes',axesHandles(1))
-    plotFiringRateHeatmap(fr,channelMap,timeWin,frMinMax,'jet',{'contra_targetOnset', 'sdfMeanZtr Heatmap'},'r');
+    plotFiringRateHeatmap(fr,channelMap,timeWin,frMinMax,'jet',{'contra_responseOnset', 'sdfMeanZtr Heatmap'},'r');
     box off;
     colorbar('off');
     %% distMat
     distMat = session.(currCond).rsquared;
     distMinMax = minmax(distMat(:)');
     set(figH, 'currentaxes',axesHandles(2))
-    plotDistanceMatHeatmap(distMat,channelMap,distMinMax,'cool',{'contra_targetOnset', 'rsquared heatmap'},'r');
+    plotDistanceMatHeatmap(distMat,channelMap,distMinMax,'cool',{'contra_responseOnset', 'rsquared heatmap'},'r');
     
     %% Probe
     [boc, eoc] = clusterIt(diag(distMat,1),0.5);
@@ -75,7 +72,7 @@ for s = 1:numel(heDak)
     oFile = fullfile(outDir,[fn '_' cond]);
     fprintf('Saving figure to file %s\n',oFile);
     %saveas(figH,oFile,'jpg');
-    %saveas(figH,oFile, 'fig');
+    saveas(figH,oFile, 'fig');
     
 end
 %%
@@ -136,7 +133,7 @@ function [ xPos ] = getNextXPos(hText, columnGap)
 end
 
 %% Figure1:
-% Make da_k1 and da_k2 : targetOnset [-50  300]
+% Make da_k1 and da_k2 : responseOnset [-50  300]
 % clustering : 
 % 1. use absolute distance not channel number
 %    use threshold of absolute distance to call a cluster

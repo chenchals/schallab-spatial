@@ -18,6 +18,8 @@ function [ ] = plotFiringRateHeatmap( im, channelMap, timeWin, frMinMax, colorMa
 
     currAxes.YTick = channelTicks;
     currAxes.YTickLabel = 2:2:numel(channelMap);
+    currAxes.FontSize = 16;
+    
 
     %pos = get(title(''),'Position');
     %text(pos(1),pos(2),{upper(title), upper([firingRateHeatmap ' heatmap'])},...
@@ -26,9 +28,9 @@ function [ ] = plotFiringRateHeatmap( im, channelMap, timeWin, frMinMax, colorMa
     %    'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom',...
     %    'Interpreter','none');
 
-    ylabel('Channel Number','FontWeight','bold', 'FontSize',12);
-    xlabel('Time From Target Onset (ms)','FontWeight','bold', 'FontSize',12);
-    title('Normalized Firing Rate','FontWeight','bold', 'FontSize',24);
+    ylabel('Channel Number','FontWeight','bold', 'FontSize',24);
+    xlabel('Time From Saccade Onset (ms)','FontWeight','bold', 'FontSize',24);
+    %title('Normalized Firing Rate','FontWeight','bold', 'FontSize',32);
 
 end
 
