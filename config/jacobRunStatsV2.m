@@ -46,15 +46,15 @@ allNhpSizeHist = histc(nhpSizes,histBins);
 allNhpDistHist = histc(nhpDists,histBins);
 allNhpNumHist  = histc(nhpNums,numHistBins);
 
-% 
-% figure('Name', 'ResponseOnset_AllNHPs_ClusterSizes_Bootstrap', 'NumberTitle', 'off'); hold on, cellfun(@(x) plot(histBins,x),nhpSizeHist,'UniformOutput',0),...
-%     plot(histBins, allNhpSizeHist,'-m','LineWidth',2);
-%     title('Size of Clusters: 1000 Bootstrap Iterations');
-%     xlabel('Size of Clusters')
-%     ylabel('Number of Bootstrap Iterations')
-%     legend('joule', 'broca', 'darwin', 'helmholtz', 'gauss', 'all');
-%     set(gca,'FontSize',15)
-%     
+
+figure('Name', 'ResponseOnset_AllNHPs_ClusterSizes_Bootstrap', 'NumberTitle', 'off'); hold on, cellfun(@(x) plot(histBins,x),nhpSizeHist,'UniformOutput',0),...
+    plot(histBins, allNhpSizeHist,'-m','LineWidth',2);
+    title('Size of Clusters: 1000 Bootstrap Iterations');
+    xlabel('Size of Clusters')
+    ylabel('Number of Bootstrap Iterations')
+    legend('joule', 'broca', 'darwin', 'helmholtz', 'gauss', 'all');
+    set(gca,'FontSize',15)
+    
 % figure('Name', 'ResponseOnset_AllNHPs_InterClusterDistances_Bootstrap', 'NumberTitle', 'off'); hold on, cellfun(@(x) plot(histBins,x),nhpDistHist,'UniformOutput',0),...
 %     plot(histBins, allNhpDistHist,'-m','LineWidth',2);
 %     title('Size of Inter-Cluster Spacings: 1000 Bootstrap Iterations');
