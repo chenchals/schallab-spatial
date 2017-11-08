@@ -1,4 +1,4 @@
-baseDir = 'processedJacob/poster/';
+baseDir = 'processed/poster2/';
 spacings = [100,150,200];
 conditions = {'contra_targetOnset' 'contra_responseOnset'};
 condSheetNameStr = {'C_TargOn' 'C_respOn'};
@@ -89,11 +89,11 @@ for spaceIndex = 1:numel(spacings)
             histNums = histc(nhpNums,numBins)';
             
             baseSheetName = [condSheetStr '_' bo '_' spacingStr];
-            %writetable(array2table(nhpSizes(:),'VariableNames',{'clust_size'}),oFile2,'Sheet', ['size_' baseSheetName],'WriteVariableNames',true); 
+            writetable(array2table(nhpSizes(:),'VariableNames',{'clust_size'}),oFile2,'Sheet', ['size_' baseSheetName],'WriteVariableNames',true); 
             writetable(array2table([histBins(:) histSizes],'VariableNames',{'clust_size','freq'}),oFile2,'Sheet', ['size_H_' baseSheetName],'WriteVariableNames',true);
-            %writetable(array2table(nhpDists(:),'VariableNames',{'dtnc'}),oFile2,'Sheet', ['dtnc_' baseSheetName],'WriteVariableNames',true); 
+            writetable(array2table(nhpDists(:),'VariableNames',{'dtnc'}),oFile2,'Sheet', ['dtnc_' baseSheetName],'WriteVariableNames',true); 
             writetable(array2table([histBins(:) histDists],'VariableNames',{'dtnc','freq'}),oFile2,'Sheet', ['dtnc_H_' baseSheetName],'WriteVariableNames',true);
-            %writetable(array2table(nhpNums(:),'VariableNames',{'num_clusts'}),oFile2,'Sheet', ['nums_' baseSheetName],'WriteVariableNames',true); 
+            writetable(array2table(nhpNums(:),'VariableNames',{'num_clusts'}),oFile2,'Sheet', ['nums_' baseSheetName],'WriteVariableNames',true); 
             writetable(array2table([numBins(:) histNums],'VariableNames',{'num_clusts','freq'}),oFile2,'Sheet', ['nums_H_' baseSheetName],'WriteVariableNames',true);
              
             clearvars -regexp .*Size.* .*Dist.* .*Num.* .*Stats.*
