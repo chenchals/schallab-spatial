@@ -2,17 +2,19 @@ function [ ] = plotDistanceMatHeatmap( im, channelMap, distMinMax, colorMap,  ti
 %PLOTDISTANCEMATHEATMAP Summary of this function goes here
 %   Detailed explanation goes here
     currAxes = gca;
-    channelTicks = 2:2:numel(channelMap);
+    channelTicks = 4:4:numel(channelMap);
     channelTickLabels = arrayfun(@(x) ['#' num2str(channelMap(x))],channelTicks,'UniformOutput',false);
 
     imagescWithCluster(im,distMinMax,0.5,1,colorMap);
     currAxes.XTick = channelTicks;
     currAxes.XTickLabelRotation = 45;
-    currAxes.XTickLabel = 2:2:numel(channelMap);
+%    currAxes.XTickLabel = 4:4:numel(channelMap);
     currAxes.YTick = channelTicks;
-    currAxes.YTickLabel = 2:2:numel(channelMap);
-    currAxes.YTickLabelRotation = 45;
+%    currAxes.YTickLabel = 4:4:numel(channelMap);
+%    currAxes.YTickLabelRotation = 45;
     currAxes.FontSize = 18;
+    set(gca,'XTickLabel',{' '})
+    set(gca,'YTickLabel',{' '})
 
 
     

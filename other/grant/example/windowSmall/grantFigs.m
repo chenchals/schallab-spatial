@@ -1,4 +1,4 @@
-outDir = '/Users/elseyjg/temp/schalllab-spatial/kalebUngroup';
+outDir = '/Users/elseyjg/temp/schalllab-spatial/posterFigs';
 %% Helmholtz
 he={'/Users/elseyjg/temp/schalllab-spatial/processed/helmholtz/2014-12-17a.mat'
 '/Users/elseyjg/temp/schalllab-spatial/processed/helmholtz/2014-12-17a.mat'};
@@ -23,12 +23,32 @@ cond = 'contra_responseOnset';
 %heDak = [he; dak]; 
 
 heDak = {'/Users/elseyjg/temp/schalllab-spatial/processed/gauss/2014-12-09a.mat'};
-pos =[
-    0.05 0.10 0.40 0.50
-    0.56 0.10 0.30 0.50
-    0.49 0.10 0.01 0.50
-    0.04 0.70 0.90 0.25
-    ];    
+
+    % *** spacing info *** 
+%100 um 32 chan
+% pos =[
+%     0.145 0.10 0.40 0.33333
+%     0.60 0.10 0.20 0.33333
+%     0.08 0.10 0.01 0.33333
+%     0.04 0.70 0.90 0.25
+%     ];    
+
+% 150 um 32 chan (base condition)
+% pos =[
+%     0.145 0.10 0.40 0.50
+%     0.6 0.10 0.30 0.50
+%     0.08 0.10 0.01 0.50
+%     0.04 0.70 0.90 0.25
+%     ];   
+
+% 150 um 24 chan
+ pos =[
+     0.145 0.10 0.40 0.371
+     0.60 0.10 0.2226 0.371
+     0.08 0.10 0.01 0.371
+     0.04 0.70 0.90 0.25
+     ]; 
+
 
 for s = 1:numel(heDak)
     axesHandles = createFig(pos);
