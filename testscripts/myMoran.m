@@ -24,29 +24,44 @@ function [ spAutoCorr ] = myMoran( features, weightMat )
 % For current purpose our 
 %   spatial objects are *points*: channel location
 %   attribute objects are *interval* data: firing rates, counts 
-  z = features;
-  n = size(z,1);% nunmer of objects in sample
+  x_i = features;
+  n = size(x_i,1);% nunmer of objects in sample
+  x_bar = sum(x_i)/n;
   % i,j are any two objects (spatial points), i not= j
-  % z_i is value of feature at ith location
+  % x_i is value of feature at ith location
   % w_ij = similarity of i's and j's location, w_ii = 0 for all i
   % w_ij is set to some suitable decreasing function, Example: 
   % w_ij = (distance_ij)^(-b) or exp(-b*distance_ij)
   %  b interpreted as rate at which the weight (influence) decreases over
   %  distance.
-  w_ij = weightMat./sum(weightMat(:)); % diag(weightMat,0) must equal 0
+  w_ij = weightMat; % diag(weightMat,0) must equal 0
+  % Row normalize = sum of a row must be 1
+  w_ij = w_ij./sum(w_ij,2);
+  
   sum_w_ij = sum(w_ij(:));
   % c_ij = similarity of i's and j's attributes
   % In general this is the covariance between the value of a feature at one
   % place and its value at another
   % for morans
-  [c_ij_m, s_sq_m] = getFeatureSpatialCovariance(z, 'moran');
+  [c_ij_m, s_sq_m] = getFeatureSpatialCovariance(x_i, 'moran');
   % for geary
-  [c_ij_g, s_sq_g] = getFeatureSpatialCovariance(z, 'geary');
+  [c_ij_g, s_sq_g] = getFeatureSpatialCovariance(x_i, 'geary');
   % compute coeffs:
-  spAutoCorr.moran.index = sum(sum(w_ij.*c_ij_m))/(s_sq_m * sum_w_ij)
-  spAutoCorr.geary.index = sum(sum(w_ij.*c_ij_g))/(2 * s_sq_g * sum_w_ij)
+  spAutoCorr.moran.index(1) = sum(sum(w_ij.*c_ij_m))/(s_sq_m * sum_w_ij)
+  spAutoCorr.geary.index(1) = sum(sum(w_ij.*c_ij_g))/(2 * s_sq_g * sum_w_ij)
   spAutoCorr.moran
   spAutoCorr.geary
+  
+  % Local Moran I
+  % I_i = z_i * sum_over_j(w_ij * z_j)
+  % z_i = (x_i-x_bar) / SD
+  z_i = (x_i-x_bar)/sqrt(s_sq_m);
+  
+  for i = 1:n
+      j = 1:n;
+      j = j(j~=i);
+      spAutoCorr.moran.index(i+1,1) = sum(w_ij(i,j)'.*z_i(j));
+  end
   
 
 end
