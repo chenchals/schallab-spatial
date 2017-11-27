@@ -109,12 +109,6 @@ function [ ] = processSessionsByLocation(nhpConfig)
         end
         qualityStr= ['Q' num2str(qualityOfSession)];
 
-%         if contains(lower(nhpInfo.chamberLoc),'left')
-%             ipsi = 'left';
-%         else
-%             ipsi = 'right';
-%         end
-%                 
         for t =1:numel(selectedTaskTypes)
             try
                 selectedTaskType = selectedTaskTypes{t};
