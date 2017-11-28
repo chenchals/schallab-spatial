@@ -1,4 +1,4 @@
-function [] = processTest()
+function [] = processDarwinK()
 %PROCESSTEST Configure Darwin (WJ) sessions here
 %     nhpConfig is a structured variable with fields that define how to
 %     process matalb datafile for this NHP.
