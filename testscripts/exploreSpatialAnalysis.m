@@ -1,11 +1,11 @@
 function [ MI ] = exploreSpatialAnalysis()
-jp60 = load('/Volumes/Macintosh HD/Users/elseyjg/temp/schalllab-spatial/processed/joule/jp124n01.mat');
+sess = load('/Users/subravcr/jacob-iMac/Users/elseyjg/temp/schalllab-spatial/processed/darwin/2016-02-26a.mat');
 
-sess = jp60;
+
 fNames = fieldnames(sess);
-% xValsToUse = choices are: 'R^2', 'sdf Mean FR', 'sdf Mean FR (Z)',
-% 'sdf Mean Ztr'
-xValsToUseArr = {'R^2','sdf Mean Ztr','sdf Mean FR (Z)','sdf Mean FR'};
+% xValsToUse = choices are: 
+% 'R^2','sdf Mean Ztr','sdf Mean FR (Z)','sdf Mean FR'
+xValsToUseArr = {'R^2','sdf Mean Ztr'};
 
     for xx = 1: numel(xValsToUseArr)
         xValToUse = xValsToUseArr{xx};
@@ -13,7 +13,7 @@ xValsToUseArr = {'R^2','sdf Mean Ztr','sdf Mean FR (Z)','sdf Mean FR'};
         xValToUse_fieldName = regexprep(xValToUse,'[^A-Za-z0-9]','');
         % Distance threshold
         neighborDistanceStep = 100; % in microns
-        dists = [2 5 7]; % distances to use
+        neighborDists = [2 5 7]; % distances to use
         connectivityFx = localfunctions;
         % Only those functions that contain suffix Fx
         connectivityFx = connectivityFx(contains(cellfun(@func2str,connectivityFx,'UniformOutput',false),'Fx'));
@@ -23,10 +23,11 @@ xValsToUseArr = {'R^2','sdf Mean Ztr','sdf Mean FR (Z)','sdf Mean FR'};
 
         for ii = 1:numel(sessConds)
             cond = sessConds{ii};
+            sdfMeanZtr = sess.(cond).sdfMeanZtr;
+            rsquared = corr(sdfMeanZtr',sdfMeanZtr').^2;
+            
             switch xValToUse
                 case 'R^2'
-                    sdfMeanZtr = sess.(cond).sdfMeanZtr;
-                    rsquared = corr(sdfMeanZtr',sdfMeanZtr').^2;
                     % Since there will be n-1 correlations, prefix 1 for self correlation
                     xVlasForMoran = [1; diag(rsquared,1)];
                 case 'sdf Mean Ztr'
@@ -42,12 +43,14 @@ xValsToUseArr = {'R^2','sdf Mean Ztr','sdf Mean FR (Z)','sdf Mean FR'};
             end
 
             nChannels = numel(xVlasForMoran);
-            distance = sess.info.channelSpacing*[0:nChannels-1];
+            distance = (0:nChannels-1)*sess.info.channelSpacing;
 
-            for dd = 1:numel(dists)
-                neighborDistance = dists(dd)*neighborDistanceStep;
+            for dd = 1:numel(neighborDists)
+                neighborDistance = neighborDists(dd)*neighborDistanceStep;
                 neighborFx = connectivityFx{2}(distance,neighborDistance);
                 weightMat = getSymmetricWeightMat(neighborFx);
+                mi.(cond)(dd).sdfMeanZtr = sdfMeanZtr;
+                mi.(cond)(dd).rsquared = rsquared;
                 mi.(cond)(dd).distance = distance;
                 mi.(cond)(dd).neighborDistance = neighborDistance;
                 mi.(cond)(dd).x = xVlasForMoran;
@@ -60,7 +63,7 @@ xValsToUseArr = {'R^2','sdf Mean Ztr','sdf Mean FR (Z)','sdf Mean FR'};
                 mi.(cond)(dd).moran.alpha = Z(:,3);
             end
         end
-        plotMoransFig(sess, mi, dists, xValToUse)
+        plotMoransFig(sess, mi, neighborDists, xValToUse)
         MI.(xValToUse_fieldName) = mi;
     end
 end
@@ -72,7 +75,19 @@ function [] = plotMoransFig(sess, mi, dists, xValsToUse)
     set(mainFig,'Name',[sess.session ' - ' xValsToUse])
     fn = sortrows(fieldnames(mi));
     nPlotRows = numel(fn) + 1 ;
-    nPlotCols = numel(dists) + 2;
+    
+    %plots to do...
+    plotSdfMeanHeatmap = 1;
+    plotRsquaredHeatmap = 1;
+    plotDiagVectorHeatmap = 1;
+    plotDiagVector = 1;
+    
+    nPlotCols = numel(dists) + ...
+        plotSdfMeanHeatmap +...
+        plotRsquaredHeatmap +...
+        plotDiagVectorHeatmap +...
+        plotDiagVector ...
+        ;
     plotNum = 0;
     for c = 1: nPlotRows-1
         currCond = fn{c};
@@ -80,7 +95,8 @@ function [] = plotMoransFig(sess, mi, dists, xValsToUse)
         x = currMi(1).x;
         distance = currMi(1).distance;
         [yTickIndices, yTicks, yTickLabels] = getTicks(distance);
-        plotNum = plotNum + 1; subplot(nPlotRows,nPlotCols,plotNum)
+        plotNum = plotNum + 1; 
+        subplot(nPlotRows,nPlotCols,plotNum)
         imagesc(x);
         colormap('cool')
         colorbar
@@ -89,7 +105,8 @@ function [] = plotMoransFig(sess, mi, dists, xValsToUse)
         title(titleTxt,'Interpreter','tex');
         set(gca,'XLim', [0.5 1],'XTick',[],'YTick', yTickIndices,'YTickLabel',yTickLabels)  
         % Plot diag
-        plotNum = plotNum + 1; subplot(nPlotRows,nPlotCols,plotNum)
+        plotNum = plotNum + 1; 
+        subplot(nPlotRows,nPlotCols,plotNum)
         plot(x,distance(:));
         set(gca,'YDir','reverse')
         set(gca,'YLim',[0 max(distance)])
@@ -194,9 +211,9 @@ function [] = plotMoran(neighborDistance, distanceVec, moranIVec, alphaVec)
 
 end
 
-function [tickIndices, ticks, tickLabels] = getTicks(distance)
-    tickIndices = 1:4:numel(distance);
-    ticks = distance(tickIndices);
+function [tickIndices, ticks, tickLabels] = getTicks(distanceVec)
+    tickIndices = 1:4:numel(distanceVec);
+    ticks = distanceVec(tickIndices);
     tickLabels = arrayfun(@num2str,ticks,'UniformOutput',false);
 end
 

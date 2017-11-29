@@ -22,7 +22,7 @@ function [] = processDarwinK()
     nhpConfig.conditions{2} = {'responseOnset', {[0 360] 45 90 135 180 225 270 315}, [-2000 1000]};
     % only one tyep of measue for now
     nhpConfig.distancesToCompute = {'correlation'};
-    nhpConfig.minTrialsPerCondition = 7;
+    nhpConfig.minTrialsPerCondition = 1;
      
     nhpConfig.selectedTaskTypes = {'Cap' 'MG' 'Search'};
     

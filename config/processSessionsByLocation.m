@@ -119,6 +119,7 @@ function [ ] = processSessionsByLocation(nhpConfig)
                         error('The Excel info for session [%s] has paradigms [%s], since there is more than 1 paradigm, nhpConfig.selectedTaskType must be set to one of the paradigms',...
                             nhpInfo.session{1}, nhpInfo.paradigm{1});
                     else
+                        selectedTaskType = upper(nhpInfo.paradigm{1});
                         selectedTaskTypeToSave = upper(nhpInfo.paradigm{1});
                     end
                 end

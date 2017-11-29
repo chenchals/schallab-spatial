@@ -90,13 +90,7 @@ function [ outSdfStruct ] = spkfun_sdf(spikeTimes, selectedTrials, eventData, al
             temp_spikes = spikeTimes(selectedTrials,chanIndex);
             currSpikeIds = spikeIds(chanIndex);
             [ bins, rasters_full ] = spkfun_getRasters(temp_spikes, alignTimes);
-            % If there are bins that include sdfWindow, then we have
-            % spikes in sdfWindow
-            if numel(find(ismember(bins,sdfWindow))) == 2
-                outNew.singleUnit(chanIndex,1) = computeSdfs(selectedTrials,rasters_full,bins,kernel,sdfWindow,currSpikeIds);
-            else
-                outNew.singleUnit(chanIndex,1) = computeSdfNans(selectedTrials,sdfWindow,currSpikeIds);
-            end
+            outNew.singleUnit(chanIndex,1) = computeSdfs(selectedTrials,rasters_full,bins,kernel,sdfWindow,currSpikeIds);
         end
         outSdfStruct = outNew.singleUnit;
     else % if multiunitTrueFalse = true
@@ -116,14 +110,8 @@ function [ outSdfStruct ] = spkfun_sdf(spikeTimes, selectedTrials, eventData, al
                     outNew.multiUnit(chanIndex,1) = computeSdfNans(selectedTrials,sdfWindow,currSpikeIds,cellIndex,channelNo);
                     continue
                 end
-                [ bins, rasters_full ] = spkfun_getRasters(temp_spikes, alignTimes);
-                
-                % If there are bins that include sdfWindow, then we have spikes in sdfWindow
-                if numel(find(ismember(bins,sdfWindow))) == 2 
-                    outNew.multiUnit(chanIndex,1) = computeSdfs(selectedTrials,rasters_full,bins,kernel,sdfWindow,currSpikeIds,cellIndex,channelNo);
-                else
-                    outNew.multiUnit(chanIndex,1) = computeSdfNans(selectedTrials,sdfWindow,currSpikeIds,cellIndex,channelNo);
-                end
+                [ bins, rasters_full ] = spkfun_getRasters(temp_spikes, alignTimes, sdfWindow);
+                outNew.multiUnit(chanIndex,1) = computeSdfs(selectedTrials,rasters_full,bins,kernel,sdfWindow,currSpikeIds,cellIndex,channelNo);
             else
                 outNew.multiUnit(chanIndex,1) = computeSdfNans(selectedTrials,sdfWindow,{},[],[]);
             end            
@@ -136,9 +124,7 @@ end
 
 %%
 function [ oStruct ] = computeSdfs(selectedTrials,rasters,bins,kernel,sdfWindow,spikeIds,varargin)
-    minWin = min(sdfWindow);
-    maxWin = max(sdfWindow);
-    sdfWindow = (minWin:maxWin);
+
     oStruct.spikeIds = spikeIdsAsChar(spikeIds);
     if numel(varargin) == 2
         oStruct.singleUnitIndices = varargin{1};
@@ -147,6 +133,9 @@ function [ oStruct ] = computeSdfs(selectedTrials,rasters,bins,kernel,sdfWindow,
     nTrials = numel(selectedTrials);
     oStruct.nTrials = nTrials;
     oStruct.selectedTrials = selectedTrials;
+    minWin = min(sdfWindow);
+    maxWin = max(sdfWindow);
+    sdfWindow = (minWin:maxWin);
     oStruct.sdfWindow = sdfWindow;
     % Convolve & Convert to firing rate counts/ms -> spikes/sec
     sdf_full = convn(rasters',kernel,'same')'.*1000;

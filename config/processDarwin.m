@@ -3,7 +3,7 @@ function [] = processDarwin()
 %     nhpConfig is a structured variable with fields that define how to
 %     process matalb datafile for this NHP.
 % see also PROCESSSESSIONS for how to define nhpConfig 
-    processedDir = '/mnt/teba/Users/Chenchal/clusterByLocation2/processed';
+    processedDir = '/mnt/teba/Users/Chenchal/clusterByLocation/processed';
     nhpConfig.nhpSourceDir = '/mnt/teba';
     nhpConfig.nhp = 'darwin';
     nhpConfig.excelFile = 'SFN_NHP_Coordinates_All.xlsx';
@@ -22,7 +22,7 @@ function [] = processDarwin()
     nhpConfig.conditions{2} = {'responseOnset', {[0 360] 45 90 135 180 225 270 315}, [-2000 1000]};
     % only one tyep of measue for now
     nhpConfig.distancesToCompute = {'correlation'};
-    nhpConfig.minTrialsPerCondition = 7;
+    nhpConfig.minTrialsPerCondition = 1;
      
     processSessionsByLocation(nhpConfig);
 
