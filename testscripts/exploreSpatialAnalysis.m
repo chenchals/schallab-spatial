@@ -175,12 +175,12 @@ function [] = plotMoransFig(sess, mi, dists, xValsToUse)
     drawnow
 end
 
-function [] = plotMoran(neighborDistance, distanceVec, moranIVec, alphaVec)
+function [] = plotMoran(neighborDistance, channelDistanceVec, moranIVec, sigAlphaVec)
     gMoran = moranIVec(1);
-    gAlphaMoran = alphaVec(1);
+    gAlphaMoran = sigAlphaVec(1);
     lMoran = moranIVec(2:end);
-    lAlphaMoran =  alphaVec(2:end);
-    plot(lMoran,distanceVec,'o-')
+    lAlphaMoran =  sigAlphaVec(2:end);
+    plot(lMoran,channelDistanceVec,'o-')
     xLims = [floor(min(lMoran)*10)/10 ceil(max(lMoran)*10)/10];
     if gAlphaMoran < 0.01
         titleTxt{1} =['MI\it_G = ' num2str(gMoran,'%0.4f') '^{**}'];
@@ -191,22 +191,22 @@ function [] = plotMoran(neighborDistance, distanceVec, moranIVec, alphaVec)
     end
     titleTxt{2} = [num2str(neighborDistance) '\mum'];
     title(titleTxt,'Interpreter','tex');
-    [~, yTicks, yTickLabels] = getTicks(distanceVec);
+    [~, yTicks, yTickLabels] = getTicks(channelDistanceVec);
     set(gca,'YTick', yTicks,'YTickLabel',yTickLabels,'YGrid','on','YMinorGrid','on')
     set(gca,'YDir','reverse')
-    set(gca,'YLim',[0 max(distanceVec)])
+    set(gca,'YLim',[0 max(channelDistanceVec)])
     set(gca,'XLim',xLims)
     xlabel('MI\it_{Local}')
-    line([0 0],[0 max(distanceVec)],'Color','k','LineStyle','--','LineWidth',1)
-    line([gMoran gMoran],[0 max(distanceVec)],'Color','r','LineStyle','--','LineWidth',2)
+    line([0 0],[0 max(channelDistanceVec)],'Color','k','LineStyle','--','LineWidth',1)
+    line([gMoran gMoran],[0 max(channelDistanceVec)],'Color','r','LineStyle','--','LineWidth',2)
     % Significant
     sig = find(lAlphaMoran < 0.05);
     if numel(sig)>0
-        text(lMoran(sig),distanceVec(sig),'*', 'FontSize',18, 'Color','r')
+        text(lMoran(sig),channelDistanceVec(sig),'*', 'FontSize',18, 'Color','r')
     end
     sig = find(lAlphaMoran < 0.01);
     if numel(sig)>0
-        text(lMoran(sig),distanceVec(sig),'**', 'FontSize',18, 'Color','r')
+        text(lMoran(sig),channelDistanceVec(sig),'**', 'FontSize',18, 'Color','r')
     end
 
 end
