@@ -90,7 +90,7 @@ function [ figH ] = doPlot8R(session, sessionLabel, colorbarNames, varargin)
         
     end %ros
  
-    addFigureTitleAndInfo(sessionLabel, session, infosHandle);
+    addFigureTitleAndInfo(sessionLabel, session.info, session.analysisDate, infosHandle);
     addDateStr();
     drawnow
     if saveFig
@@ -108,7 +108,7 @@ function [ figH ] = doPlot8R(session, sessionLabel, colorbarNames, varargin)
 end
 
 %% Add figure title and Info
-function addFigureTitleAndInfo(figureTitle, session, varargin)
+function addFigureTitleAndInfo(figureTitle, session_info, session_analysisDate, varargin)
     if numel(varargin)==0 || isempty(varargin{1})
         h = axes('Units','normalized','Position',[.01 .87 .98 .09]);
     else
@@ -120,7 +120,7 @@ function addFigureTitleAndInfo(figureTitle, session, varargin)
     h.YTick = [];
     h.Visible = 'on';
     h.Box = 'on';
-    infoTable = session.info;
+    infoTable = session_info;
     varNames=infoTable.Properties.VariableNames;
     % remove channelMap from varnames
     varNames = varNames(~contains(varNames,'ephysChannelMap'));
@@ -158,7 +158,7 @@ function addFigureTitleAndInfo(figureTitle, session, varargin)
         'VerticalAlignment', 'top','HorizontalAlignment','left');
      xPos = getNextXPos(hText, columnGap);
             % write Analysis date
-    text(xPos,yPos,['Analysis Date : ' session.analysisDate],...
+    text(xPos,yPos,['Analysis Date : ' session_analysisDate],...
         'Interpreter','none','FontWeight','bold','FontSize',fontSize,...
         'VerticalAlignment', 'top','HorizontalAlignment','left');
 end

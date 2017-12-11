@@ -39,6 +39,8 @@ function [ MI ] = processSpatialAnalysis( varargin )
     % Gather trimmed Mean SDFs
     tAlign_meanSdfs = arrayfun(@(cond) trimRawSdfCellArray(sess.(cond{1}).sdf,sess.(cond{1}).sdfWindow,TARGET_ALIGN_SDF_WINDOW),tAlign_conds,'UniformOutput',false);
     rAlign_meanSdfs = arrayfun(@(cond) trimRawSdfCellArray(sess.(cond{1}).sdf,sess.(cond{1}).sdfWindow,RESPONSE_ALIGN_SDF_WINDOW),rAlign_conds,'UniformOutput',false);
+   
+    
     % Gather ipsi, contra trimmed mean SDFs - target aligned
     sdfSize = size(tAlign_meanSdfs{1});
     tAlign_conds{end+1} = 'targetOnset_ipsi';
@@ -103,16 +105,17 @@ function [ MI ] = processSpatialAnalysis( varargin )
                 end
                 %fprintf('Computing moran sa for condition: %s, neighborDist: %d\n',cond, neighborD);
 
-                MI.(cond)(dd).(measureUsed).sdfWindow = sdfWin;
-                MI.(cond)(dd).(measureUsed).isIpsi = isIpsi;
-                MI.(cond)(dd).(measureUsed).sdfMatrix = sdfMat;
-                MI.(cond)(dd).(measureUsed).neighborFx = neighborFx;
-                MI.(cond)(dd).(measureUsed).weightMat = weightMat;
-                MI.(cond)(dd).(measureUsed).y = yMatrix;
-                MI.(cond)(dd).(measureUsed).rsquared = rsquared;
+                MI.(cond).(measureUsed)(dd).sdfWindow = sdfWin;
+                MI.(cond).(measureUsed)(dd).isIpsi = isIpsi;
+                MI.(cond).(measureUsed)(dd).sdfMatrix = sdfMat;
+                MI.(cond).(measureUsed)(dd).neighborD = neighborD;
+                MI.(cond).(measureUsed)(dd).neighborFx = neighborFx;
+                MI.(cond).(measureUsed)(dd).weightMat = weightMat;
+                MI.(cond).(measureUsed)(dd).y = yMatrix;
+                MI.(cond).(measureUsed)(dd).rsquared = rsquared;
                 tempMoran = reshapeMoran(arrayfun(@(t) moran(yMatrix(:,t),weightMat,false),1:size(yMatrix,2),'UniformOutput',false)');
                 for fn = fieldnames(tempMoran)'
-                    MI.(cond)(dd).(measureUsed).(fn{1}) = tempMoran.(fn{1});
+                    MI.(cond).(measureUsed)(dd).(fn{1}) = tempMoran.(fn{1});
                 end
             end
         end
