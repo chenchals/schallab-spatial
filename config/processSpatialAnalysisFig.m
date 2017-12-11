@@ -2,8 +2,10 @@ function [  ] = processSpatialAnalysisFig( varargin )
 %PROCESSSPATIALANALLYSISFIGS Draw figures for Spatial Analysis
 %  Use output file from processSpatialAnalysis
 % see also PROCESSSPATIALANALYSIS
-    %fileLoc = varargin{1};
-    fileLoc = '~/Downloads/Joule/moran/jp064n01_MEM_Q4.mat';
+   % fileLoc = '/Volumes/schalllab/Users/Chenchal/clusterByLocation/processed/darwin/MEM/moranSdfMean/2016-02-22a_MEM_Q2.mat';
+  %fileLoc ='/Volumes/schalllab/Users/Chenchal/clusterByLocation/processed/darwin/MEM/moranSdfMeanZtr/2016-02-26a_MEM_Q2.mat';
+    %fileLoc ='moranSdfMeanZtr/2016-02-26a';
+    fileLoc = varargin{1};
     fprintf('Processing file %s\n', fileLoc);
     sess = load(fileLoc);
     [fp, fn, ~] = fileparts(fileLoc);
@@ -28,34 +30,42 @@ function [  ] = processSpatialAnalysisFig( varargin )
         [axH,allAx(end+1,1)] = nextPlot(figH,axH);
          sdfWin = sess.(curr_cond)(1).sdfMean.sdfWindow;
          y = sess.(curr_cond)(1).sdfMean.sdfMatrix;
-        showMat(y,sdfWin);        
+        showMat(y,sdfWin,'jet');
         addTitle({curr_cond;'FR Heatmap'},ii)
         %plot r, 2 r^2
         [axH,allAx(end+1,1)] = nextPlot(figH,axH);
         imagesc(sess.(curr_cond)(1).sdfMean.rsquared);
+        colormap(gca,'cool');
+        %alpha(0.8)
         addTitle('r-squared',ii)
         for dd = 1:3
             %plot r, 3,5,7 moran local
             [axH,allAx(end+1,1)] = nextPlot(figH,axH);
             m = sess.(curr_cond)(dd).sdfMean.local_I;
+            D = sess.(curr_cond)(dd).sdfMean.neighborD;
             if iscell(sdfWin)
                 %split moran
                 y{1} = m(:,1:size(sdfWin{1},2));
                 y{2} = m(:,size(sdfWin{1},2)+1:end);               
+            else
+                y = m;
             end
-            showMat(y,sdfWin);
-            addTitle('moran-l',ii)
-            %plot r, 4,6,8 moran local
+            showMat(y,sdfWin,'cool');
+            addTitle(['moran-l-' num2str(D)],ii)
+            %plot r, 4,6,8 moran pval
             [axH,allAx(end+1,1)] = nextPlot(figH,axH);
             m = sess.(curr_cond)(dd).sdfMean.local_pval;
             if iscell(sdfWin)
                 %split moran
                 y{1} = m(:,1:size(sdfWin{1},2));
                 y{2} = m(:,size(sdfWin{1},2)+1:end);               
+            else
+                y = m;
             end
-            showMat(y,sdfWin);
-            caxis([0 0.1])
-            addTitle('moran-l pval',ii)
+            showMat2(y,sdfWin,true,'gray');
+            %caxis([0 0.1])
+            drawnow
+            addTitle(['moran-l pval-' num2str(D)],ii)
         end
     end
     infoPos2 = plotPos(end,2)+plotPos(end,3)*2+0.05;
@@ -64,13 +74,36 @@ function [  ] = processSpatialAnalysisFig( varargin )
     titleAxes = axes('Position',infoPos ,'Units','normalized');
     addSessionInfoAndTitle(figName,sess.sessionInfo, sess.processedDate, titleAxes);
     
+    fprintf('Saving moran analysis figure to location %s\n',oFile);
+    if ~exist(oDir,'dir')
+        mkdir(oDir);
+    end
+    saveas(figH,oFile,'jpg');
+    saveas(figH,oFile, 'fig');
+    %delete(figH);
+    %close all
+    
+end
+function showMat(inMat,sdfWin,colMap)
+  showMat2(inMat,sdfWin,false,colMap);
 end
 
-function showMat(inMat,sdfWin)
+function showMat2(inMat,sdfWin, isPval,colMap)
     if ~iscell(inMat)
-      h = imagesc(inMat);
+        if isPval
+          imagesc(inMat,[0 0.1]);
+          colormap(gca,'gray')
+        else
+          imagesc(inMat);
+          colormap(gca,colMap)
+        end
+      
+      %alpha(0.8);
       %colorbar;
       updateXTicks(sdfWin)
+      if isPval
+          %caxis([0 0.1])
+      end
     else
         % we have 2 plots to darw
         pos = get(gca,'Position');
@@ -87,7 +120,7 @@ function showMat(inMat,sdfWin)
                 sdfWinN = sdfWin{ii};
             end
             axes('Position',posN(ii,:),'Units','normalized');
-            showMat(inMat{ii},sdfWinN);
+            showMat2(inMat{ii},sdfWinN,isPval,colMap);
         end
         set(gcf,'CurrentAxes',currH);
     end

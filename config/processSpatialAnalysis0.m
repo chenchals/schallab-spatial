@@ -1,15 +1,14 @@
-function [ MI ] = processSpatialAnalysis( varargin )
-%PROCESSSPATIALANALYSIS Summary of this function goes here
-%   Detailed explanation goes here
-%    fileLoc = '/Volumes/schalllab/Users/Chenchal/clusterByLocation/processed/darwin/MEM/2016-02-22a_MEM_Q2.mat';
-    %fileLoc = '/Volumes/schalllab/Users/Chenchal/clusterByLocation/processed/darwin/MEM/2016-02-26a_MEM_Q2.mat';
+function [ MI ] = processSpatialAnalysis0( varargin )
+%PROCESSSPATIALANALYSIS0 Summary of this function goes here
+%   For processed files that already have rsquared computed for poster
+    %fileLoc = '~/jacob-iMac/Users/elseyjg/temp/schalllab-spatial/processed/darwin/2016-02-26a.mat';
     fileLoc = varargin{1};
     fprintf('Processing file %s\n', fileLoc);
     sess = load(fileLoc);
     [fp, fn, ~] = fileparts(fileLoc);
-    oDir = [fp filesep 'moranSdfMeanZtr'];
+    oDir = [fp filesep 'moranSdfMeanZtrImpute0'];
     oFile = fullfile(oDir,fn);
-    %load('session.mat');
+
     fNames = fieldnames(sess);
     %CONDITIONS responeOset is inferred
     TAREGT_ALIGN_CONDITION = 'targetOnset';
@@ -34,34 +33,11 @@ function [ MI ] = processSpatialAnalysis( varargin )
     tAlign_conds = fNames(contains(fNames,TAREGT_ALIGN_CONDITION));
     rAlign_conds = regexprep(tAlign_conds,'target','response');
 
-    ipsi_index = ~cellfun(@isempty, regexp(tAlign_conds,join(arrayfun(@(x) ['_' num2str(x) '|'],ipsi_locations,'UniformOutput',false),'')));
-    contra_index = ~cellfun(@isempty, regexp(tAlign_conds,join(arrayfun(@(x) ['_' num2str(x) '|'],contra_locations,'UniformOutput',false),'')));
-
-%     % Gather trimmed Mean SDFs
-%     tAlign_meanSdfs = arrayfun(@(cond) trimRawSdfCellArray(sess.(cond{1}).sdf,sess.(cond{1}).sdfWindow,TARGET_ALIGN_SDF_WINDOW),tAlign_conds,'UniformOutput',false);
-%     rAlign_meanSdfs = arrayfun(@(cond) trimRawSdfCellArray(sess.(cond{1}).sdf,sess.(cond{1}).sdfWindow,RESPONSE_ALIGN_SDF_WINDOW),rAlign_conds,'UniformOutput',false);
-
     % Gather trimmed Mean SDF Ztrs
     tAlign_meanSdfs = arrayfun(@(cond) trimMeanSdfMat(sess.(cond{1}).sdfMeanZtr,sess.(cond{1}).sdfWindow,TARGET_ALIGN_SDF_WINDOW),tAlign_conds,'UniformOutput',false);
     rAlign_meanSdfs = arrayfun(@(cond) trimMeanSdfMat(sess.(cond{1}).sdfMeanZtr,sess.(cond{1}).sdfWindow,RESPONSE_ALIGN_SDF_WINDOW),rAlign_conds,'UniformOutput',false);
-   
-    
-    % Gather ipsi, contra trimmed mean SDFs - target aligned
-    sdfSize = size(tAlign_meanSdfs{1});
-    tAlign_conds{end+1} = 'targetOnset_ipsi';
-    tAlign_meanSdfs{end+1} = nanmean(reshape(cell2mat(tAlign_meanSdfs(ipsi_index)),sdfSize(1),sdfSize(2),[]),3);
-    tAlign_conds{end+1} = 'targetOnset_contra';
-    tAlign_meanSdfs{end+1} = nanmean(reshape(cell2mat(tAlign_meanSdfs(contra_index)),sdfSize(1),sdfSize(2),[]),3);
 
-    % Gather ipsi, contra trimmed mean SDFs - response aligned
-    sdfSize = size(rAlign_meanSdfs{1});
-    rAlign_conds{end+1} = 'responseOnset_ipsi';
-    rAlign_meanSdfs{end+1} = nanmean(reshape(cell2mat(rAlign_meanSdfs(ipsi_index)),sdfSize(1),sdfSize(2),[]),3);
-    rAlign_conds{end+1} = 'responseOnset_contra';
-    rAlign_meanSdfs{end+1} = nanmean(reshape(cell2mat(rAlign_meanSdfs(contra_index)),sdfSize(1),sdfSize(2),[]),3);
     measureUsed = 'sdfMean';
-        
-    tAlign_ipsi = tAlign_conds(ipsi_index);
     t_win1 = TARGET_ALIGN_SDF_WINDOW(1);
     t_win2 = TARGET_ALIGN_SDF_WINDOW(2);
     r_win1 = RESPONSE_ALIGN_SDF_WINDOW(1);
@@ -72,7 +48,7 @@ function [ MI ] = processSpatialAnalysis( varargin )
         MI.processedDate = datestr(now);
 
         r_cond = rAlign_conds{c};
-        isIpsi = find(contains(tAlign_ipsi,t_cond));
+        isIpsi = find(contains(t_cond,'ipsi'));
 
         [t_mat, t_win] = deal(tAlign_meanSdfs{c}, (t_win1:t_win2));
         [r_mat, r_win] = deal(rAlign_meanSdfs{c}, (r_win1:r_win2));
@@ -145,7 +121,7 @@ function [ out ] = trimRawSdfCellArray(sdfCellArray, origSdfWin, trimSdfWin)
   temp = arrayfun(@(x) x{1}(:,index),sdfCellArray,'UniformOutput',false);
   % mean sdf fx from rawSdf
   % cell2mat(cellfun(@(x) nanmean(x,1),temp,'UniformOutput',false));
-  out = cell2mat(cellfun(@(x) nanmean(x,1),temp,'UniformOutput',false));;
+  out = cell2mat(cellfun(@(x) nanmean(x,1),temp,'UniformOutput',false));
 end
 
 function [yMat, sdfWin] = trimMeanSdfMat(inMat, inSdfWin, trimSdfWin)

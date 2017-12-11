@@ -6,7 +6,7 @@ function addSessionInfoAndTitle( figureTitle, session_info, session_analysisDate
     else
         h = varargin{1};
     end
-    scale = 0.7;
+    scale = 1;
     titleFontsize = 12*scale;
     set(get(h,'Title'),'Visible','on');
     title(figureTitle,'fontSize',titleFontsize,'fontWeight','bold','Interpreter','none');
