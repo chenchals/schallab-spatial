@@ -48,7 +48,7 @@ function [] = imagescWithCluster(inMat, cLimits, threshold, nanColorGray, colorb
 
     % colorbar
     h = colorbar;
-    set(h,'YLim',cLimits);
+    set(h,'YLim',cLimits, 'YTick', []);
 
 end
 

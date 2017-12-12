@@ -68,19 +68,21 @@ allNhpNumHistObserved  = histc(nhpNumsObserved,numHistBins);
         a(ii) = figure(ii);
         set(a(ii),'Name', ['targetOnset_',nhp,'_ClusterSizes']); 
         hold on; 
-        plot(histBins,nhpSizeHist{ii}./sum(nhpSizeHist{ii}), 'LineWidth', 2);
+        plot(histBins,nhpSizeHist{ii}./sum(nhpSizeHist{ii}), 'LineWidth', 6);
         set(gca,'FontSize',16);
  %       xlabel('Size of Clusters (um)','FontSize',20, 'FontWeight', 'bold')
  %       ylabel('Proportion Observed','FontSize',20, 'FontWeight', 'bold')
-        plot(histBins,nhpSizeHistObserved{ii}./sum(nhpSizeHistObserved{ii}), 'LineWidth', 2);
+        plot(histBins,nhpSizeHistObserved{ii}./sum(nhpSizeHistObserved{ii}), 'LineWidth', 6);
         xlim([0 2000]);
         set(gcf, 'units', 'normalized', 'position', [0 0 1 1]);
         set(gca,'FontSize',16);
  %       title(['Size of Clusters (um)__',nhp], 'FontSize',24, 'FontWeight', 'bold');
  %       xlabel('Size of Clusters (um)', 'FontSize',20, 'FontWeight', 'bold')
  %       ylabel('Proportion Observed', 'FontSize',20, 'FontWeight', 'bold')
-        legend({'Bootstrapped','Observed'}, 'FontWeight', 'bold', 'FontSize', 24);
-        set(gca,'tickdir','out')
+        legend({'Bootstrapped','Observed'}, 'FontWeight', 'bold', 'FontSize', 36);
+        set(gca,'tickdir','out', 'LineWidth', 5, 'TickLength', [0.03 0.025])
+ %       set(gca,'XTickLabel',{' '})
+ %       set(gca,'YTickLabel',{' '})
         saveas(a(ii),['./clustSizes_',nhp,'.fig']);
     end
     
@@ -125,18 +127,20 @@ allNhpNumHistObserved  = histc(nhpNumsObserved,numHistBins);
         d(1) = figure(1+30)
         set(d(1),'Name', ['targetOnset_AllNhps_ClusterSizes_Observed']); 
         hold on; 
-        plot(histBins,allNhpSizeHist./sum(allNhpSizeHist), 'LineWidth', 2);
+        plot(histBins,allNhpSizeHist./sum(allNhpSizeHist), 'LineWidth', 6);
         set(gca,'FontSize',16);
 %        xlabel('Size of Clusters (um)')
 %        ylabel('Number of Bootstrap Iterations')
-        plot(histBins,allNhpSizeHistObserved./sum(allNhpSizeHistObserved), 'LineWidth', 2);
+        plot(histBins,allNhpSizeHistObserved./sum(allNhpSizeHistObserved), 'LineWidth', 6);
         set(gcf, 'units', 'normalized', 'position', [0 0 1 1]);
         xlim([0 2000]);
 %        title(['Size of Clusters__AllNhps (um)']);
 %        xlabel('Size of Clusters')
 %        ylabel('Proportion Observed')
-        legend({'Bootstrapped','Observed'}, 'FontWeight', 'bold', 'FontSize', 24);
-        set(gca,'tickdir','out')
+        legend({'Bootstrapped','Observed'}, 'FontWeight', 'bold', 'FontSize', 36);
+        set(gca,'tickdir','out', 'LineWidth', 5, 'TickLength', [0.03 0.025])
+%        set(gca,'XTickLabel',{' '})
+%        set(gca,'YTickLabel',{' '})        
         saveas(d(1),['./clustSizes_AllNhps.fig']);
         
 %     
