@@ -53,8 +53,8 @@ function [ ] = processSessionsByLocation(nhpConfig)
     
     % Specify conditions to for creating multiSdf
     % condition{x} = {alignOnEventName, TargetLeftOrRight, sdfWindow}
-    alignCond1 = {'targetOnset', {[0 360] 45 90 135 180 225 270 315}, [-200 1000]};
-    alignCond2 = {'responseOnset', {[0 360] 45 90 135 180 225 270 315}, [-1000 200]};    
+    alignCond1 = {'targetOnset', {0 45 90 135 180 225 270 315}, [-200 1000]};
+    alignCond2 = {'responseOnset', {0 45 90 135 180 225 270 315}, [-1000 200]};    
     conditions = {alignCond1;alignCond2};
     minTrialsPerCondition = 1;
     % optional
@@ -146,25 +146,30 @@ function [ ] = processSessionsByLocation(nhpConfig)
                     currCondition = conditions{c};
                     alignOn = currCondition{1};
                     targetLocations = currCondition{2};
+                    targetLocationsStr = cellfun(@(x) num2str(x,'_%d'),targetLocations,'UniformOutput',false);
                     sdfWindow = currCondition{3};
-                    %Get  trials by position for condition is satisfied
+                    % Get  trials by position for condition is satisfied
                     selectedTrialsByLocation = checkMinTrialsPerCondition(model, outcome, targetLocations, selectedTaskType);
-                    for tLoc = 1:numel(targetLocations)
-                        currTargetLocation = targetLocations{tLoc};
+                    % Get trial for ipsi, contra, upper, lower visual fields
+                    [selectedTrialsByLocation, targetLocationsStr] = getIpsiContraUpperLowerTrials(nhpInfo.chamberLoc{1},selectedTrialsByLocation,targetLocationsStr);
+                                       
+                    for tLoc = 1:numel(targetLocationsStr)
+                        currTargetLocationStr = targetLocationsStr{tLoc};
                         trialList = selectedTrialsByLocation{tLoc};
                         if numel(trialList) < minTrialsPerCondition
                             logger.warn(sprintf('Number of trials [%d] for TaskType [%s] outcome [%s], targetLocations [%s] is below minTrialsPerCondition [%d]',...
-                                numel(trialList), selectedTaskType, outcome, num2str(currTargetLocation), minTrialsPerCondition));
+                                numel(trialList), selectedTaskType, outcome, currTargetLocationStr, minTrialsPerCondition));
                             continue
                         end
                         
-                        condStr = [alignOn sprintf('_%d',currTargetLocation)] ;
+                        condStr = [alignOn targetLocationsStr{tLoc}] ;
                         logger.info(sprintf('Doing condition: TaskType [%s] outcome [%s], alignOn [%s], targetLocations [%s] sdfWindow [%s]',...
-                            selectedTaskType, outcome, alignOn, num2str(currTargetLocation), num2str(sdfWindow)));
+                            selectedTaskType, outcome, alignOn, currTargetLocationStr, num2str(sdfWindow)));
                         % Get MultiUnitSdf -> has sdf_mean matrix and sdf matrix
                         [~, multiSdf.(condStr)] = model.getMultiUnitSdf(trialList, alignOn, sdfWindow);
                     end
                 end
+                
                 % To use Kalebs klNormRespv2:
                 conds = fieldnames(multiSdf);
                 % to use bl option conditions have to be ordered with targetAligned being the first
@@ -247,4 +252,30 @@ end
 function [selectedTrialsByLocation] = checkMinTrialsPerCondition(model, outcome, locationCondition, selectedTaskType)
     selectedTrialsByLocation = model.getTrialList(outcome,locationCondition,selectedTaskType);
     % Not checking minTrials here, because we wan to process if there are min trials for a singel location
+end
+
+function [selectedTrialsByLocation, targetLocationsStr] = getIpsiContraUpperLowerTrials(chamberLoc,selectedTrialsByLocation,targetLocationsStr)
+    RIGHT = [0 45 315];
+    LEFT = [135 180 225];
+    UP = [45 90 135];
+    DOWN = [225 270 315];
+    % Get trial for ipsi and contra locations
+    ipsi_locations = eval(upper(chamberLoc));
+    contra_locations = setdiff([RIGHT(:);LEFT(:)]',ipsi_locations);
+    ipsiLogical = ~cellfun(@isempty, regexp(targetLocationsStr,join(arrayfun(@(x) num2str(x,'_%d|'),ipsi_locations,'UniformOutput',false),'')));
+    contraLogical = ~cellfun(@isempty, regexp(targetLocationsStr,join(arrayfun(@(x) num2str(x,'_%d|'),contra_locations,'UniformOutput',false),'')));
+    upperLogical = ~cellfun(@isempty, regexp(targetLocationsStr,join(arrayfun(@(x) num2str(x,'_%d|'),UP,'UniformOutput',false),'')));
+    lowerLogical = ~cellfun(@isempty, regexp(targetLocationsStr,join(arrayfun(@(x) num2str(x,'_%d|'),DOWN,'UniformOutput',false),'')));
+    % ipsi trials
+    selectedTrialsByLocation{end+1} = cell2mat(selectedTrialsByLocation(find(ipsiLogical))'); %#ok<FNDSB>
+    targetLocationsStr{end+1} = '_ipsi';
+    % contra trials
+    selectedTrialsByLocation{end+1} = cell2mat(selectedTrialsByLocation(find(contraLogical))'); %#ok<FNDSB>
+    targetLocationsStr{end+1} = '_contra';
+    % upper trials
+    selectedTrialsByLocation{end+1} = cell2mat(selectedTrialsByLocation(find(upperLogical))'); %#ok<FNDSB>
+    targetLocationsStr{end+1} = '_upper';
+    % lower trials
+    selectedTrialsByLocation{end+1} = cell2mat(selectedTrialsByLocation(find(lowerLogical))'); %#ok<FNDSB>
+    targetLocationsStr{end+1} = '_lower';
 end
