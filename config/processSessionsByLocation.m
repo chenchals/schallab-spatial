@@ -50,9 +50,13 @@ function [ ] = processSessionsByLocation(nhpConfig)
     getSessions = nhpConfig.getSessions;
     dataModelName = nhpConfig.dataModelName;
     outcome = nhpConfig.outcome; %'saccToTarget';
-    conditions = nhpConfig.conditions;
-    distancesToCompute = nhpConfig.distancesToCompute;
-    minTrialsPerCondition = nhpConfig.minTrialsPerCondition;
+    
+    % Specify conditions to for creating multiSdf
+    % condition{x} = {alignOnEventName, TargetLeftOrRight, sdfWindow}
+    alignCond1 = {'targetOnset', {[0 360] 45 90 135 180 225 270 315}, [-200 1000]};
+    alignCond2 = {'responseOnset', {[0 360] 45 90 135 180 225 270 315}, [-1000 200]};    
+    conditions = {alignCond1;alignCond2};
+    minTrialsPerCondition = 1;
     % optional
     selectedTaskTypes = {''};
     if isfield(nhpConfig, 'selectedTaskTypes')
@@ -86,8 +90,6 @@ function [ ] = processSessionsByLocation(nhpConfig)
 
     sessionLocations = getSessions(nhpSourceDir, nhpTable);
     nhpConfig.sessions = sessionLocations;
-      
-    %nhpSessions = cell();
 
     for sessionIndex = 1:numel(sessionLocations)
         sessionLocation = sessionLocations{sessionIndex};
@@ -187,10 +189,7 @@ function [ ] = processSessionsByLocation(nhpConfig)
                 clearvars conds respAlign respTimes normRespZtr
                 oFile = fullfile(oDir,[multiSdf.session '.mat']);
                 logger.info(sprintf('Saving processed session to %s...',oFile));
-                saveProcesssedSession(multiSdf, oFile);
-                %nhpSessions=multiSdf;
-                %plotAndSaveFig(multiSdf, oDir, logger, errorLogger);
-                
+                saveProcesssedSession(multiSdf, oFile);                
             catch me
                 % log the error/ and continue with next TaskType
                 logger.error(me);
