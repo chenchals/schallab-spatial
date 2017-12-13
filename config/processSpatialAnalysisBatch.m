@@ -1,6 +1,6 @@
-%baseDir = '/Volumes/schalllab/Users/Chenchal/clusterByLocation/processed';
-baseDir = '/Users/subravcr/temp/jacob-iMac/temp/schalllab-spatial/processed';
-% flocs = @(x) strcat({x.folder}',filesep,{x.name}');
+baseDir = '/Volumes/schalllab/Users/Chenchal/clusterByLocation/processed';
+%baseDir = '/Users/subravcr/temp/jacob-iMac/temp/schalllab-spatial/processed';
+ flocs = @(x) strcat({x.folder}',filesep,{x.name}');
 % nhpFolds = {
 %     % Joule:
 %     fullfile(baseDir,'joule/jp*.mat')
@@ -36,18 +36,18 @@ baseDir = '/Users/subravcr/temp/jacob-iMac/temp/schalllab-spatial/processed';
 
 nhpFoldsForFigs = {
     % Joule:
-    fullfile(baseDir,'joule/moranSdfMeanZtr/*.mat')
+    fullfile(baseDir,'joule/*/moranSdfMeanZtr/*.mat')
     % Broca
-    fullfile(baseDir,'broca/moranSdfMeanZtr/*.mat')
-    fullfile(baseDir,'broca/moranSdfMeanZtr/*.mat')
+    fullfile(baseDir,'broca/*/moranSdfMeanZtr/*.mat')
+    fullfile(baseDir,'broca/*/moranSdfMeanZtr/*.mat')
     % Darwin:
-    fullfile(baseDir,'darwin/moranSdfMeanZtr/*.mat')
+    fullfile(baseDir,'darwin/*/moranSdfMeanZtr/*.mat')
     % Darwin K:
-    fullfile(baseDir,'darwink/moranSdfMeanZtr/*.mat')
+    fullfile(baseDir,'darwink/*/moranSdfMeanZtr/*.mat')
     % Gauss:
-    fullfile(baseDir,'gauss/moranSdfMeanZtr/*.mat')
+    fullfile(baseDir,'gauss/*/moranSdfMeanZtr/*.mat')
     % Helmholtz:
-    fullfile(baseDir,'helmholtz/moranSdfMeanZtr/*.mat')
+    fullfile(baseDir,'helmholtz/*/moranSdfMeanZtr/*.mat')
     };
 nhpFigFiles = cellfun(@(x) flocs(dir(x)),nhpFoldsForFigs,'UniformOutput',false);
 

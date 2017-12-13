@@ -42,7 +42,11 @@ function [  ] = processSpatialAnalysisFig( varargin )
             %plot r, 3,5,7 moran local
             [axH,allAx(end+1,1)] = nextPlot(figH,axH);
             m = sess.(curr_cond)(dd).sdfMean.local_I;
-            D = sess.(curr_cond)(dd).sdfMean.neighborD;
+            D =0;
+            if isfield(sess.(curr_cond)(dd).sdfMean,'neighborD')
+               D = sess.(curr_cond)(dd).sdfMean.neighborD;
+            end
+            
             if iscell(sdfWin)
                 %split moran
                 y{1} = m(:,1:size(sdfWin{1},2));
@@ -80,8 +84,8 @@ function [  ] = processSpatialAnalysisFig( varargin )
     end
     saveas(figH,oFile,'jpg');
     saveas(figH,oFile, 'fig');
-    %delete(figH);
-    %close all
+    delete(figH);
+    close all
     
 end
 function showMat(inMat,sdfWin,colMap)
