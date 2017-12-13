@@ -4,11 +4,12 @@ tic
 % run base processing for all files
 % rsquared matrices are NOT generated
 % sdf, sdfMean, sdfMeanZtr are generated
-processBroca;
-processDarwin;
-processDarwinK;
-processGauss;
-processHelmholtz;
-processJoule;
+processDarwinK
+% processBroca;
+% processDarwin;
+% processDarwinK;
+% processGauss;
+% processHelmholtz;
+% processJoule;
 
 toc

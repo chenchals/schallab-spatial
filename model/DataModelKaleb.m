@@ -155,8 +155,10 @@ classdef DataModelKaleb < DataModel
                     else % key if spikeTimes
                         tempVars = load(datafile,var);
                         tempVars = tempVars.spkTimes;
+                        % Kaleb nuance 
+                        %trStart is a row and trial end is a row ??
                         spikeData.(key)(:,fileIndex) = arrayfun(@(x,y,z) tempVars(tempVars>=x & tempVars<=y)-z,...
-                           evData.trStarts,evData.trEnds,evData.alignTimes,'UniformOutput',false);
+                           evData.trStarts(:),evData.trEnds(:),evData.alignTimes,'UniformOutput',false);
                      end
                 end
                 clear tempVars

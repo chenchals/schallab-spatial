@@ -17,7 +17,7 @@ function [] = processDarwinK()
     nhpConfig.dataModelName = DataModel.KALEB_DATA_MODEL;
     nhpConfig.outcome = 'Correct';
     % Task type to use if multiple     
-    nhpConfig.selectedTaskTypes = {'MG'};
+    nhpConfig.selectedTaskTypes = {'MG' 'Search' 'Cap' };
     
     processSessionsByLocation(nhpConfig);
 
@@ -30,12 +30,14 @@ function [ sessions ] = getSessions(srcFolder, nhpTable)
   sessions = cellfun(@(x) strcat({x.folder}',filesep,{x.name}'),allSessions,'UniformOutput',false);
   sessions = sessionFilter(sessions, nhpTable);
   % order files by channel Number since the channels are not zero padded
+  
   for i = 1:numel(sessions)
       if isempty(sessions{i})
           continue
       end
       sessionO = regexprep(sessions{i},'/Channel(\d)/','/Channel0$1/');
       sessionO = sortrows(sessionO);
+      % Must retain empty cells as that row corresponds to nhp Table
       sessions{i} = regexprep(sessionO,'/Channel0(\d)/','/Channel$1/');
   end
 end
@@ -47,7 +49,7 @@ function [ outSessions ] = sessionFilter(sessions,nhpTable)
         if isempty(sessions{s})
             continue
         end    
-    channelStr = arrayfun(@(x) ['Channel', num2str(x,'%d'),'/chan'],nhpTable.ephysChannelMap{s},'UniformOutput',false)';
+    channelStr = arrayfun(@(x) num2str([x x],'Channel%d/chan%dMUA'),nhpTable.ephysChannelMap{s},'UniformOutput',false)';
     matched = regexp(sessions{s},char(join(channelStr,'|')),'match');
     outSessions{s} = sessions{s}(find(cellfun(@(x) numel(x),matched)>0)); %#ok<FNDSB>
     
