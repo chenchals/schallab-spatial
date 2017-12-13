@@ -91,7 +91,7 @@ function [ ] = processSessionsByLocation(nhpConfig)
     sessionLocations = getSessions(nhpSourceDir, nhpTable);
     nhpConfig.sessions = sessionLocations;
 
-    for sessionIndex = 20:20 %1:numel(sessionLocations)
+    for sessionIndex = 1:numel(sessionLocations)
         sessionLocation = sessionLocations{sessionIndex};
         nhpInfo = nhpTable(sessionIndex,:);
         % Check if Session specified in excel has data files
