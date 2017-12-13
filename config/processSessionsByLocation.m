@@ -56,7 +56,7 @@ function [ ] = processSessionsByLocation(nhpConfig)
     alignCond1 = {'targetOnset', {0 45 90 135 180 225 270 315}, [-200 1000]};
     alignCond2 = {'responseOnset', {0 45 90 135 180 225 270 315}, [-1000 200]};    
     conditions = {alignCond1;alignCond2};
-    minTrialsPerCondition = 1;
+    minTrialsPerCondition = 1;% Not Checked
     % optional
     selectedTaskTypes = {''};
     if isfield(nhpConfig, 'selectedTaskTypes')
