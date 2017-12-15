@@ -2,10 +2,9 @@ function [  ] = processSpatialAnalysisFig( varargin )
 %PROCESSSPATIALANALLYSISFIGS Draw figures for Spatial Analysis
 %  Use output file from processSpatialAnalysis
 % see also PROCESSSPATIALANALYSIS
-   % fileLoc = '/Volumes/schalllab/Users/Chenchal/clusterByLocation/processed/darwin/MEM/moranSdfMean/2016-02-22a_MEM_Q2.mat';
-  %fileLoc ='/Volumes/schalllab/Users/Chenchal/clusterByLocation/processed/darwin/MEM/moranSdfMeanZtr/2016-02-26a_MEM_Q2.mat';
     %fileLoc ='moranSdfMeanZtr/2016-02-26a';
-    fileLoc = varargin{1};
+    %fileLoc = varargin{1};
+    fileLoc = '/mnt/teba/Users/Chenchal/Jacob/spatial/processed/darwink/MG/moranSdfMeanZtr/Init_SetUp-160808-152950_probe1_MG_Q4.mat'
     fprintf('Processing file %s\n', fileLoc);
     sess = load(fileLoc);
     [fp, fn, ~] = fileparts(fileLoc);
@@ -35,7 +34,8 @@ function [  ] = processSpatialAnalysisFig( varargin )
         %plot r, 2 r^2
         [axH,allAx(end+1,1)] = nextPlot(figH,axH);
         imagesc(sess.(curr_cond)(1).sdfMean.rsquared);
-        colormap(gca,'cool');
+        colormap(gca,'jet');
+        colorbar
         %alpha(0.8)
         addTitle('r-squared',ii)
         for dd = 1:3
@@ -54,7 +54,7 @@ function [  ] = processSpatialAnalysisFig( varargin )
             else
                 y = m;
             end
-            showMat(y,sdfWin,'cool');
+            showMat(y,sdfWin,'jet');
             addTitle(['moran-l-' num2str(D)],ii)
             %plot r, 4,6,8 moran pval
             [axH,allAx(end+1,1)] = nextPlot(figH,axH);
@@ -66,7 +66,7 @@ function [  ] = processSpatialAnalysisFig( varargin )
             else
                 y = m;
             end
-            showMat2(y,sdfWin,true,'gray');
+            showMat2(y,sdfWin,true,'jet');
             %caxis([0 0.1])
             drawnow
             addTitle(['moran-l pval-' num2str(D)],ii)
@@ -82,10 +82,10 @@ function [  ] = processSpatialAnalysisFig( varargin )
     if ~exist(oDir,'dir')
         mkdir(oDir);
     end
-    saveas(figH,oFile,'jpg');
-    saveas(figH,oFile, 'fig');
-    delete(figH);
-    close all
+%     saveas(figH,oFile,'jpg');
+%     saveas(figH,oFile, 'fig');
+%     delete(figH);
+%     close all
     
 end
 function showMat(inMat,sdfWin,colMap)
@@ -96,10 +96,12 @@ function showMat2(inMat,sdfWin, isPval,colMap)
     if ~iscell(inMat)
         if isPval
           imagesc(inMat,[0 0.1]);
-          colormap(gca,'gray')
+          colormap(gca,'jet')
+          colorbar
         else
           imagesc(inMat);
           colormap(gca,colMap)
+          colorbar
         end
       
       %alpha(0.8);

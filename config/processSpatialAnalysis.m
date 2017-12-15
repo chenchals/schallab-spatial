@@ -3,7 +3,8 @@ function [ MI ] = processSpatialAnalysis( varargin )
 %   Detailed explanation goes here
 %    fileLoc = '/Volumes/schalllab/Users/Chenchal/clusterByLocation/processed/darwin/MEM/2016-02-22a_MEM_Q2.mat';
     %fileLoc = '/Volumes/schalllab/Users/Chenchal/clusterByLocation/processed/darwin/MEM/2016-02-26a_MEM_Q2.mat';
-    fileLoc = varargin{1};
+    fileLoc = '/mnt/teba/Users/Chenchal/Jacob/spatial/processed/darwink/MG/Init_SetUp-160808-152950_probe1_MG_Q4.mat';
+    %fileLoc = varargin{1};
     fprintf('Processing file %s\n', fileLoc);
     sess = load(fileLoc);
     [fp, fn, ~] = fileparts(fileLoc);
@@ -12,12 +13,15 @@ function [ MI ] = processSpatialAnalysis( varargin )
     %load('session.mat');
     fNames = fieldnames(sess);
     %CONDITIONS responeOset is inferred
-    TAREGT_ALIGN_CONDITION = 'targetOnset';
+    LOCATIONS = {'contra'};
+    %LOCATIONS = {'_contra' '_0'};
     TARGET_ALIGN_SDF_WINDOW =  [-50 250];
     RESPONSE_ALIGN_SDF_WINDOW = [-150 100];
-
-    RIGHT = [0 45 315 360];
-    LEFT = [180 135 225];
+    
+    all_conds = fNames(~cellfun(@isempty, regexp(fNames, join(LOCATIONS,'|'))));
+    tAlign_conds = all_conds(contains(all_conds,'targetOnset'));
+    rAlign_conds = all_conds(contains(all_conds,'responseOnset'));
+    
 
     nChannels = numel(sess.info.ephysChannelMap{1});
     channelSpacing = sess.info.channelSpacing;
@@ -27,41 +31,12 @@ function [ MI ] = processSpatialAnalysis( varargin )
     neighborDists = [2 5 7]; % distances to use
     distanceVec = [0:channelSpacing:channelSpacing*(nChannels-1)];
 
-    % Infer ipsi contra locations
-    ipsi_locations = eval(upper(sess.info.chamberLoc{1}));
-    contra_locations = setdiff([RIGHT(:);LEFT(:)]',ipsi_locations);
-
-    tAlign_conds = fNames(contains(fNames,TAREGT_ALIGN_CONDITION));
-    rAlign_conds = regexprep(tAlign_conds,'target','response');
-
-    ipsi_index = ~cellfun(@isempty, regexp(tAlign_conds,join(arrayfun(@(x) ['_' num2str(x) '|'],ipsi_locations,'UniformOutput',false),'')));
-    contra_index = ~cellfun(@isempty, regexp(tAlign_conds,join(arrayfun(@(x) ['_' num2str(x) '|'],contra_locations,'UniformOutput',false),'')));
-
-%     % Gather trimmed Mean SDFs
-%     tAlign_meanSdfs = arrayfun(@(cond) trimRawSdfCellArray(sess.(cond{1}).sdf,sess.(cond{1}).sdfWindow,TARGET_ALIGN_SDF_WINDOW),tAlign_conds,'UniformOutput',false);
-%     rAlign_meanSdfs = arrayfun(@(cond) trimRawSdfCellArray(sess.(cond{1}).sdf,sess.(cond{1}).sdfWindow,RESPONSE_ALIGN_SDF_WINDOW),rAlign_conds,'UniformOutput',false);
-
     % Gather trimmed Mean SDF Ztrs
     tAlign_meanSdfs = arrayfun(@(cond) trimMeanSdfMat(sess.(cond{1}).sdfMeanZtr,sess.(cond{1}).sdfWindow,TARGET_ALIGN_SDF_WINDOW),tAlign_conds,'UniformOutput',false);
     rAlign_meanSdfs = arrayfun(@(cond) trimMeanSdfMat(sess.(cond{1}).sdfMeanZtr,sess.(cond{1}).sdfWindow,RESPONSE_ALIGN_SDF_WINDOW),rAlign_conds,'UniformOutput',false);
-   
     
-    % Gather ipsi, contra trimmed mean SDFs - target aligned
-    sdfSize = size(tAlign_meanSdfs{1});
-    tAlign_conds{end+1} = 'targetOnset_ipsi';
-    tAlign_meanSdfs{end+1} = nanmean(reshape(cell2mat(tAlign_meanSdfs(ipsi_index)),sdfSize(1),sdfSize(2),[]),3);
-    tAlign_conds{end+1} = 'targetOnset_contra';
-    tAlign_meanSdfs{end+1} = nanmean(reshape(cell2mat(tAlign_meanSdfs(contra_index)),sdfSize(1),sdfSize(2),[]),3);
-
-    % Gather ipsi, contra trimmed mean SDFs - response aligned
-    sdfSize = size(rAlign_meanSdfs{1});
-    rAlign_conds{end+1} = 'responseOnset_ipsi';
-    rAlign_meanSdfs{end+1} = nanmean(reshape(cell2mat(rAlign_meanSdfs(ipsi_index)),sdfSize(1),sdfSize(2),[]),3);
-    rAlign_conds{end+1} = 'responseOnset_contra';
-    rAlign_meanSdfs{end+1} = nanmean(reshape(cell2mat(rAlign_meanSdfs(contra_index)),sdfSize(1),sdfSize(2),[]),3);
     measureUsed = 'sdfMean';
         
-    tAlign_ipsi = tAlign_conds(ipsi_index);
     t_win1 = TARGET_ALIGN_SDF_WINDOW(1);
     t_win2 = TARGET_ALIGN_SDF_WINDOW(2);
     r_win1 = RESPONSE_ALIGN_SDF_WINDOW(1);
@@ -72,7 +47,7 @@ function [ MI ] = processSpatialAnalysis( varargin )
         MI.processedDate = datestr(now);
 
         r_cond = rAlign_conds{c};
-        isIpsi = find(contains(tAlign_ipsi,t_cond));
+        
 
         [t_mat, t_win] = deal(tAlign_meanSdfs{c}, (t_win1:t_win2));
         [r_mat, r_win] = deal(rAlign_meanSdfs{c}, (r_win1:r_win2));
@@ -111,7 +86,7 @@ function [ MI ] = processSpatialAnalysis( varargin )
                 %fprintf('Computing moran sa for condition: %s, neighborDist: %d\n',cond, neighborD);
 
                 MI.(cond)(dd).(measureUsed).sdfWindow = sdfWin;
-                MI.(cond)(dd).(measureUsed).isIpsi = isIpsi;
+                MI.(cond)(dd).(measureUsed).isIpsi = 0;
                 MI.(cond)(dd).(measureUsed).sdfMatrix = sdfMat;
                 MI.(cond)(dd).(measureUsed).neighborD = neighborD;
                 MI.(cond)(dd).(measureUsed).neighborFx = neighborFx;
