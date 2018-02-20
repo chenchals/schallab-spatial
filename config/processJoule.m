@@ -17,7 +17,7 @@ function [] = processJoule()
     nhpConfig.dataModelName = DataModel.PAUL_DATA_MODEL;
     nhpConfig.outcome = 'saccToTarget';
 
-    processSessions(nhpConfig);
+    processSessionsByLocation(nhpConfig);
 
 end
 

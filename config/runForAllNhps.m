@@ -1,8 +1,10 @@
 % run process for all nhps
+addpath(genpath('/Users/subravcr/Projects/lab-schall/schalllab-spatial'));
 tic
+
 processBroca;
 processDarwin;
-%processDarwinK;
+processDarwinK;
 processGauss;
 processHelmholtz;
 processJoule;
@@ -15,6 +17,11 @@ processJoule;
 % aggregateClusters([baseProcessedDir 'helmholtz/20*.mat']);
 % aggregateClusters([baseProcessedDir 'joule/jp*.mat']);
 % Copy excel files to base dir
+
+
+% run base processing for all files
+% rsquared matrices are NOT generated
+% sdf, sdfMean, sdfMeanZtr are generated
 
 
 toc

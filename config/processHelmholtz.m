@@ -16,8 +16,8 @@ function [] = processHelmholtz()
     % DataModel to use
     nhpConfig.dataModelName = DataModel.WOLF_DATA_MODEL;
     nhpConfig.outcome = 'Correct';
-
-    processSessions(nhpConfig);
+     
+    processSessionsByLocation(nhpConfig);
 
 end
 

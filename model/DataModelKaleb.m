@@ -68,6 +68,7 @@ classdef DataModelKaleb < DataModel
             'alignTimes:AlignTimes' % used for aligning the vector of spikeTimes
             'trStarts:trStarts'
             'trEnds:trEnds'
+            'taskType:TaskType'
             };
        % Singel units are at ChannelN/UnitN/Spikes.mat
        % The spikeIds are not labelled as DSPNN
@@ -139,6 +140,9 @@ classdef DataModelKaleb < DataModel
                 datafile = obj.dataSource{fileIndex}; 
                 [~,unit,~] = fileparts(datafile);
                 fprintf('#%s ',unit);
+                if ~mod(fileIndex,8)
+                   fprintf('\n'); 
+                end
                 for i = 1:numel(keys)
                     key = keys{i};
                     var = vars{i};
@@ -151,8 +155,10 @@ classdef DataModelKaleb < DataModel
                     else % key if spikeTimes
                         tempVars = load(datafile,var);
                         tempVars = tempVars.spkTimes;
+                        % Kaleb nuance 
+                        %trStart is a row and trial end is a row ??
                         spikeData.(key)(:,fileIndex) = arrayfun(@(x,y,z) tempVars(tempVars>=x & tempVars<=y)-z,...
-                           evData.trStarts,evData.trEnds,evData.alignTimes,'UniformOutput',false);
+                           evData.trStarts(:),evData.trEnds(:),evData.alignTimes,'UniformOutput',false);
                      end
                 end
                 clear tempVars
@@ -173,27 +179,38 @@ classdef DataModelKaleb < DataModel
         end
         
         % GETTRILALIST
-        function [ selectedTrials ] = getTrialList(obj, selectedOutcomes, targetHemifield)
+        function [ selectedTrials ] = getTrialList(obj, selectedOutcomes, selectedLocations, varargin)
+            % varargin used to suppport multiple taskTypes are in the same
+            % data file. Example mem, cap in same file 
+            taskTypes = upper(unique(obj.getEventData().taskType));
+            if length(varargin)==1
+                selectedTaskType = upper(varargin{1});
+            end
             %Convert inputs to cellstr
             outcomes = selectedOutcomes;
             if ischar(outcomes)
-                outcomes = {outcomes};
+               outcomes = {outcomes};
             end
-            locations = targetHemifield;
-            if ischar(locations)
-                locations = {locations};
-            end
-            key = char(join({'outcomes',char(join(outcomes,',')),...
-                'locations',char(join(locations,','))},'-'));
-            
-            if obj.trialList.isKey(key)
-                selectedTrials = obj.trialList(key);
+            % use if already cached
+            if obj.trialList.isKey(selectedTaskType)
+                selectedTrials = obj.trialList(selectedTaskType);
                 return
             end
-            % Get trial list first time
-            obj.trialList(key) = memTrialSelector(obj.getEventData().trialOutcome, outcomes,...
-                obj.getEventData().targetLocation, targetHemifield);
-            selectedTrials = obj.trialList(key);
+            % Get trial list for different taskTypes ONCE (here a single file
+            % has both mem and cap paradigms)
+            for t = 1:numel(taskTypes)
+                taskType = taskTypes{t};
+                obj.trialList(taskType) = memTrialSelector(obj.getEventData().trialOutcome, outcomes,...
+                    obj.getEventData().targetLocation, selectedLocations, obj.getEventData().taskType, taskType);
+            end
+            % Check if the obj.trialList Map has the selectedTaskType key
+            if obj.trialList.isKey(selectedTaskType)
+              selectedTrials = obj.trialList(selectedTaskType);
+            else
+            throw(MException('DataModelKaleb:getTrialList',...
+                sprintf('There are no trials for selected TaskType [%s]. Available TaskTypes are [%s]',...
+                selectedTaskType, join(taskTypes,', '))));
+            end
         end
     end
     %% Helper Functions
@@ -218,8 +235,17 @@ classdef DataModelKaleb < DataModel
 
        function [ trialOutcome ] = buildTrialOutcomeVar(obj, taskVar) 
             nTrials = size(taskVar.Correct,1);
+            % Kaleb nuance
+            if isfield(taskVar,'error')
+                errors = taskVar.error;
+            elseif isfield(taskVar,'Error')
+                errors = taskVar.Error;
+            else
+                error('*******in Behav.mat Task.error or Task.Error does not exist***********')
+            end
+            
             trialOutcome = repmat({''},nTrials,1);
-            uniqErrIndex=unique(taskVar.error(isfinite(taskVar.error)));
+            uniqErrIndex=unique(errors(isfinite(taskVar.error)));
             if isfield(taskVar,'error_names')
                 error_names = taskVar.error_names;
             end
@@ -232,7 +258,7 @@ classdef DataModelKaleb < DataModel
                 if strcmpi(outcome,'False') % no error
                     outcome = 'Correct';
                 end                
-                ind = find(taskVar.error==uniqErrIndex(ii));
+                ind = find(errors==uniqErrIndex(ii));
                 trialOutcome(ind) = {outcome}; %#ok<FNDSB>
             end
        end

@@ -16,8 +16,8 @@ function [] = processBroca()
     % DataModel to use
     nhpConfig.dataModelName = DataModel.PAUL_DATA_MODEL;
     nhpConfig.outcome = 'saccToTarget';
-
-    processSessions(nhpConfig);
+    
+    processSessionsByLocation(nhpConfig);
 
 end
 

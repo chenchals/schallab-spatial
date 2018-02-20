@@ -3,3 +3,6 @@ processed/*
 # Excepte
 !processed/readme.txt
 
+temp*
+processedJacob
+spatialfiltering
