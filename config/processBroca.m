@@ -3,8 +3,8 @@ function [] = processBroca()
 %     nhpConfig is a structured variable with fields that define how to
 %     process matalb datafile for this NHP.
 % see also PROCESSSESSIONS for how to define nhpConfig 
-    processedDir = '/mnt/teba/Users/Chenchal/clusterByLocation/processed';
-    nhpConfig.nhpSourceDir = '/mnt/teba';
+    processedDir = '/Volumes/SchallLab/Users/Chenchal/clusterByLocationOld/processed';
+    nhpConfig.nhpSourceDir = '/Volumes/SchallLab';
     nhpConfig.nhp = 'broca';
     nhpConfig.excelFile = 'SFN_NHP_Coordinates_All.xlsx';
     nhpConfig.sheetName = 'Br';
