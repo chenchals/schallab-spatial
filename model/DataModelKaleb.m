@@ -155,8 +155,10 @@ classdef DataModelKaleb < DataModel
                     else % key if spikeTimes
                         tempVars = load(datafile,var);
                         tempVars = tempVars.spkTimes;
+                        % Kaleb nuance 
+                        %trStart is a row and trial end is a row ??
                         spikeData.(key)(:,fileIndex) = arrayfun(@(x,y,z) tempVars(tempVars>=x & tempVars<=y)-z,...
-                           evData.trStarts,evData.trEnds,evData.alignTimes,'UniformOutput',false);
+                           evData.trStarts(:),evData.trEnds(:),evData.alignTimes,'UniformOutput',false);
                      end
                 end
                 clear tempVars
@@ -233,8 +235,17 @@ classdef DataModelKaleb < DataModel
 
        function [ trialOutcome ] = buildTrialOutcomeVar(obj, taskVar) 
             nTrials = size(taskVar.Correct,1);
+            % Kaleb nuance
+            if isfield(taskVar,'error')
+                errors = taskVar.error;
+            elseif isfield(taskVar,'Error')
+                errors = taskVar.Error;
+            else
+                error('*******in Behav.mat Task.error or Task.Error does not exist***********')
+            end
+            
             trialOutcome = repmat({''},nTrials,1);
-            uniqErrIndex=unique(taskVar.error(isfinite(taskVar.error)));
+            uniqErrIndex=unique(errors(isfinite(taskVar.error)));
             if isfield(taskVar,'error_names')
                 error_names = taskVar.error_names;
             end
@@ -247,7 +258,7 @@ classdef DataModelKaleb < DataModel
                 if strcmpi(outcome,'False') % no error
                     outcome = 'Correct';
                 end                
-                ind = find(taskVar.error==uniqErrIndex(ii));
+                ind = find(errors==uniqErrIndex(ii));
                 trialOutcome(ind) = {outcome}; %#ok<FNDSB>
             end
        end

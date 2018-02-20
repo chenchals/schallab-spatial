@@ -3,8 +3,9 @@ function [] = processBroca()
 %     nhpConfig is a structured variable with fields that define how to
 %     process matalb datafile for this NHP.
 % see also PROCESSSESSIONS for how to define nhpConfig 
-    processedDir = '/Volumes/SchallLab/Users/Chenchal/clusterByLocationOld/processed';
-    nhpConfig.nhpSourceDir = '/Volumes/SchallLab';
+
+    processedDir = '/mnt/teba/Users/Chenchal/Jacob/spatial/processed';
+    nhpConfig.nhpSourceDir = '/mnt/teba';
     nhpConfig.nhp = 'broca';
     nhpConfig.excelFile = 'SFN_NHP_Coordinates_All.xlsx';
     nhpConfig.sheetName = 'Br';
@@ -16,14 +17,7 @@ function [] = processBroca()
     % DataModel to use
     nhpConfig.dataModelName = DataModel.PAUL_DATA_MODEL;
     nhpConfig.outcome = 'saccToTarget';
-    % Specify conditions to for creating multiSdf
-    %condition{x} = {alignOnEventName, TargetLeftOrRight, sdfWindow}
-    nhpConfig.conditions{1} = {'targetOnset', {[0 360] 45 90 135 180 225 270 315}, [-1000 2000]};
-    nhpConfig.conditions{2} = {'responseOnset', {[0 360] 45 90 135 180 225 270 315}, [-2000 1000]};
-    % only one type of measue for now
-    nhpConfig.distancesToCompute = {'correlation'};
-    nhpConfig.minTrialsPerCondition = 1;
-
+    
     processSessionsByLocation(nhpConfig);
 
 end
