@@ -57,7 +57,7 @@ function [ ] = processSessionsByLocation(nhpConfig)
     alignCond2 = {'responseOnset', {0 45 90 135 180 225 270 315}, [-1000 200]};    
     conditions = {alignCond1;alignCond2};
     minTrialsPerCondition = 1;% Not Checked
-    % optional
+    % optional,  use only certain task types
     selectedTaskTypes = {''};
     if isfield(nhpConfig, 'selectedTaskTypes')
        selectedTaskTypes = upper(nhpConfig.selectedTaskTypes);
@@ -65,7 +65,7 @@ function [ ] = processSessionsByLocation(nhpConfig)
         
     outputDir = nhpOutputDir;
     
-    if ~exist(nhpOutputDir,'dir')
+    if ~exist(nhpOutputDir,'dir') 
         mkdir(nhpOutputDir);
         nixUpdateAttribs(nhpOutputDir);
     end
@@ -79,14 +79,14 @@ function [ ] = processSessionsByLocation(nhpConfig)
     %remove empty rows
     nhpTable(strcmp(nhpTable.matPath,''),:) = [];
     nhpTable.date = datestr(nhpTable.date,'mm/dd/yyyy');
-    nhpTable.ephysChannelMap = arrayfun(@(x) ...
+    nhpTable.ephysChannelMap = arrayfun(@(x) ... 
         str2num(char(split(nhpTable.ephysChannelMap{x},', '))),...
         1:size(nhpTable,1),'UniformOutput',false)';   %#ok<ST2NM>
     
     nhpConfig.nhpTable = nhpTable;
     
     outputFile = fullfile(nhpOutputDir,[nhp 'Config.mat']);       
-    save(outputFile, 'nhpConfig');
+    save(outputFile, 'nhpConfig'); % save nhpConfig variables to outputFile
 
     sessionLocations = getSessions(nhpSourceDir, nhpTable);
     nhpConfig.sessions = sessionLocations;

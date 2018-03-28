@@ -2,7 +2,9 @@ function [] = processBroca()
 %PROCESSBROCA Configure Broca sessions here
 %     nhpConfig is a structured variable with fields that define how to
 %     process matalb datafile for this NHP.
-% see also PROCESSSESSIONS for how to define nhpConfig
+% see also PROCESSSESSIONSBYLOCATION for how to define nhpConfig
+
+%   Declare path variables
     processedDir = '/Users/elseyjg/temp/schalllab-spatial/processed';
     nhpConfig.nhpSourceDir = '/Volumes/schalllab/';
     nhpConfig.nhp = 'broca';

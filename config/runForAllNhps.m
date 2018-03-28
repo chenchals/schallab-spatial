@@ -1,5 +1,5 @@
 % run process for all nhps
-addpath(genpath('/Users/subravcr/Projects/lab-schall/schalllab-spatial'));
+addpath(genpath('/Users/elseyjg/temp/schalllab-spatial'));
 tic
 
 processBroca;
