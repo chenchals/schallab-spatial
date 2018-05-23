@@ -9,6 +9,7 @@ function [] = processBroca()
     nhpConfig.nhpSourceDir = '/Volumes/schalllab/';
     nhpConfig.nhp = 'broca';
     nhpConfig.excelFile = 'SFN_NHP_Coordinates_All.xlsx';
+    nhpConfig.excelFilePath = '/Users/elseyjg/Dropbox (Personal)/spatialClustering/config/';
     nhpConfig.sheetName = 'Br';
     % Write to one dir above the config dir
     %[thisDir,~,~] = fileparts(mfilename('fullpath'));    

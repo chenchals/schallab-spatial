@@ -45,6 +45,7 @@ function [ ] = processSessionsByLocation(nhpConfig)
     nhp = nhpConfig.nhp;
     nhpSourceDir = nhpConfig.nhpSourceDir;
     excelFile = nhpConfig.excelFile;
+    excelFilePath = nhpConfig.excelFilePath;
     sheetName = nhpConfig.sheetName;
     nhpOutputDir = nhpConfig.nhpOutputDir;
     getSessions = nhpConfig.getSessions;
@@ -74,7 +75,7 @@ function [ ] = processSessionsByLocation(nhpConfig)
     errorLogger = Logger.getLogger(fullfile(nhpOutputDir,[nhp 'ProcessSessionsErrors.log']));
     
     % Read excel sheet
-    nhpTable = readtable(excelFile, 'Sheet', sheetName);
+    nhpTable = readtable(fullfile(excelFilePath, excelFile), 'Sheet', sheetName); 
 
     %remove empty rows
     nhpTable(strcmp(nhpTable.matPath,''),:) = [];
@@ -94,13 +95,14 @@ function [ ] = processSessionsByLocation(nhpConfig)
     for sessionIndex = 1:numel(sessionLocations)
         sessionLocation = sessionLocations{sessionIndex};
         nhpInfo = nhpTable(sessionIndex,:);
+        
         % Check if Session specified in excel has data files
         if isempty(sessionLocation)
             errorLogger.error(sprintf('Session %s has no datafiles. Using [ %s ] for spike file locations',...
                 nhpInfo.session{1}, nhpInfo.matPath{1}));
             continue
         end
-        logger.info(sprintf('Processing session [%s], using fileFilter [%s]',nhpInfo.session{1}, nhpInfo.matPath{1}));
+        logger.info(sprintf('Processing session [%s], using fileFilter [%s]', nhpInfo.session{1}, nhpInfo.matPath{1}));
         channelMap = nhpInfo.ephysChannelMap{1};
         % Create instance of MemoryTypeModel to reuse for task type
         model = DataModel.newInstance(dataModelName, sessionLocation, channelMap);
@@ -148,11 +150,12 @@ function [ ] = processSessionsByLocation(nhpConfig)
                     targetLocations = currCondition{2};
                     targetLocationsStr = cellfun(@(x) num2str(x,'_%d'),targetLocations,'UniformOutput',false);
                     sdfWindow = currCondition{3};
-                    % Get  trials by position for condition is satisfied
+                    % Get  trials by position, double for each vector
                     selectedTrialsByLocation = checkMinTrialsPerCondition(model, outcome, targetLocations, selectedTaskType);
-                    % Get trial for ipsi, contra, upper, lower visual fields
+                    % Get trials for ipsi, contra, upper, lower visual fields
                     [selectedTrialsByLocation, targetLocationsStr] = getIpsiContraUpperLowerTrials(nhpInfo.chamberLoc{1},selectedTrialsByLocation,targetLocationsStr);
-                                       
+                    
+                    % Loop through trial locations, check for >1 minumum trials per condition
                     for tLoc = 1:numel(targetLocationsStr)
                         currTargetLocationStr = targetLocationsStr{tLoc};
                         trialList = selectedTrialsByLocation{tLoc};
@@ -162,7 +165,7 @@ function [ ] = processSessionsByLocation(nhpConfig)
                             continue
                         end
                         
-                        condStr = [alignOn targetLocationsStr{tLoc}] ;
+                        condStr = [alignOn targetLocationsStr{tLoc}];
                         logger.info(sprintf('Doing condition: TaskType [%s] outcome [%s], alignOn [%s], targetLocations [%s] sdfWindow [%s]',...
                             selectedTaskType, outcome, alignOn, currTargetLocationStr, num2str(sdfWindow)));
                         % Get MultiUnitSdf -> has sdf_mean matrix and sdf matrix
@@ -172,7 +175,7 @@ function [ ] = processSessionsByLocation(nhpConfig)
                 
                 % To use Kalebs klNormRespv2:
                 conds = fieldnames(multiSdf);
-                % to use bl option conditions have to be ordered with targetAligned being the first
+                % to use bl option, conditions have to be ordered with targetAligned being the first
                 conds = conds(~cellfun(@isempty,regexp(conds,'targetOnset|responseOnset','match')));
                 % order is ipsi_targetOnset,ipsi_responseOnset,...
                 % contra_targetOnset, contra_responseOnset
@@ -188,6 +191,7 @@ function [ ] = processSessionsByLocation(nhpConfig)
                     sdfMeanZtr = normRespZtr{ii};
                     multiSdf.(condStr).sdfMeanZtr = sdfMeanZtr;
                 end
+                
                 % Distance computation
                 % do tandem of 2 alignOn conditions for each location condition
                 
